@@ -23,7 +23,6 @@ impl Default for BitBoard {
         // BLANK: 0b0000000000000000
         BitBoard {
             pawns_white: 0x00000000_0000FF00,
-            //pawns_white: 0x00000000_0008F700, // e4 opening - debugging test case
             rooks_white: 0x00000000_00000081,
             knights_white: 0x00000000_00000042,
             bishops_white: 0x00000000_00000024,
@@ -41,14 +40,15 @@ impl Default for BitBoard {
 }
 
 impl BitBoard {
+    /// **Utility** - A utility method for generating BitBoards from a FEN String
     fn from_fen_string(fen: &str) -> Self {
         todo!()
-        //it might be a good idea to create a game manager that handles
-        //turn movement and captured pieces, as well as castling rights
-        //and the like, only passing in the board representation of the FEN
+        //good idea to create a game manager that handles turns,
+        //movement, and captured pieces, as well as castling rights
+        //only passing in board representation within FEN
     }
 
-    // **Utility** - A utility method for creating a FEN String from a BitBoard
+    /// **Utility** - A utility method for creating a FEN String from a BitBoard
     pub fn to_fen_string(&self) -> String {
         //FEN Notes:
         //active color - get whose turn it is to move {w, b}
@@ -96,12 +96,12 @@ impl BitBoard {
             (self.queens_black, 'q'),
             (self.king_black, 'k')
         ];
-        //Resume work here tomorrow - everything's printing backwards
+        
         for (piece_map, piece_type) in bitboards {
             for i in 0..64 {
                 if piece_map & (1 << i) != 0 {
                     let r = 7 - (i/8);
-                    let c = i%8;
+                    let c = 7 - (i%8);
                     board[r][c] = piece_type;
                 }
             }
