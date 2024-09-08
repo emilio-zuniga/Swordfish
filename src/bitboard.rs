@@ -47,23 +47,6 @@ impl BitBoard {
 
     /// **Utility** - A utility method for creating a FEN String from a BitBoard
     fn to_fen_string(&self) -> String {
-        //FEN Notes:
-        //active color - get whose turn it is to move {w, b}
-        //castling rights - castle-able sides {QKqk-}
-        //possible En Passant targets - E.P. rules:
-        //          1. capturing pawn must have adv 3 ranks to perfor
-        //          2. captured pawn must have moved 2 squares in one turn
-        //          3. capture must be performed on turn immediately after 
-        //             the pawn being captured moves
-        //          - if the above conditions are met, include the coordinate
-        //            behind the pawn that just moved 2 spaces 
-        //            {a single coord on 4th or 5th rank}
-        //halfmove clock - moves since the last piece capture/pawn adv {MAX 100}
-        //          - game drawn when a counter reaches 100
-        //fullmove number - number of completed turns (increments when black moves) {probably u32}
-        
-        //All of the above will likely be implemented externally
-
         let mut s = String::new();
         let board = self.to_board();
 
