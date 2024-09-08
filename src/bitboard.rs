@@ -40,11 +40,53 @@ impl Default for BitBoard {
 }
 
 impl BitBoard {
+    /// **Utility** - A utility method for generating BitBoards from a FEN String
     fn from_fen_string(fen: &str) -> Self {
         todo!()
     }
 
+    /// **Utility** - A utility method for creating a FEN String from a BitBoard
     fn to_fen_string(&self) -> String {
-        todo!()
+        let mut s = String::new();
+        let board = self.to_board();
+
+        for row in board {
+            s.push_str(&String::from_iter(row.iter()));
+            s.push_str("\n");
+        }
+
+        s
+    }
+
+    /// **Utility** - A utility method for creating a 2D array representation from a bitboard
+    fn to_board(&self) -> [[char; 8]; 8] {
+        let mut board = [['.'; 8]; 8];
+        let bitboards = [
+            (self.pawns_white, 'P'),
+            (self.rooks_white, 'R'),
+            (self.knights_white, 'N'),
+            (self.bishops_white, 'B'),
+            (self.queens_white, 'Q'),
+            (self.king_white, 'K'),
+
+            (self.pawns_black, 'p'),
+            (self.rooks_black, 'r'),
+            (self.knights_black, 'n'),
+            (self.bishops_black, 'b'),
+            (self.queens_black, 'q'),
+            (self.king_black, 'k')
+        ];
+        
+        for (piece_map, piece_type) in bitboards {
+            for i in 0..64 {
+                if piece_map & (1 << i) != 0 {
+                    let r = 7 - (i/8);
+                    let c = 7 - (i%8);
+                    board[r][c] = piece_type;
+                }
+            }
+        }
+
+        board
     }
 }
