@@ -43,13 +43,10 @@ impl BitBoard {
     /// **Utility** - A utility method for generating BitBoards from a FEN String
     fn from_fen_string(fen: &str) -> Self {
         todo!()
-        //good idea to create a game manager that handles turns,
-        //movement, and captured pieces, as well as castling rights
-        //only passing in board representation within FEN
     }
 
     /// **Utility** - A utility method for creating a FEN String from a BitBoard
-    pub fn to_fen_string(&self) -> String {
+    fn to_fen_string(&self) -> String {
         //FEN Notes:
         //active color - get whose turn it is to move {w, b}
         //castling rights - castle-able sides {QKqk-}

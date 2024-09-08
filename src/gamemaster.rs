@@ -1,3 +1,6 @@
+use crate::bitboard;
+use bitboard::BitBoard;
+
 /// This is a representation of a chess game and the various states of each element.
 pub struct GameManager {
     castle_kingside_white: bool,
@@ -12,6 +15,9 @@ pub struct GameManager {
 }
 
 impl Default for GameManager {
+    //GameManager was created to keep track of data about a game not
+    //represented by a bitboard, such castling rights, player's turn
+    //to move, and other data relevant to the game
     fn default() -> Self {
         GameManager {
             castle_kingside_white: true,
@@ -24,5 +30,19 @@ impl Default for GameManager {
             total_turns: 0,
             bitboard: BitBoard::default(),
         }
+    }
+}
+
+impl GameManager {
+    fn from_fen_string(fen: &str) -> Self {
+        todo!();
+        //will need to pass the board representation part of the
+        //string to BitBoard::from_fen_string
+    }
+
+    fn to_fen_string(&self) -> String {
+        todo!();
+        //will need to call bitboard.to_fen() and append data
+        //GM has stored to the end of it
     }
 }
