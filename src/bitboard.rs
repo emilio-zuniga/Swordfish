@@ -40,13 +40,21 @@ impl Default for BitBoard {
 }
 
 impl BitBoard {
-    /// **Utility** - A utility method for generating BitBoards from a FEN String
+    /// A utility method for generating a `BitBoard` from a FEN string
     fn from_fen_string(fen: &str) -> Self {
         todo!()
     }
 
-    /// **Utility** - A utility method for creating a FEN String from a BitBoard
+    /// A utility method generating a FEN string representation of this `BitBoard`
     fn to_fen_string(&self) -> String {
+        let mut s = String::new();
+        let board = self.to_board();
+
+        s
+    }
+
+    /// **Debuggin** A utility method generating a `String` representation of this `BitBoard`
+    fn to_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
 
@@ -58,7 +66,7 @@ impl BitBoard {
         s
     }
 
-    /// **Utility** - A utility method for creating a 2D array representation from a bitboard
+    /// A utility method creating a 2D `char` array representation of this `BitBoard`
     fn to_board(&self) -> [[char; 8]; 8] {
         let mut board = [['.'; 8]; 8];
         let bitboards = [
