@@ -46,15 +46,36 @@ impl BitBoard {
     }
 
     /// A utility method generating a FEN string representation of this `BitBoard`
-    fn to_fen_string(&self) -> String {
+    pub fn to_fen_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
 
+        for row in board {
+            let mut spaces: u8 = 0;
+            for c in row {
+                if c == 'P' || c == 'N' || c == 'B' || c == 'R' || c == 'Q' || c == 'K' || c == 'p' || c == 'n' || c == 'b' || c == 'r' || c == 'q' || c == 'k' {
+                    if spaces > 0 {
+                        s.push((spaces + 48) as char);
+
+                        spaces = 0;
+                    }
+                    s.push(c);
+                } else {
+                    spaces += 1;
+                }
+            }
+            if spaces > 0 {
+                s.push((spaces + 48) as char);
+            }
+            s.push('/');
+        }
+        s.pop();
+        
         s
     }
 
     /// **Debuggin** A utility method generating a `String` representation of this `BitBoard`
-    fn to_string(&self) -> String {
+    pub fn to_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
 
