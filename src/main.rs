@@ -1,5 +1,7 @@
 mod bitboard;
+use bitboard::BitBoard;
 
 fn main() {
-    todo!()
+    let b = BitBoard::default();
+    println!("{}",b.to_fen_string());
 }

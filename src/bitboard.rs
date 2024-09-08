@@ -23,6 +23,7 @@ impl Default for BitBoard {
         // BLANK: 0b0000000000000000
         BitBoard {
             pawns_white: 0x00000000_0000FF00,
+            //pawns_white: 0x00000000_0008F700, // e4 opening - debugging test case
             rooks_white: 0x00000000_00000081,
             knights_white: 0x00000000_00000042,
             bishops_white: 0x00000000_00000024,
@@ -45,11 +46,11 @@ impl BitBoard {
         //it might be a good idea to create a game manager that handles
         //turn movement and captured pieces, as well as castling rights
         //and the like, only passing in the board representation of the FEN
-        
     }
 
-    fn to_fen_string(&self) -> String {
-        todo!()
+    // **Utility** - A utility method for creating a FEN String from a BitBoard
+    pub fn to_fen_string(&self) -> String {
+        //FEN Notes:
         //active color - get whose turn it is to move {w, b}
         //castling rights - castle-able sides {QKqk-}
         //possible En Passant targets - E.P. rules:
@@ -63,7 +64,49 @@ impl BitBoard {
         //halfmove clock - moves since the last piece capture/pawn adv {MAX 100}
         //          - game drawn when a counter reaches 100
         //fullmove number - number of completed turns (increments when black moves) {probably u32}
+        
+        //All of the above will likely be implemented externally
 
+        let mut s = String::new();
+        let board = self.to_board();
 
+        for row in board {
+            s.push_str(&String::from_iter(row.iter()));
+            s.push_str("\n");
+        }
+
+        s
+    }
+
+    /// **Utility** - A utility method for creating a 2D array representation from a bitboard
+    fn to_board(&self) -> [[char; 8]; 8] {
+        let mut board = [['.'; 8]; 8];
+        let bitboards = [
+            (self.pawns_white, 'P'),
+            (self.rooks_white, 'R'),
+            (self.knights_white, 'N'),
+            (self.bishops_white, 'B'),
+            (self.queens_white, 'Q'),
+            (self.king_white, 'K'),
+
+            (self.pawns_black, 'p'),
+            (self.rooks_black, 'r'),
+            (self.knights_black, 'n'),
+            (self.bishops_black, 'b'),
+            (self.queens_black, 'q'),
+            (self.king_black, 'k')
+        ];
+        //Resume work here tomorrow - everything's printing backwards
+        for (piece_map, piece_type) in bitboards {
+            for i in 0..64 {
+                if piece_map & (1 << i) != 0 {
+                    let r = 7 - (i/8);
+                    let c = i%8;
+                    board[r][c] = piece_type;
+                }
+            }
+        }
+
+        board
     }
 }
