@@ -40,12 +40,53 @@ impl Default for BitBoard {
 }
 
 impl BitBoard {
-    /// A utility method for generating a `BitBoard` from a FEN string
-    fn from_fen_string(fen: &str) -> Self {
-        todo!()
+    /// A utility method for generating a `BitBoard` from a FEN string\
+    /// * `fen` - a `&str` representing the board token of a FEN string
+    /// * `returns` - a `BitBoard` as generated from the FEN token
+    pub fn from_fen_string(fen: &str) -> Self {
+        let mut position: u64 = 0x80000000_00000000;
+        let mut board = BitBoard{
+            pawns_white: 0x0,
+            rooks_white: 0x0,
+            knights_white: 0x0,
+            bishops_white: 0x0,
+            queens_white: 0x0,
+            king_white: 0x0,
+            pawns_black: 0x0,
+            rooks_black: 0x0,
+            knights_black: 0x0,
+            bishops_black: 0x0,
+            queens_black: 0x0,
+            king_black: 0x0,
+        };
+        
+        for c in fen.chars() {
+            match c {
+                'P' => board.pawns_white |= position,
+                'R' => board.rooks_white |= position,
+                'N' => board.knights_white |= position,
+                'B' => board.bishops_white |= position,
+                'Q' => board.queens_white |= position,
+                'K' => board.king_white |= position,
+
+                'p' => board.pawns_black |= position,
+                'r' => board.rooks_black |= position,
+                'n' => board.knights_black |= position,
+                'b' => board.bishops_black |= position,
+                'q' => board.queens_black |= position,
+                'k' => board.king_black |= position,
+                '1'..='8' => position >>= c.to_digit(10).unwrap() - 1,
+                _ => position <<= 1,
+            }
+            position >>= 1;
+
+        }
+
+        board
     }
 
     /// A utility method generating a FEN string representation of this `BitBoard`
+    /// * `returns` - a `String` representing the board token of a string in FEN
     pub fn to_fen_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
@@ -74,7 +115,8 @@ impl BitBoard {
         s
     }
 
-    /// **Debuggin** A utility method generating a `String` representation of this `BitBoard`
+    /// **Debugging** A utility method generating a `String` representation of this `BitBoard`
+    /// * `returns` - a `String` representing the board
     pub fn to_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
@@ -88,6 +130,7 @@ impl BitBoard {
     }
 
     /// A utility method creating a 2D `char` array representation of this `BitBoard`
+    /// * `returns` - a `[[char; 8]; 8]` 2D array representing the board
     fn to_board(&self) -> [[char; 8]; 8] {
         let mut board = [['.'; 8]; 8];
         let bitboards = [
