@@ -16,49 +16,59 @@ pub struct GameManager {
         //            {a single coord on 4th or 5th rank}
         //halfmove clock - moves since the last piece capture/pawn adv {MAX 100}
         //          - game drawn when a counter reaches 100
-        //fullmove number - number of completed turns (increments when black moves) {probably u32}
+        //          - increment when player makes move that is not capture or pawn move
+        //          - reset to 0 when player makes move that is capture or pawn move
+        //fullmove number - number of completed turns
+        //          - increment when black moves
 
         //will need to call bitboard.to_fen() and append data
         //GM has stored to the end of it
     bitboard: BitBoard,
     white_to_move: bool,
     castling_rights: String,
-    en_passant_targets: Vec<String>,
+    en_passant_target: String,
     halfmoves: u32,
     fullmoves: u32,
 }
 
 impl Default for GameManager {
-    /// Constructs a new `GameMaster`, set to Chess's starting position
+    /// Constructs a new `GameManager`, set to Chess's starting position
     fn default() -> Self {
         GameManager {
             bitboard: BitBoard::default(),
             white_to_move: true,
             castling_rights: String::new(),
-            en_passant_targets: Vec::new(),
+            en_passant_target: String::new(),
             halfmoves: 0,
-            fullmoves: 0,
+            fullmoves: 1,
         }
     }
 }
 
 impl GameManager {
-    /// A utility method for generating a new `GameMaster` from a FEN string\
+    /// A utility method for generating a new `GameManager` from a FEN string\
     /// * `fen` - a `&str` representing a game's state in FEN
-    /// * `returns` - a `GameMaster` as generated from the FEN
-    fn from_fen_string(fen: &str) -> Self {
+    /// * `returns` - a `GameManager` as generated from the FEN
+    pub fn from_fen_string(fen: &str) -> Self {
+        let tokens = fen.split(" ");
+        for t in tokens {
+            println!("{}", t);
+        }
+        
         /* split fen into tokens
          * grab board - pass it into BitBoard::from_fen_string();
          * match next token - white_to_move = true if "w", false if "b", otherwise, default to true
-         * castling_rights = next toke 
-         * 
+         * castling_rights = next token or "-"
+         * en passant target - next token or "-"
+         * halfmoves - next token 
+         * fullmoves - next token 
          */
-        todo!();
-        //will need to pass the board representation part of the
-        //string to BitBoard::from_fen_string
+        
+        GameManager::default()
+        //todo!();
     }
 
-    fn to_fen_string(&self) -> String {
+    pub fn to_fen_string(&self) -> String {
         todo!();
     }
 }
