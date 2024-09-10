@@ -9,5 +9,8 @@ fn main() {
      * 
      */
     let fen = "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2";
-    let g = GameManager::from_fen_string(fen);
+    let game = GameManager::from_fen_string(fen);
+    let generated_fen = game.to_fen_string();
+    println!("{}", generated_fen == fen);
+
 }

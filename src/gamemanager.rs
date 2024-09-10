@@ -1,5 +1,7 @@
 use crate::bitboard;
+
 use bitboard::BitBoard;
+use regex::Regex;
 
 /// This is a representation of a chess game and the various states of each element.
 pub struct GameManager {
@@ -50,11 +52,10 @@ impl GameManager {
     /// * `fen` - a `&str` representing a game's state in FEN
     /// * `returns` - a `GameManager` as generated from the FEN
     pub fn from_fen_string(fen: &str) -> Self {
-        let tokens = fen.split(" ");
-        for t in tokens {
-            println!("{}", t);
-        }
-        
+        let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
+        // check if bitboard is valid w regex
+
+
         /* split fen into tokens
          * grab board - pass it into BitBoard::from_fen_string();
          * match next token - white_to_move = true if "w", false if "b", otherwise, default to true
@@ -63,12 +64,22 @@ impl GameManager {
          * halfmoves - next token 
          * fullmoves - next token 
          */
-        
-        GameManager::default()
-        //todo!();
+        todo!()
     }
 
     pub fn to_fen_string(&self) -> String {
-        todo!();
+        let mut s = self.bitboard.to_fen_string();
+        s.push(' ');
+        s.push(if self.white_to_move {'w'} else {'b'});
+        s.push(' ');
+        s.push_str(if self.castling_rights.len() == 0 {"-"} else {&self.castling_rights});
+        s.push(' ');
+        s.push_str(if self.en_passant_target.len() == 0 {"-"} else {&self.en_passant_target});
+        s.push(' ');
+        s.push_str(&self.halfmoves.to_string());
+        s.push(' ');
+        s.push_str(&self.fullmoves.to_string());
+
+        s
     }
 }
