@@ -22,9 +22,6 @@ pub struct GameManager {
         //          - reset to 0 when player makes move that is capture or pawn move
         //fullmove number - number of completed turns
         //          - increment when black moves
-
-        //will need to call bitboard.to_fen() and append data
-        //GM has stored to the end of it
     bitboard: BitBoard,
     white_to_move: bool,
     castling_rights: String,
@@ -52,28 +49,32 @@ impl GameManager {
     /// * `fen` - a `&str` representing a game's state in FEN
     /// * `returns` - a `GameManager` as generated from the FEN
     pub fn from_fen_string(fen: &str) -> Self {
-        let fen_regex_string = r"^([PNBRQK1-8]{1,8}\/){7}[PNBRQK1-8]{1,8} [wb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([a-h][1-8])|-) \d \d$";
-
-        let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
+        let fen_regex_string = r"^([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d \d$";
         let reggae = Regex::new(&fen_regex_string).unwrap();
+        let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
 
         if tokens.len() == 6 && reggae.is_match(fen) {
-            // will need to validate bitboard against missing digits --> ...pieces/7/pieces...
-            GameManager::default()
+            GameManager {
+                //board space validation implemented at lower level (BitBoard::from_fen_string())
+                bitboard: BitBoard::from_fen_string(&tokens[0]),
+                white_to_move: if tokens[1] == "w" {true} else {false},
+                castling_rights: tokens[2].clone(),
+                en_passant_target: tokens[3].clone(),
+                halfmoves: match tokens[4].parse() {
+                    Ok(x) => x,
+                    Err(_) => 0,
+                },
+                fullmoves: match tokens[5].parse() {
+                    Ok(x) => x,
+                    Err(_) => 0,
+                },
+            }
         } else {
             GameManager::default()
         }
-        /* split fen into tokens
-         * grab board - pass it into BitBoard::from_fen_string();
-         * match next token - white_to_move = true if "w", false if "b", otherwise, default to true
-         * castling_rights = next token or "-"
-         * en passant target - next token or "-"
-         * halfmoves - next token 
-         * fullmoves - next token 
-         */
-        //todo!()
     }
-
+    /// A utility method generating a complete FEN string representation of the game
+    /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {
         let mut s = self.bitboard.to_fen_string();
         s.push(' ');
