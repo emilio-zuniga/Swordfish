@@ -52,10 +52,17 @@ impl GameManager {
     /// * `fen` - a `&str` representing a game's state in FEN
     /// * `returns` - a `GameManager` as generated from the FEN
     pub fn from_fen_string(fen: &str) -> Self {
+        let fen_regex_string = r"^([PNBRQK1-8]{1,8}\/){7}[PNBRQK1-8]{1,8} [wb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([a-h][1-8])|-) \d \d$";
+
         let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
-        // check if bitboard is valid w regex
+        let reggae = Regex::new(&fen_regex_string).unwrap();
 
-
+        if tokens.len() == 6 && reggae.is_match(fen) {
+            // will need to validate bitboard against missing digits --> ...pieces/7/pieces...
+            GameManager::default()
+        } else {
+            GameManager::default()
+        }
         /* split fen into tokens
          * grab board - pass it into BitBoard::from_fen_string();
          * match next token - white_to_move = true if "w", false if "b", otherwise, default to true
@@ -64,7 +71,7 @@ impl GameManager {
          * halfmoves - next token 
          * fullmoves - next token 
          */
-        todo!()
+        //todo!()
     }
 
     pub fn to_fen_string(&self) -> String {
