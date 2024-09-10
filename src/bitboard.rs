@@ -60,26 +60,43 @@ impl BitBoard {
             king_black: 0x0,
         };
         
+        let mut last_char_backslash = false;
+
         for c in fen.chars() {
-            match c {
-                'P' => board.pawns_white |= position,
-                'R' => board.rooks_white |= position,
-                'N' => board.knights_white |= position,
-                'B' => board.bishops_white |= position,
-                'Q' => board.queens_white |= position,
-                'K' => board.king_white |= position,
+            if c.is_alphanumeric() {
+                match c {
+                    'P' => board.pawns_white |= position,
+                    'R' => board.rooks_white |= position,
+                    'N' => board.knights_white |= position,
+                    'B' => board.bishops_white |= position,
+                    'Q' => board.queens_white |= position,
+                    'K' => board.king_white |= position,
+    
+                    'p' => board.pawns_black |= position,
+                    'r' => board.rooks_black |= position,
+                    'n' => board.knights_black |= position,
+                    'b' => board.bishops_black |= position,
+                    'q' => board.queens_black |= position,
+                    'k' => board.king_black |= position,
+                    
+                    '1'..='8' => position >>= c.to_digit(10).unwrap() - 1,
+                    _ => (),
+                }
+                position >>= 1;
+                last_char_backslash = false;
+            } else {
+                match c {
+                    '/' => {
+                        if last_char_backslash || !(position == 0 || position.trailing_zeros() % 8 == 7) {
+                            let temp: u64 = 1 << (position.trailing_zeros() / 8) * 8 - 1;
+                            position = (position | temp) & temp;
+                        }
 
-                'p' => board.pawns_black |= position,
-                'r' => board.rooks_black |= position,
-                'n' => board.knights_black |= position,
-                'b' => board.bishops_black |= position,
-                'q' => board.queens_black |= position,
-                'k' => board.king_black |= position,
-                '1'..='8' => position >>= c.to_digit(10).unwrap() - 1,
-                _ => position <<= 1,
+                        last_char_backslash = true;
+                    },
+                    _ => (),
+                }
             }
-            position >>= 1;
-
         }
 
         board
