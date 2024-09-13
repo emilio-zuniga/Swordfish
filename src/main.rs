@@ -1,9 +1,12 @@
 use gamemanager::GameManager;
+use regex::Regex;
 
 mod gamemanager;
 mod bitboard;
 
 fn main() {
+    let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
+    let reggae = Regex::new(&fen_regex_string).unwrap();
     let tests = [
         "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2",
         "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3",
@@ -31,9 +34,38 @@ fn main() {
   ];
 
     for fen in tests {
-        let game = GameManager::from_fen_string(fen);
+        let game = if is_valid_fen(fen, &reggae){
+            GameManager::from_fen_string(fen)
+        } else {
+            GameManager::default()
+        };
         let generated_fen = game.to_fen_string();
         println!("{}\n{}\n{}\n", fen, generated_fen, fen == generated_fen);
 
+    }
+}
+
+fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
+    let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
+
+    reggae.is_match(fen) && tokens.len() == 6 && {
+        let ranks: Vec<String> = tokens[0].split('/').map(str::to_string).collect();
+        for rank in ranks {
+            let mut count: i32  = 8;
+            if rank.len() !=0 {
+                for c in rank.chars() {
+                    match c {
+                        'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => count -= 1,
+                        '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
+                        _ => (),
+                    }
+                }
+                if count != 0 {
+                    return false;
+                }
+            }
+        }
+        
+        true
     }
 }

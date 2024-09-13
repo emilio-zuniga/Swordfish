@@ -1,5 +1,3 @@
-use regex::Regex;
-
 /// This is a representation of the board. Each piece gets a [`u64`] integer.
 pub struct BitBoard {
     pawns_white: u64,
@@ -17,6 +15,7 @@ pub struct BitBoard {
 }
 
 impl Default for BitBoard {
+    /// Constructs a new `BitBoard`, set to Chess's starting position
     fn default() -> Self {
         // Return a default BitBoard, i.e. a normal starting game.
         // Let's assemble one by bits for now. Later, we'll just use FEN.
@@ -46,66 +45,45 @@ impl BitBoard {
     /// * `fen` - a `&str` representing the board token of a FEN string
     /// * `returns` - a `BitBoard` as generated from the FEN token
     pub fn from_fen_string(fen: &str) -> Self {
-        if !Self::is_valid_board_token(fen){
-            Self::default()
-        } else {
-            let mut position: u64 = 0x80000000_00000000;
-            let mut board = BitBoard{
-                pawns_white: 0x0,
-                rooks_white: 0x0,
-                knights_white: 0x0,
-                bishops_white: 0x0,
-                queens_white: 0x0,
-                king_white: 0x0,
-                pawns_black: 0x0,
-                rooks_black: 0x0,
-                knights_black: 0x0,
-                bishops_black: 0x0,
-                queens_black: 0x0,
-                king_black: 0x0,
-            };
-            
-            let mut last_char_backslash = false;
+        let mut position: u64 = 0x80000000_00000000;
+        let mut board = BitBoard{
+            pawns_white: 0x0,
+            rooks_white: 0x0,
+            knights_white: 0x0,
+            bishops_white: 0x0,
+            queens_white: 0x0,
+            king_white: 0x0,
+            pawns_black: 0x0,
+            rooks_black: 0x0,
+            knights_black: 0x0,
+            bishops_black: 0x0,
+            queens_black: 0x0,
+            king_black: 0x0,
+        };
 
-            for c in fen.chars() {
-                if c.is_alphanumeric() {
-                    match c {
-                        'P' => board.pawns_white |= position,
-                        'R' => board.rooks_white |= position,
-                        'N' => board.knights_white |= position,
-                        'B' => board.bishops_white |= position,
-                        'Q' => board.queens_white |= position,
-                        'K' => board.king_white |= position,
-        
-                        'p' => board.pawns_black |= position,
-                        'r' => board.rooks_black |= position,
-                        'n' => board.knights_black |= position,
-                        'b' => board.bishops_black |= position,
-                        'q' => board.queens_black |= position,
-                        'k' => board.king_black |= position,
-                        
-                        '1'..='8' => position >>= c.to_digit(10).unwrap() - 1,
-                        _ => (),
-                    }
-                    position >>= 1;
-                    last_char_backslash = false;
-                } else {
-                    match c {
-                        '/' => {
-                            if last_char_backslash || !(position == 0 || position.trailing_zeros() % 8 == 7) {
-                                let temp: u64 = 1 << (position.trailing_zeros() / 8) * 8 - 1;
-                                position = (position | temp) & temp;
-                            }
+        for c in fen.chars() {
+            match c {
+                'P' => board.pawns_white |= position,
+                'R' => board.rooks_white |= position,
+                'N' => board.knights_white |= position,
+                'B' => board.bishops_white |= position,
+                'Q' => board.queens_white |= position,
+                'K' => board.king_white |= position,
 
-                            last_char_backslash = true;
-                        },
-                        _ => (),
-                    }
-                }
+                'p' => board.pawns_black |= position,
+                'r' => board.rooks_black |= position,
+                'n' => board.knights_black |= position,
+                'b' => board.bishops_black |= position,
+                'q' => board.queens_black |= position,
+                'k' => board.king_black |= position,
+                '1'..='8' => position >>= c.to_digit(10).unwrap() - 1,
+                _ => position <<= 1,
             }
+            position >>= 1;
 
-            board
         }
+
+        board
     }
 
     /// A utility method generating a FEN string representation of this `BitBoard`
@@ -140,6 +118,7 @@ impl BitBoard {
 
     /// **Debugging** A utility method generating a `String` representation of this `BitBoard`
     /// * `returns` - a `String` representing the board
+    /*
     pub fn to_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
@@ -151,6 +130,7 @@ impl BitBoard {
 
         s
     }
+    */
 
     /// A utility method creating a 2D `char` array representation of this `BitBoard`
     /// * `returns` - a `[[char; 8]; 8]` 2D array representing the board
@@ -185,31 +165,4 @@ impl BitBoard {
         board
     }
 
-    /// A utility method validating the board token of FEN
-    /// * `returns` - `true` iff each rank occupies eight or less files
-    fn is_valid_board_token(fen: &str) -> bool {
-        let fen_board_regex_string = r"^([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8}$";
-        let reggae = Regex::new(&fen_board_regex_string).unwrap();
-
-        reggae.is_match(fen) && {
-            let ranks: Vec<String> = fen.split('/').map(str::to_string).collect();
-            for rank in ranks {
-                let mut count: i32  = 8;
-                if rank.len() !=0 {
-                    for c in rank.chars() {
-                        match c {
-                            'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => count -= 1,
-                            '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
-                            _ => (),
-                        }
-                    }
-                    if count < 0 {
-                        return false;
-                    }
-                }
-            }
-            
-            true
-        }
-    }
 }
