@@ -1,8 +1,10 @@
+use movetable::PieceType;
 use gamemanager::GameManager;
 use regex::Regex;
 
 mod gamemanager;
 mod bitboard;
+mod movetable;
 
 fn main() {
     let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
@@ -42,6 +44,29 @@ fn main() {
         let generated_fen = game.to_fen_string();
         println!("{}\n{}\n{}\n", fen, generated_fen, fen == generated_fen);
 
+    }
+}
+
+
+fn get_move_demo() {
+    let movetable = movetable::MoveTable::default();
+
+    if let Some(v) = movetable.table.get(&(PieceType::Queen, 0x8000000000000000)) {
+        let mut acc = 0_u64;
+        for n in v {
+            acc |= n;
+        }
+        let bitstr = format!("{:064b}", acc);
+        let mut count = 0;
+        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+            print!("{c}");
+            count += 1;
+            if count % 8 == 0 {
+                println!();
+            }
+        }
+    } else {
+        eprintln!("Error!");
     }
 }
 

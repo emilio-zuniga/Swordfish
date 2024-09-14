@@ -21,7 +21,7 @@ impl Default for BitBoard {
         // Let's assemble one by bits for now. Later, we'll just use FEN.
         // Assume black starts at the top of the board. Every two hexadecimal digits
         // represents one row. Top rows are in the high bits.
-        // BLANK: 0b0000000000000000
+        // BLANK: 0b0000000000000000000000000000000000000000000000000000000000000000
         BitBoard {
             pawns_white: 0x00000000_0000FF00,
             rooks_white: 0x00000000_00000081,
