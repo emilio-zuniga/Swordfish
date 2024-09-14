@@ -1,31 +1,50 @@
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
-pub struct Offset(u64, Direction);
-
-/// Indicates the direction in which an offset should be applied.
-#[derive(Debug, Clone)]
-pub enum Direction {
-    /// Use a left-shift operation.
-    Shl,
-    /// Use a right-shift operation.
-    Shr,
-}
-
-#[derive(Debug, Clone)]
 pub struct MoveTable {
-    table: HashMap<PieceType, ([u64; 64], Vec<MoveRays>)>,
+    pub table: HashMap<(PieceType, u64), Vec<u64>>,
 }
 
 impl Default for MoveTable {
     fn default() -> Self {
-        // Manually create a MoveTable.
-        todo!()
+        let mut table: HashMap<(PieceType, u64), Vec<u64>> = HashMap::new();
+
+        let mut shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::Rook, shift), rook_move_rays((i, j)));
+                shift = shift >> 1;
+            }
+        }
+
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::Bishop, shift), bishop_move_rays((i, j)));
+                shift = shift >> 1;
+            }
+        }
+
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert(
+                    (PieceType::Queen, shift),
+                    rook_move_rays((i, j))
+                        .into_iter()
+                        .chain(bishop_move_rays((i, j)))
+                        .collect(),
+                );
+                shift = shift >> 1;
+            }
+        }
+
+        MoveTable { table }
     }
 }
 
 /// An `enum` to represent which type the piece is. This provides indexing for our hash table of moves.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum PieceType {
     Queen,
     Rook,
@@ -37,18 +56,10 @@ pub enum PieceType {
     WhitePawn,
 }
 
-#[derive(Debug, Clone)]
-pub enum MoveRays {
-    Queen { rays: [Vec<u64>; 8] },
-    Rook { rays: [Vec<u64>; 4] },
-    Bishop { rays: [Vec<u64>; 4] },
-    King { rays: [Vec<u64>; 8] },
-    Knight { rays: [Vec<u64>; 8] },
-    BlackPawn { rays: [Vec<u64>; 8] },
-    WhitePawn { rays: [Vec<u64>; 8] },
-}
-
-pub fn rook_move_rays(square: (usize, usize)) -> Vec<MoveRays> {
+/// Generate all possible locations reachable by a rook from the given
+/// square, where the input tuple is an xy coord. taking the origin to
+/// be the top left of the board.
+pub fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
     // For square = (0, 0)...
     //   0 1 2 3 4 5 6 7 i
     // 0 q . . . . . . .
@@ -61,10 +72,7 @@ pub fn rook_move_rays(square: (usize, usize)) -> Vec<MoveRays> {
     // 7 .             .
     // j
 
-    let bitpos = 0x8000000000000000_u64; // Top left.
-
     // To calculate the bit position given an x-y coord, let the x-val be the base, and shift it by eight for each row.
-
     let mut board = [[0_u64; 8]; 8];
     for i in 0..8_usize {
         for j in 0..8_usize {
@@ -78,38 +86,77 @@ pub fn rook_move_rays(square: (usize, usize)) -> Vec<MoveRays> {
 
     board[square.0][square.1] = 0; // Can't move to the current square.
 
-    let mut bitstring = String::new();
+    let mut moves = vec![];
+
     for i in 0..8_usize {
         for j in 0..8_usize {
-            bitstring.push_str(board[i][j].to_string().as_str());
-        }
-        bitstring.push_str("\n");
-    }
-
-    dbg!(&bitstring);
-
-    let mut rays: [Vec<u64>; 4];
-    // The left ray is from board[0][square.1] to board[square.0][square.1].
-    // The right ray is ``  board[square.0][square.1] to board[7][square.1].
-    // The upwards      ``  board[square.0][0] to board[square.0][square.1].
-    // The downwards    ``  board[square.0][square.1] to board[square.0][7].
-
-    let mut leftray = vec![];
-    for i in (0..=square.0).rev() {
-        // Compute the offsets needed to reach these squares.
-        if i <= square.0 {
-            leftray.push(bitpos << i);
+            let mut bitstr = String::new();
+            if board[i][j] == 1 {
+                for k in 0..8_usize {
+                    for l in 0..8_usize {
+                        if i == k && j == l {
+                            bitstr.push_str("1");
+                        } else {
+                            bitstr.push_str("0");
+                        }
+                    }
+                }
+                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+            }
         }
     }
 
-    let mut rightray = vec![];
-    for i in square.0..7 {
-        if i > square.0 {
-            rightray.push(bitpos >> i);
+    moves
+}
+
+pub fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
+    // For square = (1, 1)...
+    //   0 1 2 3 4 5 6 7 i
+    // 0 .   .
+    // 1   b
+    // 2 .   .
+    // 3       .
+    // 4         .
+    // 5           .
+    // 6             .
+    // 7               .
+    // j
+
+    let directions: [(isize, isize); 4] = [(1, 1), (-1, -1), (1, -1), (-1, 1)];
+
+    // To calculate the bit position given an x-y coord, let the x-val be the base, and shift it by eight for each row.
+    let mut board = [[0_u64; 8]; 8];
+    for (dx, dy) in directions {
+        let mut cx = (square.0 as isize + dx) as usize;
+        let mut cy = (square.1 as isize + dy) as usize;
+        while 0 <= cx && cx < 8 && 0 <= cy && cy < 8 {
+            board[cx][cy] = 1;
+            cx = (cx as isize + dx) as usize;
+            cy = (cy as isize + dy) as usize;
         }
     }
 
-    dbg!(&leftray, &rightray);
+    board[square.0][square.1] = 0; // Can't move to the current square.
 
-    todo!()
+    let mut moves = vec![];
+
+    for i in 0..8_usize {
+        for j in 0..8_usize {
+            let mut bitstr = String::new();
+            if board[i][j] == 1 {
+                for k in 0..8_usize {
+                    for l in 0..8_usize {
+                        if i == k && j == l {
+                            bitstr.push_str("1");
+                        } else {
+                            bitstr.push_str("0");
+                        }
+                    }
+                }
+                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+            }
+        }
+    }
+
+    moves
 }
