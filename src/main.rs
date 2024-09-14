@@ -1,5 +1,6 @@
 mod bitboard;
+mod movetable;
 
 fn main() {
-    todo!()
+    crate::movetable::rook_move_rays((0, 2));
 }
