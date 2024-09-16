@@ -1,9 +1,9 @@
-use movetable::PieceType;
 use gamemanager::GameManager;
+use movetable::PieceType;
 use regex::Regex;
 
-mod gamemanager;
 mod bitboard;
+mod gamemanager;
 mod movetable;
 
 fn main() {
@@ -33,25 +33,28 @@ fn main() {
         "K1k5/8/P7/8/8/8/8/8 w - - 0 1",
         "8/k1P5/8/1K6/8/8/8/8 w - - 0 1",
         "8/8/2k5/5q2/5n2/8/5K2/8 b - - 0 1",
-  ];
+    ];
 
     for fen in tests {
-        let game = if is_valid_fen(fen, &reggae){
+        let game = if is_valid_fen(fen, &reggae) {
             GameManager::from_fen_string(fen)
         } else {
             GameManager::default()
         };
         let generated_fen = game.to_fen_string();
         println!("{}\n{}\n{}\n", fen, generated_fen, fen == generated_fen);
-
     }
-}
 
+    get_move_demo();
+}
 
 fn get_move_demo() {
     let movetable = movetable::MoveTable::default();
 
-    if let Some(v) = movetable.table.get(&(PieceType::Queen, 0x8000000000000000)) {
+    if let Some(v) = movetable
+        .table
+        .get(&(PieceType::WhiteKing, 0x8000000000000000))
+    {
         let mut acc = 0_u64;
         for n in v {
             acc |= n;
@@ -76,11 +79,13 @@ fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
     reggae.is_match(fen) && tokens.len() == 6 && {
         let ranks: Vec<String> = tokens[0].split('/').map(str::to_string).collect();
         for rank in ranks {
-            let mut count: i32  = 8;
-            if rank.len() !=0 {
+            let mut count: i32 = 8;
+            if rank.len() != 0 {
                 for c in rank.chars() {
                     match c {
-                        'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => count -= 1,
+                        'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
+                            count -= 1
+                        }
                         '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
                         _ => (),
                     }
@@ -90,7 +95,7 @@ fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
                 }
             }
         }
-        
+
         true
     }
 }
