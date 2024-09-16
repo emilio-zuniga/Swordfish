@@ -39,6 +39,14 @@ impl Default for MoveTable {
             }
         }
 
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::WhiteKing, shift), king_move_rays((i, j)));
+                shift = shift >> 1;
+            }
+        }
+
         MoveTable { table }
     }
 }
@@ -140,6 +148,62 @@ pub fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     let mut moves = vec![];
 
+    for i in 0..8_usize {
+        for j in 0..8_usize {
+            let mut bitstr = String::new();
+            if board[i][j] == 1 {
+                for k in 0..8_usize {
+                    for l in 0..8_usize {
+                        if i == k && j == l {
+                            bitstr.push_str("1");
+                        } else {
+                            bitstr.push_str("0");
+                        }
+                    }
+                }
+                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+            }
+        }
+    }
+
+    moves
+}
+
+/// Return the possible moves of a king on the given square, ignoring castling and other special moves.
+fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
+    // For square = (1, 1)...
+    //   0 1 2 3 4 5 6 7 i
+    // 0 . . .
+    // 1 . b .
+    // 2 . . .
+    // 3
+    // 4
+    // 5
+    // 6
+    // 7
+    // j
+
+    let directions: [(isize, isize); 8] = [
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
+        (1, 0),
+        (1, -1),
+        (0, -1),
+    ];
+    let mut board = [[0_u64; 8]; 8];
+
+    for (dx, dy) in directions {
+        let mut cx = (square.0 as isize + dx) as usize;
+        let mut cy = (square.1 as isize + dy) as usize;
+        if 0 <= cx && cx < 8 && 0 <= cy && cy < 8 {
+            board[cx][cy] = 1;
+        }
+    }
+
+    let mut moves = vec![];
     for i in 0..8_usize {
         for j in 0..8_usize {
             let mut bitstr = String::new();
