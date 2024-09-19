@@ -47,6 +47,14 @@ impl Default for MoveTable {
             }
         }
 
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::Knight, shift), knight_move_hops((i, j)));
+                shift = shift >> 1;
+            }
+        }
+
         MoveTable { table }
     }
 }
@@ -220,6 +228,59 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
                 moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
             }
         }
+    }
+
+    moves
+}
+
+/// Returns the possible moves of a Knight on the given square.
+fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
+    // For square = (1, 1)...
+    //   0 1 2 3 4 5 6 7 i
+    // 0       .
+    // 1   p  
+    // 2       .
+    // 3 .   . 
+    // 4
+    // 5
+    // 6
+    // 7
+    // j
+
+    let mut moves = Vec::new();
+    let position = 1 << ((7 - square.0)*8 + (7 - square.1));
+
+    // North: North West Square
+    if square.0 > 0 && square.1 > 1 {
+        moves.push(position << 17);
+    }
+    // North: North East Square
+    if square.0 < 7 && square.1 > 1 {
+        moves.push(position << 15);
+    }
+    //North: West-most Square
+    if square.0 > 1 && square.1 > 0 {
+        moves.push(position << 10);
+    }
+    //North: East-most Square
+    if square.0 < 6 && square.1 > 0 {
+        moves.push(position << 6);
+    }
+    //South: West-Most Square
+    if square.0 > 1 && square.1 < 7 {
+        moves.push(position >> 6);
+    }
+    //South: East-Most Square
+    if square.0 < 6 && square.1 < 7 {
+        moves.push(position >> 10);
+    }
+    //South: South West Square
+    if square.0 > 0 && square.1 < 6 {
+        moves.push(position >> 15);
+    }
+    //South: South East Square
+    if square.0 < 7 && square.1 < 6 {
+        moves.push(position >> 17);
     }
 
     moves
