@@ -15,7 +15,30 @@ fn get_move_demo() {
 
     if let Some(v) = movetable
         .table
-        .get(&(PieceType::Knight, 0x80000))
+        .get(&(PieceType::BlackPawn, 0x0040000000000000))
+    {
+        let mut acc = 0_u64;
+        for n in v {
+            acc |= n;
+        }
+        let bitstr = format!("{:064b}", acc);
+        let mut count = 0;
+        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+            print!("{c}");
+            count += 1;
+            if count % 8 == 0 {
+                println!();
+            }
+        }
+    } else {
+        eprintln!("Error!");
+    }
+
+    println!();
+
+    if let Some(v) = movetable
+        .table
+        .get(&(PieceType::BlackPawn, 0x0020000000000000))
     {
         let mut acc = 0_u64;
         for n in v {
@@ -42,7 +65,7 @@ fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
         let ranks: Vec<String> = tokens[0].split('/').map(str::to_string).collect();
         for rank in ranks {
             let mut count: i32 = 8;
-            if rank.len() != 0 {
+            if !rank.is_empty() {
                 for c in rank.chars() {
                     match c {
                         'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
@@ -65,7 +88,7 @@ fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
 fn fen_demo() {
     //Note: Wherever we implement FEN passing, Regex will need to be put there
     let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
-    let reggae = Regex::new(&fen_regex_string).unwrap();
+    let reggae = Regex::new(fen_regex_string).unwrap();
     let tests = [
         "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2",
         "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3",
