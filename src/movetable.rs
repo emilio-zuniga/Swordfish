@@ -13,7 +13,7 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((PieceType::Rook, shift), rook_move_rays((i, j)));
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -21,7 +21,7 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((PieceType::Bishop, shift), bishop_move_rays((i, j)));
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -35,7 +35,7 @@ impl Default for MoveTable {
                         .chain(bishop_move_rays((i, j)))
                         .collect(),
                 );
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -43,7 +43,7 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((PieceType::WhiteKing, shift), king_move_rays((i, j)));
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -51,7 +51,7 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((PieceType::Knight, shift), knight_move_hops((i, j)));
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -59,7 +59,7 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((PieceType::BlackPawn, shift), black_pawn_moves((i, j)));
-                shift = shift >> 1;
+                shift >>= 1;
             }
         }
 
@@ -119,9 +119,9 @@ pub fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
                 for k in 0..8_usize {
                     for l in 0..8_usize {
                         if i == k && j == l {
-                            bitstr.push_str("1");
+                            bitstr.push('1');
                         } else {
-                            bitstr.push_str("0");
+                            bitstr.push('0');
                         }
                     }
                 }
@@ -171,9 +171,9 @@ pub fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
                 for k in 0..8_usize {
                     for l in 0..8_usize {
                         if i == k && j == l {
-                            bitstr.push_str("1");
+                            bitstr.push('1');
                         } else {
-                            bitstr.push_str("0");
+                            bitstr.push('0');
                         }
                     }
                 }
@@ -212,8 +212,8 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
     let mut board = [[0_u64; 8]; 8];
 
     for (dx, dy) in directions {
-        let mut cx = (square.0 as isize + dx) as usize;
-        let mut cy = (square.1 as isize + dy) as usize;
+        let cx = (square.0 as isize + dx) as usize;
+        let cy = (square.1 as isize + dy) as usize;
         if cx < 8 && cy < 8 {
             board[cx][cy] = 1;
         }
@@ -227,9 +227,9 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
                 for k in 0..8_usize {
                     for l in 0..8_usize {
                         if i == k && j == l {
-                            bitstr.push_str("1");
+                            bitstr.push('1');
                         } else {
-                            bitstr.push_str("0");
+                            bitstr.push('0');
                         }
                     }
                 }
@@ -314,15 +314,15 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     for (dx, dy) in directions {
         if dx == 0 && dy == 2 {
             if square.1 == 1 {
-                let mut cx = (square.0 as isize + dx) as usize;
-                let mut cy = (square.1 as isize + dy) as usize;
+                let cx = (square.0 as isize + dx) as usize;
+                let cy = (square.1 as isize + dy) as usize;
                 if cx < 8 && cy < 8 {
                     board[cx][cy] = 1;
                 }
             }
         } else {
-            let mut cx = (square.0 as isize + dx) as usize;
-            let mut cy = (square.1 as isize + dy) as usize;
+            let cx = (square.0 as isize + dx) as usize;
+            let cy = (square.1 as isize + dy) as usize;
             if cx < 8 && cy < 8 {
                 board[cx][cy] = 1;
             }
@@ -339,9 +339,9 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
                 for k in 0..8_usize {
                     for l in 0..8_usize {
                         if i == k && j == l {
-                            bitstr.push_str("1");
+                            bitstr.push('1');
                         } else {
-                            bitstr.push_str("0");
+                            bitstr.push('0');
                         }
                     }
                 }

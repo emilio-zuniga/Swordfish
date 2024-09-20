@@ -50,17 +50,11 @@ impl GameManager {
         GameManager {
             //board space validation implemented at higher level (is_valid_fen())
             bitboard: BitBoard::from_fen_string(&tokens[0]),
-            white_to_move: if tokens[1] == "w" {true} else {false},
+            white_to_move: tokens[1] == "w",
             castling_rights: tokens[2].clone(),
             en_passant_target: tokens[3].clone(),
-            halfmoves: match tokens[4].parse() {
-                Ok(x) => x,
-                Err(_) => 0,
-            },
-            fullmoves: match tokens[5].parse() {
-                Ok(x) => x,
-                Err(_) => 0,
-            },
+            halfmoves: tokens[4].parse().unwrap_or_default(),
+            fullmoves: tokens[5].parse().unwrap_or_default(),
         }
     }
     
@@ -71,9 +65,9 @@ impl GameManager {
         s.push(' ');
         s.push(if self.white_to_move {'w'} else {'b'});
         s.push(' ');
-        s.push_str(if self.castling_rights.len() == 0 {"-"} else {&self.castling_rights});
+        s.push_str(if self.castling_rights.is_empty() {"-"} else {&self.castling_rights});
         s.push(' ');
-        s.push_str(if self.en_passant_target.len() == 0 {"-"} else {&self.en_passant_target});
+        s.push_str(if self.en_passant_target.is_empty() {"-"} else {&self.en_passant_target});
         s.push(' ');
         s.push_str(&self.halfmoves.to_string());
         s.push(' ');
