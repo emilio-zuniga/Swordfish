@@ -55,6 +55,14 @@ impl Default for MoveTable {
             }
         }
 
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::BlackPawn, shift), black_pawn_moves((i, j)));
+                shift = shift >> 1;
+            }
+        }
+
         MoveTable { table }
     }
 }
@@ -145,7 +153,7 @@ pub fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
     for (dx, dy) in directions {
         let mut cx = (square.0 as isize + dx) as usize;
         let mut cy = (square.1 as isize + dy) as usize;
-        while 0 <= cx && cx < 8 && 0 <= cy && cy < 8 {
+        while cx < 8 && cy < 8 {
             board[cx][cy] = 1;
             cx = (cx as isize + dx) as usize;
             cy = (cy as isize + dy) as usize;
@@ -182,7 +190,7 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
     // For square = (1, 1)...
     //   0 1 2 3 4 5 6 7 i
     // 0 . . .
-    // 1 . b .
+    // 1 . k .
     // 2 . . .
     // 3
     // 4
@@ -206,7 +214,7 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
     for (dx, dy) in directions {
         let mut cx = (square.0 as isize + dx) as usize;
         let mut cy = (square.1 as isize + dy) as usize;
-        if 0 <= cx && cx < 8 && 0 <= cy && cy < 8 {
+        if cx < 8 && cy < 8 {
             board[cx][cy] = 1;
         }
     }
@@ -238,9 +246,9 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
     // For square = (1, 1)...
     //   0 1 2 3 4 5 6 7 i
     // 0       .
-    // 1   p  
+    // 1   n
     // 2       .
-    // 3 .   . 
+    // 3 .   .
     // 4
     // 5
     // 6
@@ -248,7 +256,7 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
     // j
 
     let mut moves = Vec::new();
-    let position = 1 << ((7 - square.0)*8 + (7 - square.1));
+    let position = 1 << ((7 - square.0) * 8 + (7 - square.1));
 
     // North: North West Square
     if square.0 > 0 && square.1 > 1 {
@@ -281,6 +289,65 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
     //South: South East Square
     if square.0 < 7 && square.1 < 6 {
         moves.push(position >> 17);
+    }
+
+    moves
+}
+
+/// Assumes black starts at the top of the board.
+fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
+    // For square = (1, 1)...
+    //   0 1 2 3 4 5 6 7 i
+    // 0
+    // 1   p
+    // 2 . . .
+    // 3 ␣ . ␣
+    // 4 ╰───┴─╢ Only on captures!
+    // 5   ␣
+    // 6   ╰───╢ Only from the second rank!
+    // 7
+    // j
+
+    let mut board = [[0_u64; 8]; 8];
+    let directions: [(isize, isize); 4] = [(1, -1), (1, 0), (1, 1), (2, 0)];
+
+    for (dx, dy) in directions {
+        if dx == 0 && dy == 2 {
+            if square.1 == 1 {
+                let mut cx = (square.0 as isize + dx) as usize;
+                let mut cy = (square.1 as isize + dy) as usize;
+                if cx < 8 && cy < 8 {
+                    board[cx][cy] = 1;
+                }
+            }
+        } else {
+            let mut cx = (square.0 as isize + dx) as usize;
+            let mut cy = (square.1 as isize + dy) as usize;
+            if cx < 8 && cy < 8 {
+                board[cx][cy] = 1;
+            }
+        }
+    }
+
+    board[square.0][square.1] = 0; // Can't move to the current square.
+
+    let mut moves = vec![];
+    for i in 0..8_usize {
+        for j in 0..8_usize {
+            let mut bitstr = String::new();
+            if board[i][j] == 1 {
+                for k in 0..8_usize {
+                    for l in 0..8_usize {
+                        if i == k && j == l {
+                            bitstr.push_str("1");
+                        } else {
+                            bitstr.push_str("0");
+                        }
+                    }
+                }
+                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+            }
+        }
     }
 
     moves

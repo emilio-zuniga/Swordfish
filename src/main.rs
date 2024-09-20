@@ -15,7 +15,30 @@ fn get_move_demo() {
 
     if let Some(v) = movetable
         .table
-        .get(&(PieceType::Knight, 0x80000))
+        .get(&(PieceType::BlackPawn, 0x0040000000000000))
+    {
+        let mut acc = 0_u64;
+        for n in v {
+            acc |= n;
+        }
+        let bitstr = format!("{:064b}", acc);
+        let mut count = 0;
+        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+            print!("{c}");
+            count += 1;
+            if count % 8 == 0 {
+                println!();
+            }
+        }
+    } else {
+        eprintln!("Error!");
+    }
+
+    println!();
+
+    if let Some(v) = movetable
+        .table
+        .get(&(PieceType::BlackPawn, 0x0020000000000000))
     {
         let mut acc = 0_u64;
         for n in v {
