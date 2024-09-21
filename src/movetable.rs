@@ -56,8 +56,9 @@ impl Default for MoveTable {
         }
 
         shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
+                                    // No move generation for squares which pawns cannot visit.
+        for i in 1..7_usize {
+            for j in 1..7_usize {
                 table.insert((PieceType::BlackPawn, shift), black_pawn_moves((i, j)));
                 shift >>= 1;
             }
