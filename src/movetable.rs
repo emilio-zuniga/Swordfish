@@ -63,6 +63,14 @@ impl Default for MoveTable {
             }
         }
 
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((PieceType::WhitePawn, shift), white_pawn_moves((i, j)));
+                shift >>= 1;
+            }
+        }
+
         MoveTable { table }
     }
 }
@@ -348,6 +356,33 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
                 moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
             }
         }
+    }
+
+    moves
+}
+
+/// Returns a 'Vec<u64>' containing the possible moves of a white pawn, including standard captures.\
+/// **NOTE**: invalid starting pawn spaces, such as those on the 1st & 8th ranks, return an empty vector
+fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
+    let mut moves = Vec::new();
+    let position: u64 = 1 << ((7 - square.0) * 8 + (7 - square.1));
+
+    let a_file: u64 = 0x80808080_80808080;
+    let h_file: u64 = 0x01010101_01010101;
+    let rank_2: u64 = 0x00000000_0000FF00;
+    let rank_3_thru_7: u64 = 0x00FFFFFF_FFFF0000;
+
+    if (position & (rank_2 | rank_3_thru_7)) == position {
+        moves.push(position << 8);
+        if (position & rank_2) == position {
+            moves.push(position << 16);
+        }
+        if (position & a_file) != position {
+            moves.push(position << 9);
+        }
+        if (position & h_file) != position {
+            moves.push(position << 7);
+        } 
     }
 
     moves

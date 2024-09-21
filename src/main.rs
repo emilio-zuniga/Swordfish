@@ -85,6 +85,7 @@ fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
     }
 }
 
+#[allow(dead_code)]
 fn fen_demo() {
     //Note: Wherever we implement FEN passing, Regex will need to be put there
     let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
