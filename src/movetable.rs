@@ -18,7 +18,7 @@ impl Default for MoveTable {
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((Color::Both, PieceType::Rook, shift, MoveType::Normal), rook_move_rays((i, j)));
+                table.insert((Color::Both, PieceType::Knight, shift, MoveType::Normal), knight_move_hops((i, j)));
                 shift >>= 1;
             }
         }
@@ -27,6 +27,14 @@ impl Default for MoveTable {
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert((Color::Both, PieceType::Bishop, shift, MoveType::Normal), bishop_move_rays((i, j)));
+                shift >>= 1;
+            }
+        }
+
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for i in 0..8_usize {
+            for j in 0..8_usize {
+                table.insert((Color::Both, PieceType::Rook, shift, MoveType::Normal), rook_move_rays((i, j)));
                 shift >>= 1;
             }
         }
@@ -48,19 +56,20 @@ impl Default for MoveTable {
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((Color::Both, PieceType::Knight, shift, MoveType::Normal), knight_move_hops((i, j)));
-                shift >>= 1;
-            }
-        }
-/*
-        shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((PieceType::WhiteKing, shift), king_move_rays((i, j)));
+                table.insert((Color::Both, PieceType::King, shift, MoveType::Normal), king_move_rays((i, j)));
                 shift >>= 1;
             }
         }
 
+        //Note:
+        /* All that is left to add to lookup table is:
+         *      - each color's castling privileges
+         *      - each color's pawn pushes
+         *      - each color's pawn captures
+         *      - each color's pawn promotions (just check w (position & 0x00ff0000_00000000) == position)
+         */
+
+/*
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
@@ -406,8 +415,13 @@ impl MoveTable {
             },
             PieceType::King => {
                 match move_type {
-                    MoveType::Castle => self.table.get(&(color, piece, position, move_type)).unwrap().clone(),
-                    _ => self.table.get(&(color, piece, position, MoveType::Normal)).unwrap().clone(), //implement
+                    MoveType::Castle => {
+                        match color {
+                            Color::Black | Color::White => self.table.get(&(color, piece, position, move_type)).unwrap().clone(),
+                            _ => Vec::new() //theoretically unreachable
+                        }
+                    }
+                    _ => self.table.get(&(Color::Both, piece, position, MoveType::Normal)).unwrap().clone(),
                 }
             },
         }

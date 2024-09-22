@@ -112,4 +112,6 @@ impl GameManager {
             true
         }
     }
+
+    // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 }

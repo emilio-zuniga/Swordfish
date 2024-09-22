@@ -9,8 +9,7 @@ mod movetable;
 mod types;
 
 fn main() {
-    //board_to_and_from_fen_demo();
-    get_move_demo(Color::White, PieceType::Rook, (3, 3), MoveType::Normal);
+    get_move_demo(Color::White, PieceType::Knight, (2, 2), MoveType::Normal);
 }
 
 #[allow(dead_code)]
