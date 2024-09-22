@@ -116,9 +116,9 @@ impl BitBoard {
         s
     }
 
+    #[allow(dead_code)]
     /// **Debugging** A utility method generating a `String` representation of this `BitBoard`
     /// * `returns` - a `String` representing the board
-    /*
     pub fn to_string(&self) -> String {
         let mut s = String::new();
         let board = self.to_board();
@@ -130,7 +130,6 @@ impl BitBoard {
 
         s
     }
-    */
 
     /// A utility method creating a 2D `char` array representation of this `BitBoard`
     /// * `returns` - a `[[char; 8]; 8]` 2D array representing the board

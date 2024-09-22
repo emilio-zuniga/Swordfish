@@ -1,5 +1,6 @@
 use crate::bitboard;
 use bitboard::BitBoard;
+use regex::Regex;
 
 /// This is a representation of a chess game and the various states of each element.
 pub struct GameManager {
@@ -41,20 +42,25 @@ impl Default for GameManager {
     }
 }
 
+#[allow(dead_code)]
 impl GameManager {
     /// A utility method for generating a new `GameManager` from a FEN string\
     /// * `fen` - a `&str` representing a game's state in FEN
     /// * `returns` - a `GameManager` as generated from the FEN
     pub fn from_fen_string(fen: &str) -> Self {
-        let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
-        GameManager {
-            //board space validation implemented at higher level (is_valid_fen())
-            bitboard: BitBoard::from_fen_string(&tokens[0]),
-            white_to_move: tokens[1] == "w",
-            castling_rights: tokens[2].clone(),
-            en_passant_target: tokens[3].clone(),
-            halfmoves: tokens[4].parse().unwrap_or_default(),
-            fullmoves: tokens[5].parse().unwrap_or_default(),
+        if Self::is_valid_fen(fen) {
+            let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
+            GameManager {
+                //board space validation implemented at higher level (is_valid_fen())
+                bitboard: BitBoard::from_fen_string(&tokens[0]),
+                white_to_move: tokens[1] == "w",
+                castling_rights: tokens[2].clone(),
+                en_passant_target: tokens[3].clone(),
+                halfmoves: tokens[4].parse().unwrap_or_default(),
+                fullmoves: tokens[5].parse().unwrap_or_default(),
+            }
+        } else {
+            GameManager::default()
         }
     }
     
@@ -74,5 +80,36 @@ impl GameManager {
         s.push_str(&self.fullmoves.to_string());
 
         s
+    }
+
+    /// A utility function validating FEN strings
+    /// * `returns` - a `bool` indicating whether or not the string follows FEN guidelines
+    fn is_valid_fen(fen: &str) -> bool {
+        let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
+        let reggae = Regex::new(fen_regex_string).unwrap();
+        let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
+
+        reggae.is_match(fen) && tokens.len() == 6 && {
+            let ranks: Vec<String> = tokens[0].split('/').map(str::to_string).collect();
+            for rank in ranks {
+                let mut count: i32 = 8;
+                if !rank.is_empty() {
+                    for c in rank.chars() {
+                        match c {
+                            'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
+                                count -= 1
+                            }
+                            '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
+                            _ => (),
+                        }
+                    }
+                    if count != 0 {
+                        return false;
+                    }
+                }
+            }
+
+            true
+        }
     }
 }
