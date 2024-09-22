@@ -164,4 +164,5 @@ impl BitBoard {
         board
     }
 
+    // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 }

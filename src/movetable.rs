@@ -1,18 +1,24 @@
+use crate::types;
+use crate::types::MoveType;
+
 use std::collections::HashMap;
+use std::usize;
+use types::PieceType;
+use types::Color;
 
 #[derive(Debug, Clone)]
 pub struct MoveTable {
-    pub table: HashMap<(PieceType, u64), Vec<u64>>,
+    table: HashMap<(Color, PieceType, u64, MoveType), Vec<u64>>,
 }
 
 impl Default for MoveTable {
     fn default() -> Self {
-        let mut table: HashMap<(PieceType, u64), Vec<u64>> = HashMap::new();
+        let mut table: HashMap<(Color, PieceType, u64, MoveType), Vec<u64>> = HashMap::new();
 
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((PieceType::Rook, shift), rook_move_rays((i, j)));
+                table.insert((Color::Both, PieceType::Rook, shift, MoveType::Normal), rook_move_rays((i, j)));
                 shift >>= 1;
             }
         }
@@ -20,16 +26,16 @@ impl Default for MoveTable {
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((PieceType::Bishop, shift), bishop_move_rays((i, j)));
+                table.insert((Color::Both, PieceType::Bishop, shift, MoveType::Normal), bishop_move_rays((i, j)));
                 shift >>= 1;
             }
         }
-
+        
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
                 table.insert(
-                    (PieceType::Queen, shift),
+                    (Color::Both, PieceType::Queen, shift, MoveType::Normal),
                     rook_move_rays((i, j))
                         .into_iter()
                         .chain(bishop_move_rays((i, j)))
@@ -42,15 +48,15 @@ impl Default for MoveTable {
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((PieceType::WhiteKing, shift), king_move_rays((i, j)));
+                table.insert((Color::Both, PieceType::Knight, shift, MoveType::Normal), knight_move_hops((i, j)));
                 shift >>= 1;
             }
         }
-
+/*
         shift = 0x8000000000000000; // Piece in the top left corner.
         for i in 0..8_usize {
             for j in 0..8_usize {
-                table.insert((PieceType::Knight, shift), knight_move_hops((i, j)));
+                table.insert((PieceType::WhiteKing, shift), king_move_rays((i, j)));
                 shift >>= 1;
             }
         }
@@ -70,22 +76,10 @@ impl Default for MoveTable {
                 shift >>= 1;
             }
         }
+         */
 
         MoveTable { table }
     }
-}
-
-/// An `enum` to represent which type the piece is. This provides indexing for our hash table of moves.
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
-pub enum PieceType {
-    Queen,
-    Rook,
-    Bishop,
-    Knight,
-    BlackKing,
-    WhiteKing,
-    BlackPawn,
-    WhitePawn,
 }
 
 /// Generate all possible locations reachable by a rook from the given
@@ -386,4 +380,49 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     }
 
     moves
+}
+
+impl MoveTable {
+    /// **NOTE**: Something to encapsulate data\
+    /// Still needs implementation
+    pub fn get_moves(&self, color: Color, piece: PieceType, square: (usize, usize), move_type: MoveType) -> Vec<u64> {
+        let position = 1 << ((7 - square.0) * 8 + (7 - square.1));
+
+        match piece {
+            PieceType::Knight | PieceType::Bishop | PieceType::Rook | PieceType::Queen => {
+                self.table.get(&(Color::Both, piece, position, MoveType::Normal)).unwrap().clone()
+            },
+            PieceType::Pawn => {
+                match color {
+                    Color::Black | Color::White => {
+                        match move_type {
+                            MoveType::Capture => self.table.get(&(color, piece, position, move_type)).unwrap().clone(),
+                            MoveType::Promotion(new_piece) => self.table.get(&(color, piece, position, MoveType::Promotion(new_piece))).unwrap().clone(),
+                            _ => self.table.get(&(color, piece, position, MoveType::Normal)).unwrap().clone(),
+                        }
+                    },
+                    _ => Vec::new() //theoretically unreachable
+                }
+            },
+            PieceType::King => {
+                match move_type {
+                    MoveType::Castle => self.table.get(&(color, piece, position, move_type)).unwrap().clone(),
+                    _ => self.table.get(&(color, piece, position, MoveType::Normal)).unwrap().clone(), //implement
+                }
+            },
+        }
+
+    }
+
+    /// **NOTE**: Utility to get just a board w attacks
+    pub fn get_moves_as_bitboard(&self, color: Color, piece: PieceType, square: (usize, usize), move_type: MoveType) -> u64 {
+        let moves = &self.get_moves(color, piece, square, move_type);
+        let mut board = 0_u64;
+        
+        for possible_move in moves {
+            board |= possible_move;
+        }
+
+        board
+    }
 }

@@ -1,61 +1,31 @@
 use gamemanager::GameManager;
-use movetable::PieceType;
+use types::Color;
+use types::MoveType;
+use types::PieceType;
 
 mod bitboard;
 mod gamemanager;
 mod movetable;
+mod types;
 
 fn main() {
     //board_to_and_from_fen_demo();
-    //get_move_demo();
+    get_move_demo(Color::White, PieceType::Rook, (3, 3), MoveType::Normal);
 }
 
 #[allow(dead_code)]
-fn get_move_demo() {
+fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize), move_type: MoveType) {
     let movetable = movetable::MoveTable::default();
-
-    if let Some(v) = movetable
-        .table
-        .get(&(PieceType::BlackPawn, 0x0040000000000000))
-    {
-        let mut acc = 0_u64;
-        for n in v {
-            acc |= n;
+    let possibilities = movetable.get_moves_as_bitboard(color, piece, square, move_type);
+    
+    let bitstr = format!("{:064b}", possibilities);
+    let mut count = 0;
+    for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+        print!("{c}");
+        count += 1;
+        if count % 8 == 0 {
+            println!();
         }
-        let bitstr = format!("{:064b}", acc);
-        let mut count = 0;
-        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
-            print!("{c}");
-            count += 1;
-            if count % 8 == 0 {
-                println!();
-            }
-        }
-    } else {
-        eprintln!("Error!");
-    }
-
-    println!();
-
-    if let Some(v) = movetable
-        .table
-        .get(&(PieceType::BlackPawn, 0x0020000000000000))
-    {
-        let mut acc = 0_u64;
-        for n in v {
-            acc |= n;
-        }
-        let bitstr = format!("{:064b}", acc);
-        let mut count = 0;
-        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
-            print!("{c}");
-            count += 1;
-            if count % 8 == 0 {
-                println!();
-            }
-        }
-    } else {
-        eprintln!("Error!");
     }
 }
 
