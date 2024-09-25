@@ -306,64 +306,31 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
 }
 
 /// Assumes black starts at the top of the board.
-fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
-    // For square = (1, 1)...
-    //   0 1 2 3 4 5 6 7 i
-    // 0
-    // 1   p
-    // 2 . . .
-    // 3 ␣ . ␣
-    // 4 ╰───┴─╢ Only on captures!
-    // 5   ␣
-    // 6   ╰───╢ Only from the second rank!
-    // 7
-    // j
-
-    let mut board = [[0_u64; 8]; 8];
-    let directions: [(isize, isize); 4] = [(1, -1), (1, 0), (1, 1), (2, 0)];
-
-    for (dx, dy) in directions {
-        if dx == 0 && dy == 2 {
-            if square.1 == 1 {
-                let cx = (square.0 as isize + dx) as usize;
-                let cy = (square.1 as isize + dy) as usize;
-                if cx < 8 && cy < 8 {
-                    board[cx][cy] = 1;
-                }
-            }
-        } else {
-            let cx = (square.0 as isize + dx) as usize;
-            let cy = (square.1 as isize + dy) as usize;
-            if cx < 8 && cy < 8 {
-                board[cx][cy] = 1;
-            }
-        }
-    }
-
-    board[square.0][square.1] = 0; // Can't move to the current square.
-
-    let mut moves = vec![];
-    for i in 0..8_usize {
-        for j in 0..8_usize {
-            let mut bitstr = String::new();
-            if board[i][j] == 1 {
-                for k in 0..8_usize {
-                    for l in 0..8_usize {
-                        if i == k && j == l {
-                            bitstr.push('1');
-                        } else {
-                            bitstr.push('0');
-                        }
-                    }
-                }
-                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
-            }
-        }
-    }
-
-    moves
+fn black_pawn_pushes(square: (usize, usize)) -> Vec<u64> {
+    todo!()
 }
 
+fn white_pawn_pushes(square: (usize, usize)) -> Vec<u64> {
+    todo!()
+}
+
+fn black_pawn_promotions(square: (usize, usize)) -> Vec<u64> {
+    todo!()
+}
+
+fn white_pawn_promotions(square: (usize, usize)) -> Vec<u64> {
+    todo!()
+}
+
+fn black_pawn_captures(square: (usize, usize)) -> Vec<u64> {
+    todo!()
+} 
+
+fn white_pawn_captures(square: (usize, usize)) -> Vec<u64> {
+    todo!()
+} 
+
+/*
 /// Returns a 'Vec<u64>' containing the possible moves of a white pawn, including standard captures.\
 /// **NOTE**: invalid starting pawn spaces, such as those on the 1st & 8th ranks, return an empty vector
 fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
@@ -389,7 +356,7 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     }
 
     moves
-}
+} */
 
 impl MoveTable {
     /// **NOTE**: Something to encapsulate data\
@@ -428,7 +395,8 @@ impl MoveTable {
 
     }
 
-    /// **NOTE**: Utility to get just a board w attacks
+    /// A utility method generating a bitboard of a piece's attacking squares
+    /// * 'returns' - a 'u64' bitboard denoting the attacking squares of a piece
     pub fn get_moves_as_bitboard(&self, color: Color, piece: PieceType, square: (usize, usize), move_type: MoveType) -> u64 {
         let moves = &self.get_moves(color, piece, square, move_type);
         let mut board = 0_u64;
