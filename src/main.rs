@@ -1,7 +1,5 @@
 use gamemanager::GameManager;
-use types::Color;
-use types::MoveType;
-use types::PieceType;
+use crate::types::{Color, PieceType};
 
 mod bitboard;
 mod gamemanager;
@@ -9,13 +7,19 @@ mod movetable;
 mod types;
 
 fn main() {
-    get_move_demo(Color::White, PieceType::Knight, (2, 2), MoveType::Normal);
+    get_move_demo(Color::Black, PieceType::Pawn, (6,1));
+    println!();
+    get_move_demo(Color::Black, PieceType::Pawn, (5,1));
+    println!();
+    get_move_demo(Color::Black, PieceType::Knight, (5,1));
+    println!();
+    get_move_demo(Color::Black, PieceType::Bishop, (5,1));
 }
 
 #[allow(dead_code)]
-fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize), move_type: MoveType) {
+fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
     let movetable = movetable::MoveTable::default();
-    let possibilities = movetable.get_moves_as_bitboard(color, piece, square, move_type);
+    let possibilities = movetable.get_moves_as_bitboard(color, piece, square);
     
     let bitstr = format!("{:064b}", possibilities);
     let mut count = 0;

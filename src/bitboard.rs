@@ -1,3 +1,5 @@
+use crate::types::{Color, PieceType};
+
 /// This is a representation of the board. Each piece gets a [`u64`] integer.
 pub struct BitBoard {
     pawns_white: u64,
@@ -42,7 +44,7 @@ impl Default for BitBoard {
 
 impl BitBoard {
     /// A utility method for generating a `BitBoard` from a FEN string\
-    /// * `fen` - a `&str` representing the board token of a FEN string
+    /// * `fen` - a `&str` representing the board token of a FEN string\
     /// * `returns` - a `BitBoard` as generated from the FEN token
     pub fn from_fen_string(fen: &str) -> Self {
         let mut position: u64 = 0x80000000_00000000;
@@ -164,5 +166,33 @@ impl BitBoard {
         board
     }
 
-    // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
+    #[allow(dead_code)]
+    /// A utility method returning the bitboard representing the placement\
+    /// of this `PieceType` of this `Color`\
+    /// * `color` - the `Color` of the pieces\
+    /// * `pieces` - the `PieceType` of the pieces 
+    pub fn get_bitboard(&self, color: Color, piece: PieceType) -> u64 {
+        match color {
+            Color::White => {
+                match piece {
+                    PieceType::Pawn => self.pawns_white,
+                    PieceType::Knight => self.knights_white,
+                    PieceType::Bishop => self.bishops_white,
+                    PieceType::Rook => self.rooks_white,
+                    PieceType::Queen => self.queens_white,
+                    PieceType::King => self.king_white,
+                }
+            },
+            Color::Black => {
+                match piece {
+                    PieceType::Pawn => self.pawns_black,
+                    PieceType::Knight => self.knights_black,
+                    PieceType::Bishop => self.bishops_black,
+                    PieceType::Rook => self.rooks_black,
+                    PieceType::Queen => self.queens_black,
+                    PieceType::King => self.king_black,
+                }
+            },
+        }
+    }
 }
