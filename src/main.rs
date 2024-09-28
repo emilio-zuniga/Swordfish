@@ -1,94 +1,37 @@
 use gamemanager::GameManager;
-use movetable::PieceType;
-use regex::Regex;
+use crate::types::{Color, PieceType};
 
 mod bitboard;
 mod gamemanager;
 mod movetable;
+mod types;
 
 fn main() {
-    get_move_demo();
-}
-
-fn get_move_demo() {
-    let movetable = movetable::MoveTable::default();
-
-    if let Some(v) = movetable
-        .table
-        .get(&(PieceType::BlackPawn, 0x0040000000000000))
-    {
-        let mut acc = 0_u64;
-        for n in v {
-            acc |= n;
-        }
-        let bitstr = format!("{:064b}", acc);
-        let mut count = 0;
-        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
-            print!("{c}");
-            count += 1;
-            if count % 8 == 0 {
-                println!();
-            }
-        }
-    } else {
-        eprintln!("Error!");
-    }
-
+    let x = 1;
+    let y = 7;
+    get_move_demo(Color::White, PieceType::Pawn, (x,y));
     println!();
+    get_move_demo(Color::Black, PieceType::Pawn, (x,y));
+}
 
-    if let Some(v) = movetable
-        .table
-        .get(&(PieceType::BlackPawn, 0x0020000000000000))
-    {
-        let mut acc = 0_u64;
-        for n in v {
-            acc |= n;
+#[allow(dead_code)]
+fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
+    let movetable = movetable::MoveTable::default();
+    let possibilities = movetable.get_moves_as_bitboard(color, piece, square);
+    
+    let bitstr = format!("{:064b}", possibilities);
+    let mut count = 0;
+    for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+        print!("{c}");
+        count += 1;
+        if count % 8 == 0 {
+            println!();
         }
-        let bitstr = format!("{:064b}", acc);
-        let mut count = 0;
-        for c in bitstr.replace("0", ".").replace("1", "X").chars() {
-            print!("{c}");
-            count += 1;
-            if count % 8 == 0 {
-                println!();
-            }
-        }
-    } else {
-        eprintln!("Error!");
     }
 }
 
-fn is_valid_fen(fen: &str, reggae: &Regex) -> bool {
-    let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
-
-    reggae.is_match(fen) && tokens.len() == 6 && {
-        let ranks: Vec<String> = tokens[0].split('/').map(str::to_string).collect();
-        for rank in ranks {
-            let mut count: i32 = 8;
-            if !rank.is_empty() {
-                for c in rank.chars() {
-                    match c {
-                        'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
-                            count -= 1
-                        }
-                        '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
-                        _ => (),
-                    }
-                }
-                if count != 0 {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-}
-
-fn fen_demo() {
-    //Note: Wherever we implement FEN passing, Regex will need to be put there
-    let fen_regex_string = r"([PNBRQKpnbrqk1-8]{1,8}\/){7}[PNBRQKpnbrqk1-8]{1,8} [WBwb] ((K?Q?k?q)|(K?Q?kq?)|(K?Qk?q?)|(KQ?k?q?)|-) (([A-Ha-h][1-8])|-) \d+ \d+";
-    let reggae = Regex::new(fen_regex_string).unwrap();
+#[allow(dead_code)]
+fn board_to_and_from_fen_demo() {
     let tests = [
         "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2",
         "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3",
@@ -116,12 +59,9 @@ fn fen_demo() {
     ];
 
     for fen in tests {
-        let game = if is_valid_fen(fen, &reggae) {
-            GameManager::from_fen_string(fen)
-        } else {
-            GameManager::default()
-        };
+        let game = GameManager::from_fen_string(fen);
         let generated_fen = game.to_fen_string();
+
         println!("{}\n{}\n{}\n", fen, generated_fen, fen == generated_fen);
     }
 }

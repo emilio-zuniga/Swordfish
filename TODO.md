@@ -8,3 +8,9 @@ This is a list of early tasks which should probably be implemented in the follow
 - [ ] Given a board and player turn, generate all possible *pseudo-legal* moves at that level.
 - [ ] Implement minimum subset of UCI commands for later testing and UCI GUI interfacing:
       https://www.chessprogramming.org/Sequential_Probability_Ratio_Test#Minimum_UCI_Requirements
+
+
+Current Subtasks:
+**MoveTable**:
+**GameManager**:
+**BitBoard**:
