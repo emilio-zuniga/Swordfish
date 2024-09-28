@@ -11,71 +11,71 @@ impl Default for MoveTable {
         let mut table: HashMap<(Color, PieceType, u64), Vec<u64>> = HashMap::new();
 
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::White, PieceType::Knight, shift), knight_move_hops((i, j)));
-                shift >>= 1;
-            }
-        }
-
-        shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::White, PieceType::Bishop, shift), bishop_move_rays((i, j)));
-                shift >>= 1;
-            }
-        }
-
-        shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::White, PieceType::Rook, shift), rook_move_rays((i, j)));
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert((Color::White, PieceType::Knight, shift), knight_move_hops((x, y)));
                 shift >>= 1;
             }
         }
         
         shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert((Color::White, PieceType::Bishop, shift), bishop_move_rays((x, y)));
+                shift >>= 1;
+            }
+        }
+        
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert((Color::White, PieceType::Rook, shift), rook_move_rays((x, y)));
+                shift >>= 1;
+            }
+        }
+        
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for y in 0..8_usize {
+            for x in 0..8_usize {
                 table.insert(
                     (Color::White, PieceType::Queen, shift),
-                    rook_move_rays((i, j))
+                    rook_move_rays((x, y))
                         .into_iter()
-                        .chain(bishop_move_rays((i, j)))
+                        .chain(bishop_move_rays((x, y)))
                         .collect(),
                 );
                 shift >>= 1;
             }
         }
-
+        
         shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::White, PieceType::King, shift), king_move_rays((i, j)));
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert((Color::White, PieceType::King, shift), king_move_rays((x, y)));
                 shift >>= 1;
             }
         }
-
+        
         shift = 0x8000000000000000; // Piece in the top left corner.
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::Black, PieceType::King, shift), king_move_rays((i, j)));
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert((Color::Black, PieceType::King, shift), king_move_rays((x, y)));
                 shift >>= 1;
             }
         }
 
         shift = 0x0080000000000000; // Piece on a7
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::White, PieceType::Pawn, shift), white_pawn_moves((i, j)));
+        for y in 1..7_usize {
+            for x in 0..8_usize {
+                table.insert((Color::White, PieceType::Pawn, shift), white_pawn_moves((x, y)));
                 shift >>= 1;
             }
         }
-
+        
         shift = 0x0080000000000000; // Piece on a7
-        for i in 0..8_usize {
-            for j in 0..8_usize {
-                table.insert((Color::Black, PieceType::Pawn, shift), black_pawn_moves((i, j)));
+        for y in 1..7_usize {
+            for x in 0..8_usize {
+                table.insert((Color::Black, PieceType::Pawn, shift), black_pawn_moves((x, y)));
                 shift >>= 1;
             }
         }
@@ -85,9 +85,9 @@ impl Default for MoveTable {
 }
 
 /// Generate all possible locations reachable by a rook from the given
-/// square, where the input tuple is an yx coord. taking the origin to
+/// square, where the input tuple is an xy coord. taking the origin to
 /// be the top left of the board.
-/// * `square` - the yx coordinates of the piece
+/// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
 fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
     // For square = (0, 0)...
@@ -104,12 +104,12 @@ fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     // To calculate the bit position given an x-y coord, let the x-val be the base, and shift it by eight for each row.
     let mut board = [[0_u64; 8]; 8];
-    for i in 0..8_usize {
-        for j in 0..8_usize {
-            if i == square.0 || j == square.1 {
-                board[i][j] = 1;
+    for x in 0..8_usize {
+        for y in 0..8_usize {
+            if x == square.0 || y == square.1 {
+                board[x][y] = 1;
             } else {
-                board[i][j] = 0;
+                board[x][y] = 0;
             }
         }
     }
@@ -118,13 +118,13 @@ fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     let mut moves = vec![];
 
-    for i in 0..8_usize {
-        for j in 0..8_usize {
+    for y in 0..8_usize {
+        for x in 0..8_usize {
             let mut bitstr = String::new();
-            if board[i][j] == 1 {
-                for k in 0..8_usize {
-                    for l in 0..8_usize {
-                        if i == k && j == l {
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
                             bitstr.push('1');
                         } else {
                             bitstr.push('0');
@@ -140,9 +140,9 @@ fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
 }
 
 /// Generate all possible locations reachable by a bishop from the given
-/// square, where the input tuple is an yx coord. taking the origin to
+/// square, where the input tuple is an xy coord. taking the origin to
 /// be the top left of the board.
-/// * `square` - the yx coordinates of the piece
+/// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
 fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
     // For square = (1, 1)...
@@ -175,13 +175,13 @@ fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     let mut moves = vec![];
 
-    for i in 0..8_usize {
-        for j in 0..8_usize {
+    for y in 0..8_usize {
+        for x in 0..8_usize {
             let mut bitstr = String::new();
-            if board[i][j] == 1 {
-                for k in 0..8_usize {
-                    for l in 0..8_usize {
-                        if i == k && j == l {
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
                             bitstr.push('1');
                         } else {
                             bitstr.push('0');
@@ -197,7 +197,7 @@ fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
 }
 
 /// Return the possible moves of a king on the given square, ignoring castling and other special moves.
-/// * `square` - the yx coordinates of the piece
+/// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
 fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
     // For square = (1, 1)...
@@ -233,13 +233,14 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
     }
 
     let mut moves = vec![];
-    for i in 0..8_usize {
-        for j in 0..8_usize {
+
+    for y in 0..8_usize {
+        for x in 0..8_usize {
             let mut bitstr = String::new();
-            if board[i][j] == 1 {
-                for k in 0..8_usize {
-                    for l in 0..8_usize {
-                        if i == k && j == l {
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
                             bitstr.push('1');
                         } else {
                             bitstr.push('0');
@@ -255,9 +256,11 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
 }
 
 /// Returns the possible moves of a Knight on the given square.
-/// * `square` - the yx coordinates of the piece
+/// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
 fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
+    //square.0 = x-coord
+    //square.1 = y-coord
     // For square = (1, 1)...
     //   0 1 2 3 4 5 6 7 i
     // 0       .
@@ -271,7 +274,7 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
     // j
 
     let mut moves = Vec::new();
-    let position = 1 << ((7 - square.0) * 8 + (7 - square.1));
+    let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
     // North: North West Square
     if square.0 > 0 && square.1 > 1 {
@@ -315,7 +318,7 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move of the pawn possible from that square
 fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     let mut moves = Vec::new();
-    let position: u64 = 1 << ((7 - square.0) * 8 + (7 - square.1));
+    let position: u64 = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
     let a_file: u64 = 0x80808080_80808080;
     let h_file: u64 = 0x01010101_01010101;
@@ -345,7 +348,7 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move of the pawn possible from that square
 fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     let mut moves = Vec::new();
-    let position: u64 = 1 << ((7 - square.0) * 8 + (7 - square.1));
+    let position: u64 = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
     let a_file: u64 = 0x80808080_80808080;
     let h_file: u64 = 0x01010101_01010101;
@@ -375,7 +378,7 @@ impl MoveTable {
     /// * `square` - the x and y coordinates of the piece's position\
     /// * `returns` - a `Vec<u64>` containing each pseudo legal move of that piece possible from that square
     pub fn get_moves(&self, color: Color, piece: PieceType, square: (usize, usize)) -> Vec<u64> {
-        let position = 1 << ((7 - square.0) * 8 + (7 - square.1));
+        let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
         
         match piece {
             PieceType::Knight | PieceType::Bishop | PieceType::Rook | PieceType::Queen => self.table.get(&(Color::White, piece, position)).unwrap().clone(),

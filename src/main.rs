@@ -7,13 +7,11 @@ mod movetable;
 mod types;
 
 fn main() {
-    get_move_demo(Color::Black, PieceType::Pawn, (6,1));
+    let x = 1;
+    let y = 7;
+    get_move_demo(Color::White, PieceType::Pawn, (x,y));
     println!();
-    get_move_demo(Color::Black, PieceType::Pawn, (5,1));
-    println!();
-    get_move_demo(Color::Black, PieceType::Knight, (5,1));
-    println!();
-    get_move_demo(Color::Black, PieceType::Bishop, (5,1));
+    get_move_demo(Color::Black, PieceType::Pawn, (x,y));
 }
 
 #[allow(dead_code)]
