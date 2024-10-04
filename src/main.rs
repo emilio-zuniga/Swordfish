@@ -1,5 +1,6 @@
-use gamemanager::GameManager;
 use crate::types::{Color, PieceType};
+use gamemanager::GameManager;
+use types::Square;
 
 mod bitboard;
 mod gamemanager;
@@ -7,27 +8,15 @@ mod movetable;
 mod types;
 
 fn main() {
-    let x = 1;
-    let y = 7;
-    get_move_demo(Color::White, PieceType::Pawn, (x,y));
-    println!();
-    get_move_demo(Color::Black, PieceType::Pawn, (x,y));
+    
 }
 
 #[allow(dead_code)]
 fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
     let movetable = movetable::MoveTable::default();
     let possibilities = movetable.get_moves_as_bitboard(color, piece, square);
-    
-    let bitstr = format!("{:064b}", possibilities);
-    let mut count = 0;
-    for c in bitstr.replace("0", ".").replace("1", "X").chars() {
-        print!("{c}");
-        count += 1;
-        if count % 8 == 0 {
-            println!();
-        }
-    }
+
+    print_bitboard(possibilities);
 }
 
 #[allow(dead_code)]
@@ -63,5 +52,38 @@ fn board_to_and_from_fen_demo() {
         let generated_fen = game.to_fen_string();
 
         println!("{}\n{}\n{}\n", fen, generated_fen, fen == generated_fen);
+    }
+}
+
+#[allow(dead_code)]
+fn enum_coord_system_demo() {
+    let mut position = 0x80000000_00000000;
+
+    while position != 0_u64 {
+        let coordinate = Square::from_u64(position);
+
+        match coordinate {
+            Some(variant) => {
+                println!("\n{:?}", variant);
+                let coordinate = variant.to_u64();
+                print_bitboard(coordinate);
+            }
+            None => (),
+        }
+
+        position >>= 1;
+    }
+}
+
+#[allow(dead_code)]
+fn print_bitboard(board: u64) {
+    let bitstr = format!("{:064b}", board);
+    let mut count = 0;
+    for c in bitstr.replace("0", ".").replace("1", "X").chars() {
+        print!("{c}");
+        count += 1;
+        if count % 8 == 0 {
+            println!();
+        }
     }
 }
