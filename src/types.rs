@@ -32,6 +32,9 @@ pub enum Square {
 
 #[allow(dead_code)]
 impl Square {
+    /// A function that generates a `Square` coordinate from a `u64`.\
+    /// * `coordinate`` - a `u64` representing a single square on a chess board \
+    /// * `returns` - `Some(Square)` iff `coordinate` is represented by some power of 2; otherwise `None`
     pub fn from_u64(coordinate: u64) -> Option<Square> {
         match coordinate {
             0x80000000_00000000 => Some(Square::A8),
@@ -108,7 +111,9 @@ impl Square {
             _ => None,
         }
     }
-
+    
+    /// A function that generates the `u64` representation of a `Square`.\
+    /// * `returns` - a `u64` indicating the position given by the `Square`
     pub fn to_u64(&self) -> u64 {
         match &self {
             Square::A8 => 0x80000000_00000000,
