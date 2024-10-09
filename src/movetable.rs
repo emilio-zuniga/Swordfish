@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::types::{Color, PieceType};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct MoveTable {
@@ -13,27 +13,36 @@ impl Default for MoveTable {
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
-                table.insert((Color::White, PieceType::Knight, shift), knight_move_hops((x, y)));
+                table.insert(
+                    (Color::White, PieceType::Knight, shift),
+                    knight_move_hops((x, y)),
+                );
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
-                table.insert((Color::White, PieceType::Bishop, shift), bishop_move_rays((x, y)));
+                table.insert(
+                    (Color::White, PieceType::Bishop, shift),
+                    bishop_move_rays((x, y)),
+                );
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
-                table.insert((Color::White, PieceType::Rook, shift), rook_move_rays((x, y)));
+                table.insert(
+                    (Color::White, PieceType::Rook, shift),
+                    rook_move_rays((x, y)),
+                );
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
@@ -47,19 +56,25 @@ impl Default for MoveTable {
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
-                table.insert((Color::White, PieceType::King, shift), king_move_rays((x, y)));
+                table.insert(
+                    (Color::White, PieceType::King, shift),
+                    king_move_rays((x, y)),
+                );
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
             for x in 0..8_usize {
-                table.insert((Color::Black, PieceType::King, shift), king_move_rays((x, y)));
+                table.insert(
+                    (Color::Black, PieceType::King, shift),
+                    king_move_rays((x, y)),
+                );
                 shift >>= 1;
             }
         }
@@ -67,15 +82,21 @@ impl Default for MoveTable {
         shift = 0x0080000000000000; // Piece on a7
         for y in 1..7_usize {
             for x in 0..8_usize {
-                table.insert((Color::White, PieceType::Pawn, shift), white_pawn_moves((x, y)));
+                table.insert(
+                    (Color::White, PieceType::Pawn, shift),
+                    white_pawn_moves((x, y)),
+                );
                 shift >>= 1;
             }
         }
-        
+
         shift = 0x0080000000000000; // Piece on a7
         for y in 1..7_usize {
             for x in 0..8_usize {
-                table.insert((Color::Black, PieceType::Pawn, shift), black_pawn_moves((x, y)));
+                table.insert(
+                    (Color::Black, PieceType::Pawn, shift),
+                    black_pawn_moves((x, y)),
+                );
                 shift >>= 1;
             }
         }
@@ -336,7 +357,7 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
         }
         if (position & h_file) != position {
             moves.push(position >> 9);
-        } 
+        }
     }
 
     moves
@@ -365,13 +386,23 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
         }
         if (position & h_file) != position {
             moves.push(position << 7);
-        } 
+        }
     }
 
     moves
 }
 
 impl MoveTable {
+    /// Given a single piece position & the type, return the possible moves as a [`Vec`].
+    pub fn moves(&self, color: Color, piece: PieceType, position: u64) -> Vec<u64> {
+        let res = match self.table.get(&(color, piece, position)) {
+            Some(v) => v.clone(),
+            None => Vec::new(),
+        };
+
+        res.to_vec()
+    }
+
     /// A utility method for getting the possible moves of a piece at a given position\
     /// * `color` - the `Color` of the piece\
     /// * `piece` - the `PieceType`\
@@ -379,10 +410,16 @@ impl MoveTable {
     /// * `returns` - a `Vec<u64>` containing each pseudo legal move of that piece possible from that square
     pub fn get_moves(&self, color: Color, piece: PieceType, square: (usize, usize)) -> Vec<u64> {
         let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
-        
+
         match piece {
-            PieceType::Knight | PieceType::Bishop | PieceType::Rook | PieceType::Queen => self.table.get(&(Color::White, piece, position)).unwrap().clone(),
-            PieceType::Pawn | PieceType::King => self.table.get(&(color, piece, position)).unwrap().clone(),
+            PieceType::Knight | PieceType::Bishop | PieceType::Rook | PieceType::Queen => self
+                .table
+                .get(&(Color::White, piece, position))
+                .unwrap()
+                .clone(),
+            PieceType::Pawn | PieceType::King => {
+                self.table.get(&(color, piece, position)).unwrap().clone()
+            }
         }
     }
 
@@ -391,10 +428,15 @@ impl MoveTable {
     /// * `piece` - the `PieceType`\
     /// * `square`` - the x and y coordinates of the piece's position\
     /// * `returns` - a `u64` bitboard representing the pseudo legal move of that piece possible from that square
-    pub fn get_moves_as_bitboard(&self, color: Color, piece: PieceType, square: (usize, usize)) -> u64 {
+    pub fn get_moves_as_bitboard(
+        &self,
+        color: Color,
+        piece: PieceType,
+        square: (usize, usize),
+    ) -> u64 {
         let moves = &self.get_moves(color, piece, square);
         let mut board = 0_u64;
-        
+
         for possible_move in moves {
             board |= possible_move;
         }

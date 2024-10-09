@@ -1,4 +1,8 @@
-use crate::{bitboard, types::Color};
+use crate::{
+    bitboard,
+    movetable::MoveTable,
+    types::{Color, PieceType},
+};
 use bitboard::BitBoard;
 use regex::Regex;
 
@@ -21,6 +25,7 @@ pub struct GameManager {
      * fullmove number - number of completed turns (increment when black moves)
      */
     bitboard: BitBoard,
+    movetable: MoveTable,
     white_to_move: bool,
     castling_rights: String,
     en_passant_target: String,
@@ -33,6 +38,7 @@ impl Default for GameManager {
     fn default() -> Self {
         GameManager {
             bitboard: BitBoard::default(),
+            movetable: MoveTable::default(),
             white_to_move: true,
             castling_rights: String::from("KQkq"),
             en_passant_target: String::new(),
@@ -53,6 +59,7 @@ impl GameManager {
             GameManager {
                 //board space validation implemented at higher level (is_valid_fen())
                 bitboard: BitBoard::from_fen_string(&tokens[0]),
+                movetable: MoveTable::default(),
                 white_to_move: tokens[1] == "w",
                 castling_rights: tokens[2].clone(),
                 en_passant_target: tokens[3].clone(),
@@ -123,7 +130,7 @@ impl GameManager {
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
     pub fn pseudolegal_moves(&self, color: Color) -> () {
-        let mut pseudolegal_moves = Vec::new();
+        let mut pseudolegal_moves: Vec<u64> = Vec::new();
 
         match color {
             Color::Black => {
@@ -135,6 +142,60 @@ impl GameManager {
 
                 // This means our "pseudo-legal" moves include only valid moves, and moves that leave the king in check, or are not permitted by the rules of chess
                 // for some reason besides intersection of pieces.
+
+                // To get each black piece, pop each power of two for each piece type.
+                let friendly_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+                let enemy_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
+
+                let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
+                let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                let kings = GameManager::powers_of_two(self.bitboard.king_black);
+
+                for p in pawns {
+                    for m in self.movetable.moves(Color::Black, PieceType::Pawn, p) {
+                        if m & friendly_pieces == 0 {
+                            // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                            pseudolegal_moves.push(todo!())
+                        }
+                    }
+                }
+
+                for p in rooks {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in bishops {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in queens {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in kings {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
                 todo!()
             }
             Color::White => {
@@ -144,7 +205,7 @@ impl GameManager {
         todo!()
     }
 
-    fn powers_of_two(int: u64) -> Vec<u64> {
+    pub fn powers_of_two(int: u64) -> Vec<u64> {
         let mut res = Vec::new();
         let mut i = 1_u64;
         while i <= int {
