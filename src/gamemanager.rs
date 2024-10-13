@@ -164,10 +164,12 @@ impl GameManager {
                 let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
                 for p in pawns {
-                    for m in self.movetable.moves(Color::Black, PieceType::Pawn, p) {
-                        if m & friendly_pieces == 0 {
-                            // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                            pseudolegal_moves.push(todo!())
+                    for r in self.movetable.moves(Color::Black, PieceType::Pawn, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                                pseudolegal_moves.push(todo!())
+                            }
                         }
                     }
                 }
