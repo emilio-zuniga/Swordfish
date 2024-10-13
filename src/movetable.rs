@@ -1,14 +1,18 @@
 use crate::types::{Color, PieceType};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone)]
+/// A HashMap of [`(Color, PieceType, u64)`] indexing [`Vec<Vec<u64>>`] where
+/// the index integer is a position on the board (must be a power of two) and
+/// the list of lists is a list of rays---that is, each direction the object
+/// can move in is a separate list. This facilitates move legality checking,
+/// because sliding pieces simply start at the head of the list and work out.
 pub struct MoveTable {
-    table: HashMap<(Color, PieceType, u64), Vec<u64>>,
+    table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>>,
 }
 
 impl Default for MoveTable {
     fn default() -> Self {
-        let mut table: HashMap<(Color, PieceType, u64), Vec<u64>> = HashMap::new();
+        let mut table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = HashMap::new();
 
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
@@ -110,7 +114,7 @@ impl Default for MoveTable {
 /// be the top left of the board.
 /// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
-fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
+fn rook_move_rays(square: (usize, usize)) -> Vec<Vec<u64>> {
     // For square = (0, 0)...
     //   0 1 2 3 4 5 6 7 i
     // 0 q . . . . . . .
@@ -139,23 +143,81 @@ fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     let mut moves = vec![];
 
-    for y in 0..8_usize {
-        for x in 0..8_usize {
-            let mut bitstr = String::new();
-            if board[x][y] == 1 {
-                for l in 0..8_usize {
-                    for k in 0..8_usize {
-                        if x == k && y == l {
-                            bitstr.push('1');
-                        } else {
-                            bitstr.push('0');
-                        }
+    let mut up_moves = vec![];
+    for y in (0..square.1).rev() {
+        let x = square.0;
+        let mut bitstr = String::new();
+        if board[x][y] == 1 {
+            for l in 0..8_usize {
+                for k in 0..8_usize {
+                    if x == k && y == l {
+                        bitstr.push('1');
+                    } else {
+                        bitstr.push('0');
                     }
                 }
-                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
             }
+            up_moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
         }
     }
+    moves.push(up_moves);
+
+    let mut down_moves = vec![];
+    for y in square.1..8 {
+        let x = square.0;
+        let mut bitstr = String::new();
+        if board[x][y] == 1 {
+            for l in 0..8_usize {
+                for k in 0..8_usize {
+                    if x == k && y == l {
+                        bitstr.push('1');
+                    } else {
+                        bitstr.push('0');
+                    }
+                }
+            }
+            down_moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+        }
+    }
+    moves.push(down_moves);
+
+    let mut left_moves = vec![];
+    for x in (0..square.0).rev() {
+        let y = square.1;
+        let mut bitstr = String::new();
+        if board[x][y] == 1 {
+            for l in 0..8_usize {
+                for k in 0..8_usize {
+                    if x == k && y == l {
+                        bitstr.push('1');
+                    } else {
+                        bitstr.push('0');
+                    }
+                }
+            }
+            left_moves.push(u64::from_str_radix(&bitstr, 2).unwrap());
+        }
+    }
+    moves.push(left_moves);
+
+    let mut right_moves = vec![];
+    for x in square.0..8 {
+        let y = square.1;
+        let mut bitstr = String::new();
+        if board[x][y] == 1 {
+            for l in 0..8_usize {
+                for k in 0..8_usize {
+                    if x == k && y == l {
+                        bitstr.push('1');
+                    } else {
+                        bitstr.push('0');
+                    }
+                }
+            }
+            right_moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+        }
+    }
+    moves.push(right_moves);
 
     moves
 }
@@ -165,7 +227,7 @@ fn rook_move_rays(square: (usize, usize)) -> Vec<u64> {
 /// be the top left of the board.
 /// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
-fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
+fn bishop_move_rays(square: (usize, usize)) -> Vec<Vec<u64>> {
     // For square = (1, 1)...
     //   0 1 2 3 4 5 6 7 i
     // 0 .   .
@@ -196,8 +258,9 @@ fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
 
     let mut moves = vec![];
 
-    for y in 0..8_usize {
-        for x in 0..8_usize {
+    let mut upper_left_moves = vec![];
+    for y in (0..square.1).rev() {
+        for x in (0..square.0).rev() {
             let mut bitstr = String::new();
             if board[x][y] == 1 {
                 for l in 0..8_usize {
@@ -209,18 +272,79 @@ fn bishop_move_rays(square: (usize, usize)) -> Vec<u64> {
                         }
                     }
                 }
-                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+                upper_left_moves.push(u64::from_str_radix(&bitstr, 2).unwrap());
             }
         }
     }
+    moves.push(upper_left_moves);
+
+    let mut lower_left_moves = vec![];
+    for y in (0..square.1 + 1).rev() {
+        for x in (0..square.0).rev() {
+            let mut bitstr = String::new();
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
+                            bitstr.push('1');
+                        } else {
+                            bitstr.push('0');
+                        }
+                    }
+                }
+                lower_left_moves.push(u64::from_str_radix(&bitstr, 2).unwrap());
+            }
+        }
+    }
+    moves.push(lower_left_moves);
+
+    let mut upper_right_moves = vec![];
+    for y in (0..square.1).rev() {
+        for x in square.0 + 1..8 {
+            let mut bitstr = String::new();
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
+                            bitstr.push('1');
+                        } else {
+                            bitstr.push('0');
+                        }
+                    }
+                }
+                upper_right_moves.push(u64::from_str_radix(&bitstr, 2).unwrap());
+            }
+        }
+    }
+    moves.push(upper_right_moves);
+
+    let mut lower_right_moves = vec![];
+    for y in square.1 + 1..8 {
+        for x in square.0 + 1..8 {
+            let mut bitstr = String::new();
+            if board[x][y] == 1 {
+                for l in 0..8_usize {
+                    for k in 0..8_usize {
+                        if x == k && y == l {
+                            bitstr.push('1');
+                        } else {
+                            bitstr.push('0');
+                        }
+                    }
+                }
+                lower_right_moves.push(u64::from_str_radix(&bitstr, 2).unwrap());
+            }
+        }
+    }
+    moves.push(lower_right_moves);
 
     moves
 }
 
 /// Return the possible moves of a king on the given square, ignoring castling and other special moves.
 /// * `square` - the xy coordinates of the piece
-/// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
-fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
+/// * `returns` - a [`Vec<Vec<u64>>`] containing each pseudo legal move possible from that coordinate
+fn king_move_rays(square: (usize, usize)) -> Vec<Vec<u64>> {
     // For square = (1, 1)...
     //   0 1 2 3 4 5 6 7 i
     // 0 . . .
@@ -268,7 +392,7 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
                         }
                     }
                 }
-                moves.push(u64::from_str_radix(&bitstr, 2).unwrap()); // TODO: Watch out for this.
+                moves.push(vec![u64::from_str_radix(&bitstr, 2).unwrap()]); // TODO: Watch out for this.
             }
         }
     }
@@ -279,7 +403,7 @@ fn king_move_rays(square: (usize, usize)) -> Vec<u64> {
 /// Returns the possible moves of a Knight on the given square.
 /// * `square` - the xy coordinates of the piece
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move possible from that coordinate
-fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
+fn knight_move_hops(square: (usize, usize)) -> Vec<Vec<u64>> {
     //square.0 = x-coord
     //square.1 = y-coord
     // For square = (1, 1)...
@@ -294,40 +418,40 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
     // 7
     // j
 
-    let mut moves = Vec::new();
-    let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
+    let mut moves: Vec<Vec<u64>> = Vec::new();
+    let position = (1 << ((7 - square.1) * 8 + (7 - square.0))) as u64;
 
     // North: North West Square
     if square.0 > 0 && square.1 > 1 {
-        moves.push(position << 17);
+        moves.push(vec![position << 17]);
     }
     // North: North East Square
     if square.0 < 7 && square.1 > 1 {
-        moves.push(position << 15);
+        moves.push(vec![position << 15]);
     }
     //North: West-most Square
     if square.0 > 1 && square.1 > 0 {
-        moves.push(position << 10);
+        moves.push(vec![position << 10]);
     }
     //North: East-most Square
     if square.0 < 6 && square.1 > 0 {
-        moves.push(position << 6);
+        moves.push(vec![position << 6]);
     }
     //South: West-Most Square
     if square.0 > 1 && square.1 < 7 {
-        moves.push(position >> 6);
+        moves.push(vec![position >> 6]);
     }
     //South: East-Most Square
     if square.0 < 6 && square.1 < 7 {
-        moves.push(position >> 10);
+        moves.push(vec![position >> 10]);
     }
     //South: South West Square
     if square.0 > 0 && square.1 < 6 {
-        moves.push(position >> 15);
+        moves.push(vec![position >> 15]);
     }
     //South: South East Square
     if square.0 < 7 && square.1 < 6 {
-        moves.push(position >> 17);
+        moves.push(vec![position >> 17]);
     }
 
     moves
@@ -337,7 +461,7 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<u64> {
 /// Invalid starting spaces, such as those on the 1st & 8th ranks, return an empty vector\
 /// * `square` - the x and y coordinates of the piece's position\
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move of the pawn possible from that square
-fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
+fn black_pawn_moves(square: (usize, usize)) -> Vec<Vec<u64>> {
     let mut moves = Vec::new();
     let position: u64 = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
@@ -347,16 +471,16 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     let rank_2_thru_6: u64 = 0x0000FFFF_FFFFFF00;
 
     if (position & (rank_2_thru_6 | rank_7)) == position {
-        moves.push(position >> 8);
+        moves.push(vec![position >> 8]);
 
         if (position & rank_7) == position {
-            moves.push(position >> 16);
+            moves.push(vec![position >> 16]);
         }
         if (position & a_file) != position {
-            moves.push(position >> 7);
+            moves.push(vec![position >> 7]);
         }
         if (position & h_file) != position {
-            moves.push(position >> 9);
+            moves.push(vec![position >> 9]);
         }
     }
 
@@ -367,7 +491,7 @@ fn black_pawn_moves(square: (usize, usize)) -> Vec<u64> {
 /// Invalid starting spaces, such as those on the 1st & 8th ranks, return an empty vector\
 /// * `square` - the x and y coordinates of the piece's position\
 /// * `returns` - a `Vec<u64>` containing each pseudo legal move of the pawn possible from that square
-fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
+fn white_pawn_moves(square: (usize, usize)) -> Vec<Vec<u64>> {
     let mut moves = Vec::new();
     let position: u64 = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
@@ -377,15 +501,15 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
     let rank_3_thru_7: u64 = 0x00FFFFFF_FFFF0000;
 
     if (position & (rank_2 | rank_3_thru_7)) == position {
-        moves.push(position << 8);
+        moves.push(vec![position << 8]);
         if (position & rank_2) == position {
-            moves.push(position << 16);
+            moves.push(vec![position << 16]);
         }
         if (position & a_file) != position {
-            moves.push(position << 9);
+            moves.push(vec![position << 9]);
         }
         if (position & h_file) != position {
-            moves.push(position << 7);
+            moves.push(vec![position << 7]);
         }
     }
 
@@ -393,14 +517,14 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<u64> {
 }
 
 impl MoveTable {
-    /// Given a single piece position & the type, return the possible moves as a [`Vec`].
-    pub fn moves(&self, color: Color, piece: PieceType, position: u64) -> Vec<u64> {
+    /// Given a single piece position & the type, return the possible moves as a [`Vec<Vec<u64>>`].
+    pub fn moves(&self, color: Color, piece: PieceType, position: u64) -> Vec<Vec<u64>> {
         let res = match self.table.get(&(color, piece, position)) {
             Some(v) => v.clone(),
             None => Vec::new(),
         };
 
-        res.to_vec()
+        res
     }
 
     /// A utility method for getting the possible moves of a piece at a given position\
@@ -408,7 +532,12 @@ impl MoveTable {
     /// * `piece` - the `PieceType`\
     /// * `square` - the x and y coordinates of the piece's position\
     /// * `returns` - a `Vec<u64>` containing each pseudo legal move of that piece possible from that square
-    pub fn get_moves(&self, color: Color, piece: PieceType, square: (usize, usize)) -> Vec<u64> {
+    pub fn get_moves(
+        &self,
+        color: Color,
+        piece: PieceType,
+        square: (usize, usize),
+    ) -> Vec<Vec<u64>> {
         let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
         match piece {
@@ -423,10 +552,10 @@ impl MoveTable {
         }
     }
 
-    /// A utility method for getting the possible moves of a piece at a given position\
-    /// * `color` - the `Color` of the piece\
-    /// * `piece` - the `PieceType`\
-    /// * `square`` - the x and y coordinates of the piece's position\
+    /// A utility method for getting the possible moves of a piece at a given position
+    /// * `color` - the `Color` of the piece
+    /// * `piece` - the `PieceType`
+    /// * `square` - the x and y coordinates of the piece's position
     /// * `returns` - a `u64` bitboard representing the pseudo legal move of that piece possible from that square
     pub fn get_moves_as_bitboard(
         &self,
@@ -434,11 +563,13 @@ impl MoveTable {
         piece: PieceType,
         square: (usize, usize),
     ) -> u64 {
-        let moves = &self.get_moves(color, piece, square);
+        let moverays = &self.get_moves(color, piece, square);
         let mut board = 0_u64;
 
-        for possible_move in moves {
-            board |= possible_move;
+        for ray in moverays {
+            for possible_move in ray {
+                board |= possible_move;
+            }
         }
 
         board
