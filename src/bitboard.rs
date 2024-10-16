@@ -2,18 +2,18 @@ use crate::types::{Color, PieceType};
 
 /// This is a representation of the board. Each piece gets a [`u64`] integer.
 pub struct BitBoard {
-    pawns_white: u64,
-    rooks_white: u64,
-    knights_white: u64,
-    bishops_white: u64,
-    queens_white: u64,
-    king_white: u64,
-    pawns_black: u64,
-    rooks_black: u64,
-    knights_black: u64,
-    bishops_black: u64,
-    queens_black: u64,
-    king_black: u64,
+    pub pawns_white: u64,
+    pub rooks_white: u64,
+    pub knights_white: u64,
+    pub bishops_white: u64,
+    pub queens_white: u64,
+    pub king_white: u64,
+    pub pawns_black: u64,
+    pub rooks_black: u64,
+    pub knights_black: u64,
+    pub bishops_black: u64,
+    pub queens_black: u64,
+    pub king_black: u64,
 }
 
 impl Default for BitBoard {
@@ -48,7 +48,7 @@ impl BitBoard {
     /// * `returns` - a `BitBoard` as generated from the FEN token
     pub fn from_fen_string(fen: &str) -> Self {
         let mut position: u64 = 0x80000000_00000000;
-        let mut board = BitBoard{
+        let mut board = BitBoard {
             pawns_white: 0x0,
             rooks_white: 0x0,
             knights_white: 0x0,
@@ -82,7 +82,6 @@ impl BitBoard {
                 _ => position <<= 1,
             }
             position >>= 1;
-
         }
 
         board
@@ -97,7 +96,19 @@ impl BitBoard {
         for row in board {
             let mut spaces: u8 = 0;
             for c in row {
-                if c == 'P' || c == 'N' || c == 'B' || c == 'R' || c == 'Q' || c == 'K' || c == 'p' || c == 'n' || c == 'b' || c == 'r' || c == 'q' || c == 'k' {
+                if c == 'P'
+                    || c == 'N'
+                    || c == 'B'
+                    || c == 'R'
+                    || c == 'Q'
+                    || c == 'K'
+                    || c == 'p'
+                    || c == 'n'
+                    || c == 'b'
+                    || c == 'r'
+                    || c == 'q'
+                    || c == 'k'
+                {
                     if spaces > 0 {
                         s.push((spaces + 48) as char);
 
@@ -114,7 +125,7 @@ impl BitBoard {
             s.push('/');
         }
         s.pop();
-        
+
         s
     }
 
@@ -144,20 +155,19 @@ impl BitBoard {
             (self.bishops_white, 'B'),
             (self.queens_white, 'Q'),
             (self.king_white, 'K'),
-
             (self.pawns_black, 'p'),
             (self.rooks_black, 'r'),
             (self.knights_black, 'n'),
             (self.bishops_black, 'b'),
             (self.queens_black, 'q'),
-            (self.king_black, 'k')
+            (self.king_black, 'k'),
         ];
-        
+
         for (piece_map, piece_type) in bitboards {
             for i in 0..64 {
                 if piece_map & (1 << i) != 0 {
-                    let r = 7 - (i/8);
-                    let c = 7 - (i%8);
+                    let r = 7 - (i / 8);
+                    let c = 7 - (i % 8);
                     board[r][c] = piece_type;
                 }
             }
@@ -170,28 +180,24 @@ impl BitBoard {
     /// A utility method returning the bitboard representing the placement\
     /// of this `PieceType` of this `Color`\
     /// * `color` - the `Color` of the pieces\
-    /// * `pieces` - the `PieceType` of the pieces 
+    /// * `pieces` - the `PieceType` of the pieces
     pub fn get_bitboard(&self, color: Color, piece: PieceType) -> u64 {
         match color {
-            Color::White => {
-                match piece {
-                    PieceType::Pawn => self.pawns_white,
-                    PieceType::Knight => self.knights_white,
-                    PieceType::Bishop => self.bishops_white,
-                    PieceType::Rook => self.rooks_white,
-                    PieceType::Queen => self.queens_white,
-                    PieceType::King => self.king_white,
-                }
+            Color::White => match piece {
+                PieceType::Pawn => self.pawns_white,
+                PieceType::Knight => self.knights_white,
+                PieceType::Bishop => self.bishops_white,
+                PieceType::Rook => self.rooks_white,
+                PieceType::Queen => self.queens_white,
+                PieceType::King => self.king_white,
             },
-            Color::Black => {
-                match piece {
-                    PieceType::Pawn => self.pawns_black,
-                    PieceType::Knight => self.knights_black,
-                    PieceType::Bishop => self.bishops_black,
-                    PieceType::Rook => self.rooks_black,
-                    PieceType::Queen => self.queens_black,
-                    PieceType::King => self.king_black,
-                }
+            Color::Black => match piece {
+                PieceType::Pawn => self.pawns_black,
+                PieceType::Knight => self.knights_black,
+                PieceType::Bishop => self.bishops_black,
+                PieceType::Rook => self.rooks_black,
+                PieceType::Queen => self.queens_black,
+                PieceType::King => self.king_black,
             },
         }
     }

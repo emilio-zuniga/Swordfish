@@ -1,4 +1,8 @@
-use crate::bitboard;
+use crate::{
+    bitboard,
+    movetable::MoveTable,
+    types::{Color, PieceType},
+};
 use bitboard::BitBoard;
 use regex::Regex;
 
@@ -21,6 +25,7 @@ pub struct GameManager {
      * fullmove number - number of completed turns (increment when black moves)
      */
     bitboard: BitBoard,
+    movetable: MoveTable,
     white_to_move: bool,
     castling_rights: String,
     en_passant_target: String,
@@ -33,6 +38,7 @@ impl Default for GameManager {
     fn default() -> Self {
         GameManager {
             bitboard: BitBoard::default(),
+            movetable: MoveTable::default(),
             white_to_move: true,
             castling_rights: String::from("KQkq"),
             en_passant_target: String::new(),
@@ -53,6 +59,7 @@ impl GameManager {
             GameManager {
                 //board space validation implemented at higher level (is_valid_fen())
                 bitboard: BitBoard::from_fen_string(&tokens[0]),
+                movetable: MoveTable::default(),
                 white_to_move: tokens[1] == "w",
                 castling_rights: tokens[2].clone(),
                 en_passant_target: tokens[3].clone(),
@@ -63,17 +70,25 @@ impl GameManager {
             GameManager::default()
         }
     }
-    
+
     /// A utility method generating a complete FEN string representation of the game
     /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {
         let mut s = self.bitboard.to_fen_string();
         s.push(' ');
-        s.push(if self.white_to_move {'w'} else {'b'});
+        s.push(if self.white_to_move { 'w' } else { 'b' });
         s.push(' ');
-        s.push_str(if self.castling_rights.is_empty() {"-"} else {&self.castling_rights});
+        s.push_str(if self.castling_rights.is_empty() {
+            "-"
+        } else {
+            &self.castling_rights
+        });
         s.push(' ');
-        s.push_str(if self.en_passant_target.is_empty() {"-"} else {&self.en_passant_target});
+        s.push_str(if self.en_passant_target.is_empty() {
+            "-"
+        } else {
+            &self.en_passant_target
+        });
         s.push(' ');
         s.push_str(&self.halfmoves.to_string());
         s.push(' ');
@@ -96,9 +111,8 @@ impl GameManager {
                 if !rank.is_empty() {
                     for c in rank.chars() {
                         match c {
-                            'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q' | 'k' => {
-                                count -= 1
-                            }
+                            'P' | 'N' | 'B' | 'R' | 'Q' | 'K' | 'p' | 'n' | 'b' | 'r' | 'q'
+                            | 'k' => count -= 1,
                             '1'..='8' => count -= c.to_digit(10).unwrap() as i32,
                             _ => (),
                         }
@@ -114,4 +128,130 @@ impl GameManager {
     }
 
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
+
+    pub fn pseudolegal_moves(&self, color: Color) -> () {
+        let mut pseudolegal_moves: Vec<u64> = Vec::new();
+
+        match color {
+            Color::Black => {
+                // For each black piece on the board, obtain its possible moves.
+                // Each piece is a power of two, and we'll pop the powers of two with the function below.
+
+                // Each power of two is passed to its respective MoveTable, and the resultant list of moves is matched against
+                // the friendly_pieces integer. This way, invalid moves are filtered out.
+
+                // This means our "pseudo-legal" moves include only valid moves, and moves that leave the king in check, or are not permitted by the rules of chess
+                // for some reason besides intersection of pieces.
+
+                // To get each black piece, pop each power of two for each piece type.
+                let friendly_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+                let enemy_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
+
+                let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
+                let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                let kings = GameManager::powers_of_two(self.bitboard.king_black);
+
+                for p in pawns {
+                    for r in self.movetable.moves(Color::Black, PieceType::Pawn, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                                pseudolegal_moves.push(todo!())
+                            }
+                        }
+                    }
+                }
+
+                for p in rooks {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in bishops {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in queens {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                for p in kings {
+                    if p & friendly_pieces == 0 {
+                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    }
+                }
+
+                todo!()
+            }
+            Color::White => {
+                todo!()
+            }
+        }
+        todo!()
+    }
+
+    pub fn powers_of_two(int: u64) -> Vec<u64> {
+        let mut res = Vec::new();
+        let mut i = 1_u64;
+        while i <= int {
+            if i & int != 0 {
+                res.push(i);
+            }
+            i <<= 1;
+        }
+        res
+    }
+
+    pub fn legal_moves(&self, color: Color) -> () {
+        match color {
+            Color::Black => {
+                let friendly_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+                let enemy_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
+
+                let pseudolegal_moves = todo!();
+            }
+            Color::White => {
+                let friendly_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
+                let enemy_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+            }
+        }
+        todo!()
+    }
 }
