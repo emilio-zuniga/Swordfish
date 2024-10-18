@@ -1,7 +1,7 @@
 use crate::{
     bitboard,
     movetable::MoveTable,
-    types::{Color, PieceType},
+    types::{Color, PieceType, Square},
 };
 use bitboard::BitBoard;
 use regex::Regex;
@@ -129,8 +129,8 @@ impl GameManager {
 
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
-    pub fn pseudolegal_moves(&self, color: Color) -> () {
-        let mut pseudolegal_moves: Vec<u64> = Vec::new();
+    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(Square, Square)> {
+        let mut pseudolegal_moves: Vec<u64> = Vec::new(); //Vec<(Square, Square)>
 
         match color {
             Color::Black => {
@@ -169,6 +169,10 @@ impl GameManager {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
                                 pseudolegal_moves.push(todo!())
+                                //if pawn push, check there are no other in front of it (inludes double pushes)
+                                //if capture, ensure an opponent's piece is on either side
+                                //if on last rank, account for all possible promotion types
+
                             }
                         }
                     }
@@ -195,6 +199,17 @@ impl GameManager {
                 for p in kings {
                     if p & friendly_pieces == 0 {
                         // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                        /* For Castling:
+                         * castle side check status in GM
+                         * check presence of friendly/enemy pieces on back rank
+                         * check for opponent attacks on back rank
+                         * check for presence of rook
+                         * check for king in check
+                         * 
+                         * update bitboards accordingly
+                         * update GM accordingly
+                         */
+
                     }
                 }
 
