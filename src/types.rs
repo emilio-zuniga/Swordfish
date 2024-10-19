@@ -365,3 +365,46 @@ impl Square {
  * pawn capture & promotion to rook
  * pawn capture & promotion to queen
  */
+pub enum MoveType {
+    QuietMove, 
+    DoublePawnPush,
+    KingCastle,
+    QueenCastle,
+    Capture,
+    EPCapture,
+    NPromotion,
+    BPromotion,
+    RPromotion,
+    QPromotion,
+    NPromoCapture,
+    BPromoCapture,
+    RPromoCapture,
+    QPromoCapture
+}
+
+impl MoveType {
+    /// A function that generates the `str` representation of a `MoveType`.\
+    /// * `returns` - a `&str` in the following 4-bit format:
+    /// 1st bit: promotion
+    /// 2nd bit: capture
+    /// 3rd bit: special 1
+    /// 4th bit: special 0
+    pub fn to_str(&self) -> &str {
+        match self {
+            MoveType::QuietMove => "0000", 
+            MoveType::DoublePawnPush => "0001",
+            MoveType::KingCastle => "0010",
+            MoveType::QueenCastle => "0011",
+            MoveType::Capture => "0100",
+            MoveType::EPCapture => "0101",
+            MoveType::NPromotion => "1000",
+            MoveType::BPromotion => "1001",
+            MoveType::RPromotion => "1010",
+            MoveType::QPromotion => "1011",
+            MoveType::NPromoCapture => "1100",
+            MoveType::BPromoCapture => "1101",
+            MoveType::RPromoCapture => "1110",
+            MoveType::QPromoCapture => "1111",
+        }
+    }
+}
