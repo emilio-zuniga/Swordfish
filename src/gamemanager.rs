@@ -1,7 +1,7 @@
 use crate::{
     bitboard,
     movetable::MoveTable,
-    types::{Color, PieceType, Square},
+    types::{Color, MoveType, PieceType, Square},
 };
 use bitboard::BitBoard;
 use regex::Regex;
@@ -129,8 +129,8 @@ impl GameManager {
 
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
-    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(Square, Square)> {
-        let mut pseudolegal_moves: Vec<u64> = Vec::new(); //Vec<(Square, Square)>
+    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(Square, Square, MoveType)> {
+        let mut pseudolegal_moves: Vec<(Square, Square, MoveType)> = Vec::new();
 
         match color {
             Color::Black => {
@@ -163,20 +163,9 @@ impl GameManager {
                 let queens = GameManager::powers_of_two(self.bitboard.queens_black);
                 let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
-                for p in pawns {
-                    for r in self.movetable.moves(Color::Black, PieceType::Pawn, p) {
-                        for m in r {
-                            if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                                pseudolegal_moves.push(todo!())
-                                //if pawn push, check there are no other in front of it (inludes double pushes)
-                                //if capture, ensure an opponent's piece is on either side
-                                //if on last rank, account for all possible promotion types
-
-                            }
-                        }
-                    }
-                }
+                let mut pawn_pseudo_legal_moves =
+                    self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
 
                 for p in rooks {
                     if p & friendly_pieces == 0 {
@@ -205,11 +194,10 @@ impl GameManager {
                          * check for opponent attacks on back rank
                          * check for presence of rook
                          * check for king in check
-                         * 
+                         *
                          * update bitboards accordingly
                          * update GM accordingly
                          */
-
                     }
                 }
 
@@ -219,7 +207,93 @@ impl GameManager {
                 todo!()
             }
         }
-        todo!()
+    }
+
+    fn pseudolegal_pawn_moves(
+        &self,
+        color: Color,
+        pawn_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(Square, Square, MoveType)> {
+        let mut pawn_pseudo_legal_moves = Vec::new();
+
+        //pawns can do:
+        /* Quiet Move
+         * Double Pawn Push
+         * Capture
+         * En Passant Capture
+         * 4 Promotions
+         * 4 Capture Promotions
+         */
+        let rank_2: u64 = 0x00000000_0000FF00;
+        let rank_4: u64 = 0x00000000_FF000000;
+        let rank_5: u64 = 0x000000FF_00000000;
+        let rank_7: u64 = 0x00FF0000_00000000;
+        let rank_8: u64 = 0xFF000000_00000000;
+        let file_1: u64 = 0x80808080_80808080;
+        let files_2_thu_7: u64 = 0x7E7E7E7E_7E7E7E7E;
+        let file_8: u64 = 0x01010101_01010101;
+
+        match color {
+            Color::Black => {}
+            Color::White => {
+                for pawn in pawn_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Pawn, pawn) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+
+                                if (m & (pawn << 8)) == m {
+                                    // then this move is a pawn push
+
+                                    if m & enemy_pieces == 0 {
+                                        //then this move can be played
+
+                                        if m & rank_8 == m {
+                                            //then this move will either be:
+                                            /* Promotion to Knight
+                                             * Promotion to Bishop
+                                             * Promotion to Rook
+                                             * Promotion to Queen
+                                             */
+                                        }
+                                        //if it makes it here, then it is just a normal pawn push
+                                    }
+                                    if m & rank_8 == m {
+                                        //then this is a pawn promotion
+                                    }
+                                } else if (pawn & rank_2 == pawn) && (m & (pawn << 16)) == m {
+                                    //then this move is a double push
+
+                                } else {
+                                    //this move is a capture
+
+                                    if m & enemy_pieces == m {
+                                        //then this move is a capture
+
+                                        if m & rank_8 == m {
+                                            //then this move is a promotion capture
+                                            
+                                        }
+                                    } else if match Square::from_str(&self.en_passant_target) {
+                                        Some(coord) => m & coord.to_u64() == m,
+                                        None => false,
+                                    } {
+                                        //then this move is an en passant capture
+
+                                    }
+                                }
+                            }
+
+                            pawn_pseudo_legal_moves.push(todo!());
+                        }
+                    }
+                }
+            }
+        }
+
+        pawn_pseudo_legal_moves
     }
 
     pub fn powers_of_two(int: u64) -> Vec<u64> {

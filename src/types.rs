@@ -349,22 +349,7 @@ impl Square {
     }
 }
 
-/* For Make/Unmake Move, likely create enum (or represent w 4 bit integer):
- * quiet moves
- * double pawn push
- * king castle
- * queen castle
- * captures
- * en-passant capture
- * pawn promotion to knight
- * pawn promotion to bishop
- * pawn promotion to rook
- * pawn promotion to queen
- * pawn capture & promotion to knight
- * pawn capture & promotion to bishop
- * pawn capture & promotion to rook
- * pawn capture & promotion to queen
- */
+#[allow(dead_code)]
 pub enum MoveType {
     QuietMove, 
     DoublePawnPush,
@@ -382,6 +367,7 @@ pub enum MoveType {
     QPromoCapture
 }
 
+#[allow(dead_code)]
 impl MoveType {
     /// A function that generates the `str` representation of a `MoveType`.\
     /// * `returns` - a `&str` in the following 4-bit format:
