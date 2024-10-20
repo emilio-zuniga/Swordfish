@@ -9,7 +9,7 @@ pub enum PieceType {
     Pawn,
 }
 
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 /// An `enum` to represent the color of a piece.
 pub enum Color {
     Black,
@@ -18,7 +18,7 @@ pub enum Color {
 
 /// An `enum` representing a single coordinate of a chess board
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Square {
     A8, B8, C8, D8, E8, F8, G8, H8,
     A7, B7, C7, D7, E7, F7, G7, H7,
@@ -349,19 +349,48 @@ impl Square {
     }
 }
 
-/* For Make/Unmake Move, likely create enum (or represent w 4 bit integer):
- * quiet moves
- * double pawn push
- * king castle
- * queen castle
- * captures
- * en-passant capture
- * pawn promotion to knight
- * pawn promotion to bishop
- * pawn promotion to rook
- * pawn promotion to queen
- * pawn capture & promotion to knight
- * pawn capture & promotion to bishop
- * pawn capture & promotion to rook
- * pawn capture & promotion to queen
- */
+#[allow(dead_code)]
+pub enum MoveType {
+    QuietMove, 
+    DoublePawnPush,
+    KingCastle,
+    QueenCastle,
+    Capture,
+    EPCapture,
+    NPromotion,
+    BPromotion,
+    RPromotion,
+    QPromotion,
+    NPromoCapture,
+    BPromoCapture,
+    RPromoCapture,
+    QPromoCapture
+}
+
+#[allow(dead_code)]
+impl MoveType {
+    /// A function that generates the `str` representation of a `MoveType`.\
+    /// * `returns` - a `&str` in the following 4-bit format:
+    /// 1st bit: promotion
+    /// 2nd bit: capture
+    /// 3rd bit: special 1
+    /// 4th bit: special 0
+    pub fn to_str(&self) -> &str {
+        match self {
+            MoveType::QuietMove => "0000", 
+            MoveType::DoublePawnPush => "0001",
+            MoveType::KingCastle => "0010",
+            MoveType::QueenCastle => "0011",
+            MoveType::Capture => "0100",
+            MoveType::EPCapture => "0101",
+            MoveType::NPromotion => "1000",
+            MoveType::BPromotion => "1001",
+            MoveType::RPromotion => "1010",
+            MoveType::QPromotion => "1011",
+            MoveType::NPromoCapture => "1100",
+            MoveType::BPromoCapture => "1101",
+            MoveType::RPromoCapture => "1110",
+            MoveType::QPromoCapture => "1111",
+        }
+    }
+}

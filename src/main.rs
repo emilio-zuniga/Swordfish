@@ -8,7 +8,10 @@ mod movetable;
 mod types;
 
 fn main() {
-    
+    let fen_str = "k7/8/8/2pP4/8/8/8/K7 w - c6 0 1";
+    let gm = GameManager::from_fen_string(fen_str);
+    gm.pseudolegal_moves(Color::White);
+    gm.pseudolegal_moves(Color::Black);
 }
 
 #[allow(dead_code)]

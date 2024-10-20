@@ -419,7 +419,7 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<Vec<u64>> {
     // j
 
     let mut moves: Vec<Vec<u64>> = Vec::new();
-    let position = (1 << ((7 - square.1) * 8 + (7 - square.0))) as u64;
+    let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
     // North: North West Square
     if square.0 > 0 && square.1 > 1 {
