@@ -270,15 +270,8 @@ impl GameManager {
                                              * Promotion to Rook
                                              * Promotion to Queen
                                              */
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -306,14 +299,8 @@ impl GameManager {
                                             ));
                                         } else {
                                             //just a normal pawn push
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -326,15 +313,9 @@ impl GameManager {
                                 } else if (pawn & rank_7 == pawn) && (m & (pawn >> 16)) == m {
                                     //then this move is a double push
                                     if (friendly_pieces | enemy_pieces) & (m | (m << 8)) == 0 {
-                                        //then there is in between the pawn and the fourth rank
-                                        let from = match Square::from_u64(pawn) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
-                                        let to = match Square::from_u64(m) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
+                                        //then there is in between the pawn and the fifth rank
+                                        let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                        let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -349,14 +330,8 @@ impl GameManager {
                                         //then this move is definitely a capture
                                         if m & rank_1 == m {
                                             //then this move is a promotion capture
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -384,14 +359,8 @@ impl GameManager {
                                             ));
                                         } else {
                                             //then this move is a standard capture
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -405,14 +374,8 @@ impl GameManager {
                                         None => false,
                                     } {
                                         //then this move is an en passant capture
-                                        let from = match Square::from_u64(pawn) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
-                                        let to = match Square::from_u64(m) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
+                                        let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                        let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -444,15 +407,8 @@ impl GameManager {
                                              * Promotion to Rook
                                              * Promotion to Queen
                                              */
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -480,14 +436,8 @@ impl GameManager {
                                             ));
                                         } else {
                                             //just a normal pawn push
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -501,14 +451,8 @@ impl GameManager {
                                     //then this move is a double push
                                     if (friendly_pieces | enemy_pieces) & (m | (m >> 8)) == 0 {
                                         //then there is in between the pawn and the fourth rank
-                                        let from = match Square::from_u64(pawn) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
-                                        let to = match Square::from_u64(m) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
+                                        let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                        let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -523,14 +467,8 @@ impl GameManager {
                                         //then this move is definitely a capture
                                         if m & rank_8 == m {
                                             //then this move is a promotion capture
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -558,14 +496,8 @@ impl GameManager {
                                             ));
                                         } else {
                                             //then this move is a standard capture
-                                            let from = match Square::from_u64(pawn) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
-                                            let to = match Square::from_u64(m) {
-                                                Some(coord) => coord,
-                                                None => Square::A1,
-                                            };
+                                            let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -579,14 +511,8 @@ impl GameManager {
                                         None => false,
                                     } {
                                         //then this move is an en passant capture
-                                        let from = match Square::from_u64(pawn) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
-                                        let to = match Square::from_u64(m) {
-                                            Some(coord) => coord,
-                                            None => Square::A1,
-                                        };
+                                        let from = Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                        let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -615,11 +541,14 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut knight_pseudo_legal_moves = Vec::new();
-        
+
         match color {
             Color::Black => {
                 for knight in knight_locations {
-                    for r in self.movetable.moves(Color::Black, PieceType::Knight, knight) {
+                    for r in self
+                        .movetable
+                        .moves(Color::Black, PieceType::Knight, knight)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -627,10 +556,13 @@ impl GameManager {
                         }
                     }
                 }
-            },
+            }
             Color::White => {
                 for knight in knight_locations {
-                    for r in self.movetable.moves(Color::White, PieceType::Knight, knight) {
+                    for r in self
+                        .movetable
+                        .moves(Color::White, PieceType::Knight, knight)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -638,7 +570,7 @@ impl GameManager {
                         }
                     }
                 }
-            },
+            }
         }
 
         knight_pseudo_legal_moves
@@ -654,7 +586,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut bishop_pseudo_legal_moves = Vec::new();
-        
+
         match color {
             Color::Black => {
                 for bishop in bishop_locations {
@@ -692,7 +624,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut rook_pseudo_legal_moves = Vec::new();
-        
+
         match color {
             Color::Black => {
                 for rook in rook_locations {
@@ -720,7 +652,7 @@ impl GameManager {
 
         rook_pseudo_legal_moves
     }
-    
+
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_queen_moves(
         &self,
@@ -730,7 +662,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut queen_pseudo_legal_moves = Vec::new();
-        
+
         match color {
             Color::Black => {
                 for queen in queen_locations {
@@ -758,7 +690,7 @@ impl GameManager {
 
         queen_pseudo_legal_moves
     }
-    
+
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_king_moves(
         &self,
@@ -768,7 +700,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut king_pseudo_legal_moves = Vec::new();
-        
+
         match color {
             Color::Black => {
                 for king in king_locations {
@@ -801,7 +733,7 @@ impl GameManager {
     pub fn powers_of_two(int: u64) -> Vec<u64> {
         let mut res = Vec::new();
         let mut i = 1_u64;
-        while i <= int {
+        while i <= int && i != 0 {
             if i & int != 0 {
                 res.push(i);
             }
