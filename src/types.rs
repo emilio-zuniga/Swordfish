@@ -9,7 +9,7 @@ pub enum PieceType {
     Pawn,
 }
 
-#[derive(Debug, Clone, Eq, Hash, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
 /// An `enum` to represent the color of a piece.
 pub enum Color {
     Black,

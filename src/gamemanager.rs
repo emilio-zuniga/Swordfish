@@ -129,8 +129,8 @@ impl GameManager {
 
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
-    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(Square, Square, MoveType)> {
-        let mut pseudolegal_moves: Vec<(Square, Square, MoveType)> = Vec::new();
+    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut pseudolegal_moves: Vec<(PieceType, Square, Square, MoveType)> = Vec::new();
 
         match color {
             Color::Black => {
@@ -158,10 +158,10 @@ impl GameManager {
                     | self.bitboard.king_white;
 
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
-                let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
-                let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
-                let queens = GameManager::powers_of_two(self.bitboard.queens_black);
-                let kings = GameManager::powers_of_two(self.bitboard.king_black);
+                //let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                //let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                //let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                //let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
                 let mut pawn_pseudo_legal_moves =
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
@@ -247,7 +247,7 @@ impl GameManager {
         pawn_locations: Vec<u64>,
         friendly_pieces: u64,
         enemy_pieces: u64,
-    ) -> Vec<(Square, Square, MoveType)> {
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut pawn_pseudo_legal_moves = Vec::new();
 
         //pawns can do:
@@ -258,11 +258,128 @@ impl GameManager {
          * 4 Promotions
          * 4 Capture Promotions
          */
+        let rank_1: u64 = 0x00000000_000000FF;
         let rank_2: u64 = 0x00000000_0000FF00;
+        let rank_7: u64 = 0x00FF0000_00000000;
         let rank_8: u64 = 0xFF000000_00000000;
 
         match color {
-            Color::Black => {}
+            Color::Black => {
+                for pawn in pawn_locations {
+                    for r in self.movetable.moves(color, PieceType::Pawn, pawn) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                                if (m & (pawn >> 8)) == m {
+                                    // then this move is a type of pawn push
+                                    if m & enemy_pieces == 0 {
+                                        //then this push is not blocked
+                                        if m & rank_1 == m {
+                                            //then this move will either be:
+                                            /* Promotion to Knight
+                                             * Promotion to Bishop
+                                             * Promotion to Rook
+                                             * Promotion to Queen
+                                             */
+                                            let from = match Square::from_u64(pawn) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+
+                                            let to = match Square::from_u64(m) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromotion));
+                                        } else {
+                                            //just a normal pawn push
+                                            let from = match Square::from_u64(pawn) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+                                            let to = match Square::from_u64(m) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QuietMove));
+                                        }
+                                    }
+                                } else if (pawn & rank_7 == pawn) && (m & (pawn >> 16)) == m {
+                                    //then this move is a double push
+                                    if (friendly_pieces | enemy_pieces) & (m | (m << 8)) == 0 {
+                                        //then there is in between the pawn and the fourth rank
+                                        let from = match Square::from_u64(pawn) {
+                                            Some(coord) => coord,
+                                            None => Square::A1,
+                                        };
+                                        let to = match Square::from_u64(m) {
+                                            Some(coord) => coord,
+                                            None => Square::A1,
+                                        };
+
+                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::DoublePawnPush));
+                                    }
+
+                                } else {
+                                    //this move is a type of capture
+                                    if m & enemy_pieces == m {
+                                        //then this move is definitely a capture
+                                        if m & rank_1 == m {
+                                            //then this move is a promotion capture
+                                            let from = match Square::from_u64(pawn) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+                                            let to = match Square::from_u64(m) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromoCapture));
+                                            
+                                        } else {
+                                            //then this move is a standard capture
+                                            let from = match Square::from_u64(pawn) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+                                            let to = match Square::from_u64(m) {
+                                                Some(coord) => coord,
+                                                None => Square::A1,
+                                            };
+
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::Capture));
+                                        }
+                                    } else if match Square::from_str(&self.en_passant_target) {
+                                        Some(coord) => m & coord.to_u64() == m,
+                                        None => false,
+                                    } {
+                                        //then this move is an en passant capture
+                                        let from = match Square::from_u64(pawn) {
+                                            Some(coord) => coord,
+                                            None => Square::A1,
+                                        };
+                                        let to = match Square::from_u64(m) {
+                                            Some(coord) => coord,
+                                            None => Square::A1,
+                                        };
+
+                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::EPCapture));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             Color::White => {
                 for pawn in pawn_locations {
                     for r in self.movetable.moves(Color::White, PieceType::Pawn, pawn) {
@@ -290,10 +407,10 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::NPromotion));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::BPromotion));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::RPromotion));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::QPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromotion));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromotion));
                                         } else {
                                             //just a normal pawn push
                                             let from = match Square::from_u64(pawn) {
@@ -305,7 +422,7 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::QuietMove));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QuietMove));
                                         }
                                     }
                                 } else if (pawn & rank_2 == pawn) && (m & (pawn << 16)) == m {
@@ -321,7 +438,7 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((from, to, MoveType::DoublePawnPush));
+                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::DoublePawnPush));
                                     }
 
                                 } else {
@@ -339,10 +456,10 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::NPromoCapture));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::BPromoCapture));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::RPromoCapture));
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::QPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromoCapture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromoCapture));
                                             
                                         } else {
                                             //then this move is a standard capture
@@ -355,7 +472,7 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((from, to, MoveType::Capture));
+                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::Capture));
                                         }
                                     } else if match Square::from_str(&self.en_passant_target) {
                                         Some(coord) => m & coord.to_u64() == m,
@@ -371,7 +488,7 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((from, to, MoveType::EPCapture));
+                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::EPCapture));
                                     }
                                 }
                             }
