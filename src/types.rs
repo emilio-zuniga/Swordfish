@@ -17,7 +17,6 @@ pub enum Color {
 }
 
 /// An `enum` representing a single coordinate of a chess board
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 pub enum Square {
     A8, B8, C8, D8, E8, F8, G8, H8,
@@ -30,7 +29,6 @@ pub enum Square {
     A1, B1, C1, D1, E1, F1, G1, H1,
 }
 
-#[allow(dead_code)]
 impl Square {
     /// A function that generates a `Square` coordinate from a `u64`.\
     /// * `coordinate`` - a `u64` representing a single square on a chess board \
@@ -349,7 +347,6 @@ impl Square {
     }
 }
 
-#[allow(dead_code)]
 pub enum MoveType {
     QuietMove, 
     DoublePawnPush,
@@ -367,7 +364,6 @@ pub enum MoveType {
     QPromoCapture
 }
 
-#[allow(dead_code)]
 impl MoveType {
     /// A function that generates the `str` representation of a `MoveType`.\
     /// * `returns` - a `&str` in the following 4-bit format:

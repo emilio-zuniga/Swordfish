@@ -49,7 +49,6 @@ impl Default for GameManager {
     }
 }
 
-#[allow(dead_code)]
 impl GameManager {
     /// A utility method for generating a new `GameManager` from a FEN string\
     /// * `fen` - a `&str` representing a game's state in FEN
@@ -128,7 +127,12 @@ impl GameManager {
         }
     }
 
-    /// Should return all pseudo legal moves accross all piece types
+    /// A method returning a list of pseudo-legal moves playable according to the
+    /// information encoded in this instance of GameManager
+    /// * `color` - the `Color` of the side to move
+    /// * `returns` - a `Vec` of tuple representing playable moves:\
+    ///     (the `PieceType` of the piece to move, the starting `Square`, 
+    ///     the target `Square`, and the `MoveType`)
     pub fn pseudolegal_moves(&self, color: Color) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut pseudolegal_moves: Vec<(PieceType, Square, Square, MoveType)> = Vec::new();
 
@@ -242,7 +246,15 @@ impl GameManager {
         }
     }
 
-    ///returned as (piece type, from square, to square, move type)
+    /// A method returning a list of pseudo-legal pawn moves playable according to
+    /// the information encoded in this instance of GameManager
+    /// * `color` - the `Color` of the side to move
+    /// * `pawn_locations` - a `Vec<u64>` containing a list of each pawn's location
+    /// * `friendly_pieces` - a `u64` representing the current position of allied pieces
+    /// * `enemy_pieces` - a `u64` representing the current position of enemy pieces
+    /// * `returns` - a `Vec` of tuples representing playable pawn moves in the following form:\
+    ///     (the `PieceType` of the piece to move, the starting `Square`, 
+    ///     the target `Square`, and the `MoveType`)
     fn pseudolegal_pawn_moves(
         &self,
         color: Color,
@@ -567,6 +579,50 @@ impl GameManager {
         }
 
         pawn_pseudo_legal_moves
+    }
+
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_knight_moves(
+        &self,
+        color: Color,
+        knight_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut knight_pseudo_legal_moves = Vec::new();
+
+        match color {
+            Color::Black => {
+                for knight in knight_locations {
+                    for r in self
+                        .movetable
+                        .moves(Color::Black, PieceType::Knight, knight)
+                    {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+            Color::White => {
+                for knight in knight_locations {
+                    for r in self
+                        .movetable
+                        .moves(Color::White, PieceType::Knight, knight)
+                    {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        knight_pseudo_legal_moves
     }
 
     /// Return all bishop moves from the given locations as `(PieceType, Square, Square, MoveType)`.

@@ -11,6 +11,7 @@ pub struct MoveTable {
 }
 
 impl Default for MoveTable {
+    /// Generates a `MoveTable` containing the possible moves for each piece type at each square
     fn default() -> Self {
         let mut table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = HashMap::new();
 
