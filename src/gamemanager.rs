@@ -127,8 +127,7 @@ impl GameManager {
         }
     }
 
-    // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
-
+    /// Should return all pseudo legal moves accross all piece types
     pub fn pseudolegal_moves(&self, color: Color) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut pseudolegal_moves: Vec<(PieceType, Square, Square, MoveType)> = Vec::new();
 
@@ -145,19 +144,20 @@ impl GameManager {
 
                 // To get each black piece, pop each power of two for each piece type.
                 let friendly_pieces = self.bitboard.pawns_black
-                    | self.bitboard.rooks_black
                     | self.bitboard.knights_black
                     | self.bitboard.bishops_black
+                    | self.bitboard.rooks_black
                     | self.bitboard.queens_black
                     | self.bitboard.king_black;
                 let enemy_pieces = self.bitboard.pawns_white
-                    | self.bitboard.rooks_white
                     | self.bitboard.knights_white
                     | self.bitboard.bishops_white
+                    | self.bitboard.rooks_white
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
+                let knights = GameManager::powers_of_two(self.bitboard.knights_black);
                 //let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
                 //let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
                 //let queens = GameManager::powers_of_two(self.bitboard.queens_black);
@@ -166,46 +166,33 @@ impl GameManager {
                 let mut pawn_pseudo_legal_moves =
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
-                
+
+                let mut knight_pseudo_legal_moves =
+                    self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
+
                 /*
-                for p in rooks {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                    }
-                }
+                let mut bishop_pseudo_legal_moves =
+                    self.pseudolegal_bishop_moves(color, bishops, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
 
-                for p in bishops {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                    }
-                }
+                let mut rook_pseudo_legal_moves =
+                    self.pseudolegal_rook_moves(color, rooks, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
 
-                for p in queens {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                    }
-                }
+                let mut queen_pseudo_legal_moves =
+                    self.pseudolegal_queen_moves(color, queens, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
 
-                for p in kings {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                        /* For Castling:
-                         * castle side check status in GM
-                         * check presence of friendly/enemy pieces on back rank
-                         * check for opponent attacks on back rank
-                         * check for presence of rook
-                         * check for king in check
-                         *
-                         * update bitboards accordingly
-                         * update GM accordingly
-                         */
-                    }
-                }
+                let mut king_pseudo_legal_moves =
+                    self.pseudolegal_king_moves(color, kings, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut king_pseudo_legal_moves);
+                 */
 
-                todo!()
-                */
-                
-                println!("Number of moves recorded: {}", pseudolegal_moves.len());
+                println!(
+                    "Number of moves accross all piece types recorded: {}",
+                    pseudolegal_moves.len()
+                );
 
                 pseudolegal_moves
             }
@@ -216,17 +203,17 @@ impl GameManager {
                     | self.bitboard.bishops_white
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
-                
+
                 let enemy_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
                     | self.bitboard.knights_black
                     | self.bitboard.bishops_black
                     | self.bitboard.queens_black
                     | self.bitboard.king_black;
-                
+
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_white);
-                //let rooks = GameManager::powers_of_two(self.bitboard.rooks_white);
                 //let bishops = GameManager::powers_of_two(self.bitboard.bishops_white);
+                //let rooks = GameManager::powers_of_two(self.bitboard.rooks_white);
                 //let queens = GameManager::powers_of_two(self.bitboard.queens_white);
                 //let kings = GameManager::powers_of_two(self.bitboard.king_white);
 
@@ -234,13 +221,15 @@ impl GameManager {
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
 
+                //Add the rest of the piece movements here
+
                 println!("Number of moves recorded: {}", pseudolegal_moves.len());
                 pseudolegal_moves
             }
         }
     }
 
-    ///returned as (from square, to square, move type)
+    ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_pawn_moves(
         &self,
         color: Color,
@@ -291,10 +280,30 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromotion));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::NPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::BPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::RPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QPromotion,
+                                            ));
                                         } else {
                                             //just a normal pawn push
                                             let from = match Square::from_u64(pawn) {
@@ -306,7 +315,12 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QuietMove));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QuietMove,
+                                            ));
                                         }
                                     }
                                 } else if (pawn & rank_7 == pawn) && (m & (pawn >> 16)) == m {
@@ -322,9 +336,13 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::DoublePawnPush));
+                                        pawn_pseudo_legal_moves.push((
+                                            PieceType::Pawn,
+                                            from,
+                                            to,
+                                            MoveType::DoublePawnPush,
+                                        ));
                                     }
-
                                 } else {
                                     //this move is a type of capture
                                     if m & enemy_pieces == m {
@@ -340,11 +358,30 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromoCapture));
-                                            
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::NPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::BPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::RPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QPromoCapture,
+                                            ));
                                         } else {
                                             //then this move is a standard capture
                                             let from = match Square::from_u64(pawn) {
@@ -356,7 +393,12 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::Capture));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::Capture,
+                                            ));
                                         }
                                     } else if match Square::from_str(&self.en_passant_target) {
                                         Some(coord) => m & coord.to_u64() == m,
@@ -372,7 +414,12 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::EPCapture));
+                                        pawn_pseudo_legal_moves.push((
+                                            PieceType::Pawn,
+                                            from,
+                                            to,
+                                            MoveType::EPCapture,
+                                        ));
                                     }
                                 }
                             }
@@ -407,10 +454,30 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromotion));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromotion));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::NPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::BPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::RPromotion,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QPromotion,
+                                            ));
                                         } else {
                                             //just a normal pawn push
                                             let from = match Square::from_u64(pawn) {
@@ -422,7 +489,12 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QuietMove));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QuietMove,
+                                            ));
                                         }
                                     }
                                 } else if (pawn & rank_2 == pawn) && (m & (pawn << 16)) == m {
@@ -438,9 +510,13 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::DoublePawnPush));
+                                        pawn_pseudo_legal_moves.push((
+                                            PieceType::Pawn,
+                                            from,
+                                            to,
+                                            MoveType::DoublePawnPush,
+                                        ));
                                     }
-
                                 } else {
                                     //this move is a type of capture
                                     if m & enemy_pieces == m {
@@ -456,11 +532,30 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::NPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::BPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::RPromoCapture));
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::QPromoCapture));
-                                            
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::NPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::BPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::RPromoCapture,
+                                            ));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::QPromoCapture,
+                                            ));
                                         } else {
                                             //then this move is a standard capture
                                             let from = match Square::from_u64(pawn) {
@@ -472,7 +567,12 @@ impl GameManager {
                                                 None => Square::A1,
                                             };
 
-                                            pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::Capture));
+                                            pawn_pseudo_legal_moves.push((
+                                                PieceType::Pawn,
+                                                from,
+                                                to,
+                                                MoveType::Capture,
+                                            ));
                                         }
                                     } else if match Square::from_str(&self.en_passant_target) {
                                         Some(coord) => m & coord.to_u64() == m,
@@ -488,7 +588,12 @@ impl GameManager {
                                             None => Square::A1,
                                         };
 
-                                        pawn_pseudo_legal_moves.push((PieceType::Pawn, from, to, MoveType::EPCapture));
+                                        pawn_pseudo_legal_moves.push((
+                                            PieceType::Pawn,
+                                            from,
+                                            to,
+                                            MoveType::EPCapture,
+                                        ));
                                     }
                                 }
                             }
@@ -501,6 +606,198 @@ impl GameManager {
         pawn_pseudo_legal_moves
     }
 
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_knight_moves(
+        &self,
+        color: Color,
+        knight_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut knight_pseudo_legal_moves = Vec::new();
+        
+        match color {
+            Color::Black => {
+                for knight in knight_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Knight, knight) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+            Color::White => {
+                for knight in knight_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Knight, knight) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        knight_pseudo_legal_moves
+    }
+
+    /*
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_bishop_moves(
+        &self,
+        color: Color,
+        bishop_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut bishop_pseudo_legal_moves = Vec::new();
+        
+        match color {
+            Color::Black => {
+                for bishop in bishop_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Bishop, bishop) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+            Color::White => {
+                for bishop in bishop_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Bishop, bishop) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        bishop_pseudo_legal_moves
+    }
+
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_rook_moves(
+        &self,
+        color: Color,
+        rook_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut rook_pseudo_legal_moves = Vec::new();
+        
+        match color {
+            Color::Black => {
+                for rook in rook_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Rook, rook) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+            Color::White => {
+                for rook in rook_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Rook, rook) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        rook_pseudo_legal_moves
+    }
+    
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_queen_moves(
+        &self,
+        color: Color,
+        queen_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut queen_pseudo_legal_moves = Vec::new();
+        
+        match color {
+            Color::Black => {
+                for queen in queen_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Queen, queen) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+            Color::White => {
+                for queen in queen_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Queen, queen) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        queen_pseudo_legal_moves
+    }
+    
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_king_moves(
+        &self,
+        color: Color,
+        king_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut king_pseudo_legal_moves = Vec::new();
+        
+        match color {
+            Color::Black => {
+                for king in king_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::King, king) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+            Color::White => {
+                for king in king_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::King, king) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        king_pseudo_legal_moves
+    }
+    */
+
     pub fn powers_of_two(int: u64) -> Vec<u64> {
         let mut res = Vec::new();
         let mut i = 1_u64;
@@ -512,7 +809,7 @@ impl GameManager {
         }
         res
     }
-    
+
     /*
     pub fn legal_moves(&self, color: Color) -> () {
         match color {
