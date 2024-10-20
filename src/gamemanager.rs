@@ -732,52 +732,50 @@ impl GameManager {
         let mut res = Vec::new();
         let mut i = 1_u64;
         while i <= int && i != 0 {
-            while i <= int && i != 0 {
-                if i & int != 0 {
-                    debug_assert!(i.is_power_of_two());
-                    res.push(i);
-                }
-                i <<= 1;
+            if i & int != 0 {
+                debug_assert!(i.is_power_of_two());
+                res.push(i);
             }
-            res
+            i <<= 1;
         }
+        res
+    }
 
-        // TODO: Implement move legality checks.
-        pub fn legal_moves(&self, color: Color) -> () {
-            match color {
-                Color::Black => {
-                    let friendly_pieces = self.bitboard.pawns_black
-                        | self.bitboard.rooks_black
-                        | self.bitboard.knights_black
-                        | self.bitboard.bishops_black
-                        | self.bitboard.queens_black
-                        | self.bitboard.king_black;
-                    let enemy_pieces = self.bitboard.pawns_white
-                        | self.bitboard.rooks_white
-                        | self.bitboard.knights_white
-                        | self.bitboard.bishops_white
-                        | self.bitboard.queens_white
-                        | self.bitboard.king_white;
+    // TODO: Implement move legality checks.
+    pub fn legal_moves(&self, color: Color) -> () {
+        match color {
+            Color::Black => {
+                let friendly_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+                let enemy_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
 
-                    let pseudolegal_moves = todo!();
-                }
-                Color::White => {
-                    let friendly_pieces = self.bitboard.pawns_white
-                        | self.bitboard.rooks_white
-                        | self.bitboard.knights_white
-                        | self.bitboard.bishops_white
-                        | self.bitboard.queens_white
-                        | self.bitboard.king_white;
-                    let enemy_pieces = self.bitboard.pawns_black
-                        | self.bitboard.rooks_black
-                        | self.bitboard.knights_black
-                        | self.bitboard.bishops_black
-                        | self.bitboard.queens_black
-                        | self.bitboard.king_black;
-                }
+                let pseudolegal_moves = todo!();
             }
-            todo!()
+            Color::White => {
+                let friendly_pieces = self.bitboard.pawns_white
+                    | self.bitboard.rooks_white
+                    | self.bitboard.knights_white
+                    | self.bitboard.bishops_white
+                    | self.bitboard.queens_white
+                    | self.bitboard.king_white;
+                let enemy_pieces = self.bitboard.pawns_black
+                    | self.bitboard.rooks_black
+                    | self.bitboard.knights_black
+                    | self.bitboard.bishops_black
+                    | self.bitboard.queens_black
+                    | self.bitboard.king_black;
+            }
         }
+        todo!()
     }
 }
 
