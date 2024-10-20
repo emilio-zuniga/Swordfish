@@ -419,7 +419,8 @@ fn knight_move_hops(square: (usize, usize)) -> Vec<Vec<u64>> {
     // j
 
     let mut moves: Vec<Vec<u64>> = Vec::new();
-    let position = (1 << ((7 - square.1) * 8 + (7 - square.0))) as u64;
+    // Explicitly specify behavior when shl-ing by more than the no. of bits in lhs, i.e. 64.
+    let position = (1_u64.checked_shl(((7 - square.1) * 8 + (7 - square.0)) as u32)).unwrap_or(0);
 
     // North: North West Square
     if square.0 > 0 && square.1 > 1 {
@@ -541,14 +542,16 @@ impl MoveTable {
         let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
         match piece {
-            PieceType::Knight | PieceType::Bishop | PieceType::Rook | PieceType::Queen => self
+            PieceType::Knight
+            | PieceType::Bishop
+            | PieceType::Rook
+            | PieceType::Queen
+            | PieceType::King => self
                 .table
                 .get(&(Color::White, piece, position))
                 .unwrap()
                 .clone(),
-            PieceType::Pawn | PieceType::King => {
-                self.table.get(&(color, piece, position)).unwrap().clone()
-            }
+            PieceType::Pawn => self.table.get(&(color, piece, position)).unwrap().clone(),
         }
     }
 
@@ -573,5 +576,42 @@ impl MoveTable {
         }
 
         board
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashSet;
+
+    use super::MoveTable;
+
+    #[test]
+    fn check_knight_moves() {
+        let table = MoveTable::default();
+        let rays = table.get_moves(
+            crate::types::Color::Black,
+            crate::types::PieceType::Knight,
+            (0, 1),
+        );
+
+        let string_boards = table.get_moves_as_bitboard(
+            crate::types::Color::Black,
+            crate::types::PieceType::Knight,
+            (0, 1),
+        );
+
+        let mut pslm: HashSet<u64> = HashSet::new();
+        pslm.insert(0x80000000000000);
+        pslm.insert(0x20000000000000);
+        pslm.insert(0x4000000000000);
+        pslm.insert(0x1000000000000);
+
+        let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
+        let only_four = rays
+            .iter()
+            .fold(0, |acc, r: &Vec<u64>| acc + r.iter().count());
+
+        assert!(all_are_members);
+        assert_eq!(only_four, 4);
     }
 }

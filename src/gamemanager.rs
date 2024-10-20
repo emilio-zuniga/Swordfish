@@ -1,7 +1,9 @@
+use std::time;
+
 use crate::{
     bitboard,
     movetable::MoveTable,
-    types::{Color, PieceType},
+    types::{Color, PieceType, Square},
 };
 use bitboard::BitBoard;
 use regex::Regex;
@@ -129,8 +131,9 @@ impl GameManager {
 
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
-    pub fn pseudolegal_moves(&self, color: Color) -> () {
-        let mut pseudolegal_moves: Vec<u64> = Vec::new();
+    // TODO: Should return a list of 4-tuples (from, to, movetype, bitboard).
+    pub fn pseudolegal_moves(&self, color: Color) -> Vec<(Square, Square, BitBoard)> {
+        let mut pseudolegal_moves: Vec<(Square, Square, BitBoard)> = Vec::new();
 
         match color {
             Color::Black => {
@@ -143,7 +146,6 @@ impl GameManager {
                 // This means our "pseudo-legal" moves include only valid moves, and moves that leave the king in check, or are not permitted by the rules of chess
                 // for some reason besides intersection of pieces.
 
-                // To get each black piece, pop each power of two for each piece type.
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
                     | self.bitboard.knights_black
@@ -157,10 +159,18 @@ impl GameManager {
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
+                // To get each black piece, pop each power of two for each piece type.
+                println!("Calling powers_of_two() on pawns!");
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
+                println!("Calling powers_of_two() on knights!");
+                let knights = GameManager::powers_of_two(self.bitboard.knights_black);
+                println!("Calling powers_of_two() on rooks!");
                 let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                println!("Calling powers_of_two() on bishops!");
                 let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                println!("Calling powers_of_two() on queens!");
                 let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                println!("Calling powers_of_two() on kings!");
                 let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
                 for p in pawns {
@@ -168,50 +178,168 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
-                                pseudolegal_moves.push(todo!())
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.pawns_black = altered_board.pawns_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.pawns_black = altered_board.pawns_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
+                            }
+                        }
+                    }
+                }
+
+                for p in knights {
+                    for r in self.movetable.moves(Color::Black, PieceType::Knight, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.knights_black = altered_board.knights_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.knights_black = altered_board.knights_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
                             }
                         }
                     }
                 }
 
                 for p in rooks {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    for r in self.movetable.moves(Color::Black, PieceType::Rook, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.rooks_black = altered_board.rooks_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.rooks_black = altered_board.rooks_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
+                            }
+                        }
                     }
                 }
 
                 for p in bishops {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    for r in self.movetable.moves(Color::Black, PieceType::Bishop, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.bishops_black = altered_board.bishops_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.bishops_black = altered_board.bishops_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
+                            }
+                        }
                     }
                 }
 
                 for p in queens {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    for r in self.movetable.moves(Color::Black, PieceType::Queen, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.queens_black = altered_board.queens_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.queens_black = altered_board.queens_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
+                            }
+                        }
                     }
                 }
 
                 for p in kings {
-                    if p & friendly_pieces == 0 {
-                        // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+                    for r in self.movetable.moves(Color::Black, PieceType::King, p) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces, and it can be played, ignoring king safety.
+
+                                // Remove pawn p from the BitBoard with pawns & ~p.
+                                let mut altered_board = self.bitboard.clone();
+                                altered_board.king_black = altered_board.king_black & !p;
+
+                                let from =
+                                    Square::from_u64(p).expect("Must be a valid coordinate!");
+
+                                // Place pawn at new position with pawns | m. There will be
+                                // no intersection, as we checked for that already.
+                                altered_board.king_black = altered_board.king_black | m;
+
+                                let to = Square::from_u64(m).expect("Must be a valid coordinate!");
+
+                                pseudolegal_moves.push((from, to, altered_board));
+                            }
+                        }
                     }
                 }
-
-                todo!()
             }
             Color::White => {
                 todo!()
             }
         }
-        todo!()
+
+        pseudolegal_moves
     }
 
     pub fn powers_of_two(int: u64) -> Vec<u64> {
+        println!("Reached powers_of_two() on {:#64X}", int);
         let mut res = Vec::new();
         let mut i = 1_u64;
-        while i <= int {
+        while i <= int && i != 0 {
+            //println!("[|   i: {:#64X}\n[| int: {:#64X}", i, int);
+            //std::thread::sleep(time::Duration::from_millis(100)); // FIXME: Remove debug code.
             if i & int != 0 {
+                debug_assert!(i.is_power_of_two());
                 res.push(i);
             }
             i <<= 1;
@@ -253,5 +381,24 @@ impl GameManager {
             }
         }
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::GameManager;
+    use crate::types::Color;
+
+    #[test]
+    fn check_psl_moves_1() {
+        let game_manager = GameManager::default();
+        let moves = game_manager.pseudolegal_moves(Color::Black);
+
+        let mut count = 0;
+        for (_, _, b) in moves {
+            println!("{}", b.to_string());
+            count += 1;
+        }
+        assert_eq!(count, 20 /* 20 valid moves at start of game. */);
     }
 }

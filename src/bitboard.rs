@@ -1,5 +1,6 @@
 use crate::types::{Color, PieceType};
 
+#[derive(Copy, Clone, Debug)]
 /// This is a representation of the board. Each piece gets a [`u64`] integer.
 pub struct BitBoard {
     pub pawns_white: u64,
