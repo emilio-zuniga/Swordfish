@@ -347,6 +347,7 @@ impl GameManager {
         res
     }
 
+    /*
     pub fn legal_moves(&self, color: Color) -> () {
         match color {
             Color::Black => {
@@ -382,6 +383,7 @@ impl GameManager {
         }
         todo!()
     }
+    */
 }
 
 #[cfg(test)]
