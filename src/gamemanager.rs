@@ -788,12 +788,9 @@ mod test {
     fn check_psl_moves_1() {
         let game_manager = GameManager::default();
         let moves = game_manager.pseudolegal_moves(Color::Black);
-
-        let mut count = 0;
-        for (_, _, b) in moves {
-            println!("{}", b.to_string());
-            count += 1;
-        }
-        assert_eq!(count, 20 /* 20 valid moves at start of game. */);
+        assert_eq!(
+            moves.iter().count(),
+            20 /* 20 valid moves at start of game. */
+        );
     }
 }
