@@ -1,3 +1,4 @@
+#![allow(dead_code, unused_variables, unused_mut)]
 use crate::{
     bitboard,
     movetable::MoveTable,
@@ -142,7 +143,6 @@ impl GameManager {
                 // This means our "pseudo-legal" moves include only valid moves, and moves that leave the king in check, or are not permitted by the rules of chess
                 // for some reason besides intersection of pieces.
 
-                // To get each black piece, pop each power of two for each piece type.
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.knights_black
                     | self.bitboard.bishops_black
@@ -156,12 +156,13 @@ impl GameManager {
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
+                // To get each black piece, pop each power of two for each piece type.
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
-                //let knights = GameManager::powers_of_two(self.bitboard.knights_black);
-                //let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
-                //let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
-                //let queens = GameManager::powers_of_two(self.bitboard.queens_black);
-                //let kings = GameManager::powers_of_two(self.bitboard.king_black);
+                let knights = GameManager::powers_of_two(self.bitboard.knights_black);
+                let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
                 let mut pawn_pseudo_legal_moves =
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
@@ -568,6 +569,166 @@ impl GameManager {
         pawn_pseudo_legal_moves
     }
 
+    /// Return all bishop moves from the given locations as `(PieceType, Square, Square, MoveType)`.
+    fn pseudolegal_bishop_moves(
+        &self,
+        color: Color,
+        bishop_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut bishop_pseudo_legal_moves = Vec::new();
+
+        match color {
+            Color::Black => {
+                for bishop in bishop_locations {
+                    for r in self
+                        .movetable
+                        .moves(Color::Black, PieceType::Bishop, bishop)
+                    {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                                todo!()
+                            }
+                        }
+                    }
+                }
+            }
+            Color::White => {
+                for bishop in bishop_locations {
+                    for r in self
+                        .movetable
+                        .moves(Color::White, PieceType::Bishop, bishop)
+                    {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                                todo!()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bishop_pseudo_legal_moves
+    }
+
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_rook_moves(
+        &self,
+        color: Color,
+        rook_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut rook_pseudo_legal_moves = Vec::new();
+
+        match color {
+            Color::Black => {
+                for rook in rook_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Rook, rook) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+            Color::White => {
+                for rook in rook_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Rook, rook) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        rook_pseudo_legal_moves
+    }
+
+    fn pseudolegal_queen_moves(
+        &self,
+        color: Color,
+        queen_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut queen_pseudo_legal_moves = Vec::new();
+
+        match color {
+            Color::Black => {
+                for queen in queen_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::Queen, queen) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+            Color::White => {
+                for queen in queen_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::Queen, queen) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        queen_pseudo_legal_moves
+    }
+
+    ///returned as (piece type, from square, to square, move type)
+    fn pseudolegal_king_moves(
+        &self,
+        color: Color,
+        king_locations: Vec<u64>,
+        friendly_pieces: u64,
+        enemy_pieces: u64,
+    ) -> Vec<(PieceType, Square, Square, MoveType)> {
+        let mut king_pseudo_legal_moves = Vec::new();
+
+        match color {
+            Color::Black => {
+                for king in king_locations {
+                    for r in self.movetable.moves(Color::Black, PieceType::King, king) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+            Color::White => {
+                for king in king_locations {
+                    for r in self.movetable.moves(Color::White, PieceType::King, king) {
+                        for m in r {
+                            if m & friendly_pieces == 0 {
+                                // ...then this move does not intersect any friendly pieces
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        king_pseudo_legal_moves
+    }
+
+
     /*
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_knight_moves(
@@ -778,7 +939,9 @@ impl GameManager {
         let mut res = Vec::new();
         let mut i = 1_u64;
         while i <= int && i != 0 {
+        while i <= int && i != 0 {
             if i & int != 0 {
+                debug_assert!(i.is_power_of_two());
                 res.push(i);
             }
             i <<= 1;
@@ -786,7 +949,7 @@ impl GameManager {
         res
     }
 
-    /*
+    // TODO: Implement move legality checks.
     pub fn legal_moves(&self, color: Color) -> () {
         match color {
             Color::Black => {
@@ -822,5 +985,23 @@ impl GameManager {
         }
         todo!()
     }
-    */
+}
+
+#[cfg(test)]
+mod test {
+    use super::GameManager;
+    use crate::types::Color;
+
+    #[test]
+    fn check_psl_moves_1() {
+        let game_manager = GameManager::default();
+        let moves = game_manager.pseudolegal_moves(Color::Black);
+
+        let mut count = 0;
+        for (_, _, b) in moves {
+            println!("{}", b.to_string());
+            count += 1;
+        }
+        assert_eq!(count, 20 /* 20 valid moves at start of game. */);
+    }
 }
