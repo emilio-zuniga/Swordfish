@@ -594,11 +594,7 @@ mod test {
             (0, 1),
         );
 
-        let string_boards = table.get_moves_as_bitboard(
-            crate::types::Color::Black,
-            crate::types::PieceType::Knight,
-            (0, 1),
-        );
+        dbg!(&rays);
 
         let mut pslm: HashSet<u64> = HashSet::new();
         pslm.insert(0x80000000000000);
