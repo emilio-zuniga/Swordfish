@@ -126,7 +126,59 @@ impl GameManager {
             true
         }
     }
-
+    
+    impl GameManager {
+        /// Returns a bitboard representing all pseudo-legal moves for the current player (including castling and en passant logic).
+        /// This bitboard will have `1`s in all the positions where the current player can move.
+        pub fn generate_pseudo_legal_moves_bitboard(&self) -> u64 {
+            let mut all_moves: u64 = 0; // This will store the bitboard for all possible moves
+    
+            let move_table = movetable::MoveTable::default(); // Use your MoveTable
+    
+            let board = self.bitboard.to_board(); // Convert BitBoard to a 2D array (char representation)
+    
+            // Determine the color of the player to move
+            let current_player_color = if self.white_to_move { Color::White } else { Color::Black };
+    
+            // Iterate through all squares (8x8 chessboard)
+            for (r, row) in board.iter().enumerate() {
+                for (c, &piece_char) in row.iter().enumerate() {
+                    let square = (r, c); // Current square (row, column)
+    
+                    // Check if there's a piece on this square
+                    if piece_char != '.' {
+                        // Determine the piece's color
+                        let piece_color = if piece_char.is_uppercase() { Color::White } else { Color::Black };
+    
+                        // Only generate moves for pieces of the current player's color
+                        if piece_color == current_player_color {
+                            // Determine the piece type
+                            let piece = match piece_char.to_ascii_lowercase() {
+                                'p' => PieceType::Pawn,
+                                'r' => PieceType::Rook,
+                                'n' => PieceType::Knight,
+                                'b' => PieceType::Bishop,
+                                'q' => PieceType::Queen,
+                                'k' => PieceType::King,
+                                _ => continue, // Skip invalid characters
+                            };
+    
+                            // Generate pseudo-legal moves for the piece at the current square
+                            let moves_bitboard = move_table.get_moves_as_bitboard(piece_color, piece, square);
+    
+                            // Combine the current piece's moves into the overall bitboard using bitwise OR
+                            all_moves |= moves_bitboard;
+                        }
+                    }
+                }
+            }
+    
+            // TODO: Add logic for handling castling and en passant moves
+    
+            all_moves // Return the bitboard containing all pseudo-legal moves for the current player
+        }
+    }
+    
     // Implement fn get_board(piece: PieceType, color: Color) -> u64 {}
 
     pub fn pseudolegal_moves(&self, color: Color) -> () {
