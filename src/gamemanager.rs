@@ -284,6 +284,11 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(pawn)
+                                                .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                                .expect("Each u64 is a power of two");
+
                                 if (m & (pawn >> 8)) == m {
                                     // then this move is a type of pawn push
                                     if m & enemy_pieces == 0 {
@@ -295,10 +300,6 @@ impl GameManager {
                                              * Promotion to Rook
                                              * Promotion to Queen
                                              */
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -326,10 +327,6 @@ impl GameManager {
                                             ));
                                         } else {
                                             //just a normal pawn push
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -343,10 +340,6 @@ impl GameManager {
                                     //then this move is a double push
                                     if (friendly_pieces | enemy_pieces) & (m | (m << 8)) == 0 {
                                         //then there is in between the pawn and the fifth rank
-                                        let from = Square::from_u64(pawn)
-                                            .expect("Each u64 is a power of two");
-                                        let to = Square::from_u64(m)
-                                            .expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -361,10 +354,6 @@ impl GameManager {
                                         //then this move is definitely a capture
                                         if m & rank_1 == m {
                                             //then this move is a promotion capture
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -392,10 +381,6 @@ impl GameManager {
                                             ));
                                         } else {
                                             //then this move is a standard capture
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -409,10 +394,6 @@ impl GameManager {
                                         None => false,
                                     } {
                                         //then this move is an en passant capture
-                                        let from = Square::from_u64(pawn)
-                                            .expect("Each u64 is a power of two");
-                                        let to = Square::from_u64(m)
-                                            .expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -429,10 +410,15 @@ impl GameManager {
             }
             Color::White => {
                 for pawn in pawn_locations {
-                    for r in self.movetable.moves(Color::White, PieceType::Pawn, pawn) {
+                    for r in self.movetable.moves(color, PieceType::Pawn, pawn) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(pawn)
+                                                .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                                .expect("Each u64 is a power of two");
+                                
                                 if (m & (pawn << 8)) == m {
                                     // then this move is a type of pawn push
                                     if m & enemy_pieces == 0 {
@@ -444,10 +430,6 @@ impl GameManager {
                                              * Promotion to Rook
                                              * Promotion to Queen
                                              */
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -475,10 +457,6 @@ impl GameManager {
                                             ));
                                         } else {
                                             //just a normal pawn push
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -492,10 +470,6 @@ impl GameManager {
                                     //then this move is a double push
                                     if (friendly_pieces | enemy_pieces) & (m | (m >> 8)) == 0 {
                                         //then there is in between the pawn and the fourth rank
-                                        let from = Square::from_u64(pawn)
-                                            .expect("Each u64 is a power of two");
-                                        let to = Square::from_u64(m)
-                                            .expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
@@ -510,10 +484,6 @@ impl GameManager {
                                         //then this move is definitely a capture
                                         if m & rank_8 == m {
                                             //then this move is a promotion capture
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -541,10 +511,6 @@ impl GameManager {
                                             ));
                                         } else {
                                             //then this move is a standard capture
-                                            let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                            let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
 
                                             pawn_pseudo_legal_moves.push((
                                                 PieceType::Pawn,
@@ -558,10 +524,6 @@ impl GameManager {
                                         None => false,
                                     } {
                                         //then this move is an en passant capture
-                                        let from = Square::from_u64(pawn)
-                                            .expect("Each u64 is a power of two");
-                                        let to = Square::from_u64(m)
-                                            .expect("Each u64 is a power of two");
 
                                         pawn_pseudo_legal_moves.push((
                                             PieceType::Pawn,
