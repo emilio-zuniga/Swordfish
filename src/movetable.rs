@@ -73,17 +73,6 @@ impl Default for MoveTable {
             }
         }
 
-        shift = 0x8000000000000000; // Piece in the top left corner.
-        for y in 0..8_usize {
-            for x in 0..8_usize {
-                table.insert(
-                    (Color::Black, PieceType::King, shift),
-                    king_move_rays((x, y)),
-                );
-                shift >>= 1;
-            }
-        }
-
         shift = 0x0080000000000000; // Piece on a7
         for y in 1..7_usize {
             for x in 0..8_usize {
@@ -519,40 +508,33 @@ fn white_pawn_moves(square: (usize, usize)) -> Vec<Vec<u64>> {
 }
 
 impl MoveTable {
-    /// Given a single piece position & the type, return the possible moves as a [`Vec<Vec<u64>>`].
-    pub fn moves(&self, color: Color, piece: PieceType, position: u64) -> Vec<Vec<u64>> {
-        let res = match self.table.get(&(color, piece, position)) {
-            Some(v) => v.clone(),
-            None => Vec::new(),
-        };
-
-        res
-    }
-
     /// A utility method for getting the possible moves of a piece at a given position\
     /// * `color` - the `Color` of the piece\
     /// * `piece` - the `PieceType`\
-    /// * `square` - the x and y coordinates of the piece's position\
-    /// * `returns` - a `Vec<u64>` containing each pseudo legal move of that piece possible from that square
+    /// * `position` - a `u64` consisting of a single bit 
+    /// * `returns` - a `Vec<Vec<u64>>` containing each pseudo legal move of that piece possible from that square
     pub fn get_moves(
         &self,
         color: Color,
         piece: PieceType,
-        square: (usize, usize),
+        position: u64,
     ) -> Vec<Vec<u64>> {
-        let position = 1 << ((7 - square.1) * 8 + (7 - square.0));
 
         match piece {
             PieceType::Knight
             | PieceType::Bishop
             | PieceType::Rook
             | PieceType::Queen
-            | PieceType::King => self
-                .table
-                .get(&(Color::White, piece, position))
-                .unwrap()
-                .clone(),
-            PieceType::Pawn => self.table.get(&(color, piece, position)).unwrap().clone(),
+            | PieceType::King => 
+                match self.table.get(&(Color::White, piece, position)) {
+                    Some(v) => v.clone(),
+                    None => Vec::new(),
+                },
+            PieceType::Pawn => 
+                match self.table.get(&(color, piece, position)) {
+                    Some(v) => v.clone(),
+                    None => Vec::new(),
+                },
         }
     }
 
@@ -565,9 +547,9 @@ impl MoveTable {
         &self,
         color: Color,
         piece: PieceType,
-        square: (usize, usize),
+        position: u64
     ) -> u64 {
-        let moverays = &self.get_moves(color, piece, square);
+        let moverays = &self.get_moves(color, piece, position);
         let mut board = 0_u64;
 
         for ray in moverays {
@@ -577,12 +559,14 @@ impl MoveTable {
         }
 
         board
+        }
     }
-}
 
 #[cfg(test)]
 mod test {
     use std::collections::HashSet;
+
+    use crate::types::Square;
 
     use super::MoveTable;
 
@@ -592,7 +576,7 @@ mod test {
         let rays = table.get_moves(
             crate::types::Color::Black,
             crate::types::PieceType::Knight,
-            (0, 1),
+            Square::B8.to_u64(),
         );
 
         dbg!(&rays);

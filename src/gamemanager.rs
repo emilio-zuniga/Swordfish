@@ -131,7 +131,7 @@ impl GameManager {
     /// information encoded in this instance of GameManager
     /// * `color` - the `Color` of the side to move
     /// * `returns` - a `Vec` of tuple representing playable moves:\
-    ///     (the `PieceType` of the piece to move, the starting `Square`, 
+    ///     (the `PieceType` of the piece to move, the starting `Square`,
     ///     the target `Square`, and the `MoveType`)
     pub fn pseudolegal_moves(&self, color: Color) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut pseudolegal_moves: Vec<(PieceType, Square, Square, MoveType)> = Vec::new();
@@ -163,20 +163,20 @@ impl GameManager {
                 // To get each black piece, pop each power of two for each piece type.
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_black);
                 let knights = GameManager::powers_of_two(self.bitboard.knights_black);
-                let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
-                let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
-                let queens = GameManager::powers_of_two(self.bitboard.queens_black);
-                let kings = GameManager::powers_of_two(self.bitboard.king_black);
+                //let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
+                //let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+                //let queens = GameManager::powers_of_two(self.bitboard.queens_black);
+                //let kings = GameManager::powers_of_two(self.bitboard.king_black);
 
                 let mut pawn_pseudo_legal_moves =
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
-
-                /*
+                
                 let mut knight_pseudo_legal_moves =
                     self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
-                 */
+
+
 
                 /*
                 let mut bishop_pseudo_legal_moves =
@@ -201,13 +201,6 @@ impl GameManager {
                     self.pseudolegal_king_moves(color, kings, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut king_pseudo_legal_moves);
                  */
-
-                println!(
-                    "Number of moves accross all Black piece types recorded: {}",
-                    pseudolegal_moves.len()
-                );
-
-                pseudolegal_moves
             }
             Color::White => {
                 let friendly_pieces = self.bitboard.pawns_white
@@ -225,7 +218,7 @@ impl GameManager {
                     | self.bitboard.king_black;
 
                 let pawns = GameManager::powers_of_two(self.bitboard.pawns_white);
-                //let knights = GameManager::powers_of_two(self.bitboard.knights_white);
+                let knights = GameManager::powers_of_two(self.bitboard.knights_white);
                 //let bishops = GameManager::powers_of_two(self.bitboard.bishops_white);
                 //let rooks = GameManager::powers_of_two(self.bitboard.rooks_white);
                 //let queens = GameManager::powers_of_two(self.bitboard.queens_white);
@@ -235,15 +228,24 @@ impl GameManager {
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
 
+                let mut knight_pseudo_legal_moves =
+                    self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
+                pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
+                
                 //Add the rest of the piece movements here
-
-                println!(
-                    "Number of moves accross all Black piece types recorded: {}",
-                    pseudolegal_moves.len()
-                );
-                pseudolegal_moves
             }
         }
+
+        println!(
+            "Number of moves accross all {} piece types recorded: {}",
+            match color {
+                Color::Black => "Black",
+                Color::White => "White",
+            },
+            pseudolegal_moves.len()
+        );
+
+        pseudolegal_moves
     }
 
     /// A method returning a list of pseudo-legal pawn moves playable according to
@@ -253,7 +255,7 @@ impl GameManager {
     /// * `friendly_pieces` - a `u64` representing the current position of allied pieces
     /// * `enemy_pieces` - a `u64` representing the current position of enemy pieces
     /// * `returns` - a `Vec` of tuples representing playable pawn moves in the following form:\
-    ///     (the `PieceType` of the piece to move, the starting `Square`, 
+    ///     (the `PieceType` of the piece to move, the starting `Square`,
     ///     the target `Square`, and the `MoveType`)
     fn pseudolegal_pawn_moves(
         &self,
@@ -280,7 +282,7 @@ impl GameManager {
         match color {
             Color::Black => {
                 for pawn in pawn_locations {
-                    for r in self.movetable.moves(color, PieceType::Pawn, pawn) {
+                    for r in self.movetable.get_moves(color, PieceType::Pawn, pawn) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -558,11 +560,32 @@ impl GameManager {
                 for knight in knight_locations {
                     for r in self
                         .movetable
-                        .moves(Color::Black, PieceType::Knight, knight)
+                        .get_moves(Color::Black, PieceType::Knight, knight)
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
+                                // The knight's move does not intersect any friendly pieces
+                                
+                                let from = Square::from_u64(knight).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    // It's a capture move if the destination is occupied by an enemy piece
+                                    knight_pseudo_legal_moves.push((
+                                        PieceType::Knight,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                } else {
+                                    // It's a quiet move (no capture)
+                                    knight_pseudo_legal_moves.push((
+                                        PieceType::Knight,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -572,11 +595,31 @@ impl GameManager {
                 for knight in knight_locations {
                     for r in self
                         .movetable
-                        .moves(Color::White, PieceType::Knight, knight)
+                        .get_moves(Color::White, PieceType::Knight, knight)
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
+                                // The knight's move does not intersect any friendly pieces
+                                let from = Square::from_u64(knight).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    // It's a capture move if the destination is occupied by an enemy piece
+                                    knight_pseudo_legal_moves.push((
+                                        PieceType::Knight,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                } else {
+                                    // It's a quiet move (no capture)
+                                    knight_pseudo_legal_moves.push((
+                                        PieceType::Knight,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -602,7 +645,7 @@ impl GameManager {
                 for bishop in bishop_locations {
                     for r in self
                         .movetable
-                        .moves(Color::Black, PieceType::Bishop, bishop)
+                        .get_moves(Color::Black, PieceType::Bishop, bishop)
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
@@ -617,7 +660,7 @@ impl GameManager {
                 for bishop in bishop_locations {
                     for r in self
                         .movetable
-                        .moves(Color::White, PieceType::Bishop, bishop)
+                        .get_moves(Color::White, PieceType::Bishop, bishop)
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
@@ -646,7 +689,7 @@ impl GameManager {
         match color {
             Color::Black => {
                 for rook in rook_locations {
-                    for r in self.movetable.moves(Color::Black, PieceType::Rook, rook) {
+                    for r in self.movetable.get_moves(Color::Black, PieceType::Rook, rook) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -657,7 +700,7 @@ impl GameManager {
             }
             Color::White => {
                 for rook in rook_locations {
-                    for r in self.movetable.moves(Color::White, PieceType::Rook, rook) {
+                    for r in self.movetable.get_moves(Color::White, PieceType::Rook, rook) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -683,7 +726,7 @@ impl GameManager {
         match color {
             Color::Black => {
                 for queen in queen_locations {
-                    for r in self.movetable.moves(Color::Black, PieceType::Queen, queen) {
+                    for r in self.movetable.get_moves(Color::Black, PieceType::Queen, queen) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -694,7 +737,7 @@ impl GameManager {
             }
             Color::White => {
                 for queen in queen_locations {
-                    for r in self.movetable.moves(Color::White, PieceType::Queen, queen) {
+                    for r in self.movetable.get_moves(Color::White, PieceType::Queen, queen) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -721,7 +764,7 @@ impl GameManager {
         match color {
             Color::Black => {
                 for king in king_locations {
-                    for r in self.movetable.moves(Color::Black, PieceType::King, king) {
+                    for r in self.movetable.get_moves(Color::Black, PieceType::King, king) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -732,7 +775,7 @@ impl GameManager {
             }
             Color::White => {
                 for king in king_locations {
-                    for r in self.movetable.moves(Color::White, PieceType::King, king) {
+                    for r in self.movetable.get_moves(Color::White, PieceType::King, king) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
