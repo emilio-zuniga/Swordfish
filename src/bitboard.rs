@@ -1,5 +1,6 @@
 use crate::types::{Color, PieceType};
 
+#[derive(Copy, Clone, Debug)]
 /// This is a representation of the board. Each piece gets a [`u64`] integer.
 pub struct BitBoard {
     pub pawns_white: u64,
@@ -129,7 +130,6 @@ impl BitBoard {
         s
     }
 
-    #[allow(dead_code)]
     /// **Debugging** A utility method generating a `String` representation of this `BitBoard`
     /// * `returns` - a `String` representing the board
     pub fn to_string(&self) -> String {
@@ -176,7 +176,6 @@ impl BitBoard {
         board
     }
 
-    #[allow(dead_code)]
     /// A utility method returning the bitboard representing the placement\
     /// of this `PieceType` of this `Color`\
     /// * `color` - the `Color` of the pieces\

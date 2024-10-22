@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::types::{Color, PieceType};
 use gamemanager::GameManager;
 use types::Square;
@@ -8,10 +9,12 @@ mod movetable;
 mod types;
 
 fn main() {
-    
+    let fen_str = "k7/8/8/2pP4/8/8/8/K7 w - c6 0 1";
+    let gm = GameManager::from_fen_string(fen_str);
+    gm.pseudolegal_moves(Color::White);
+    gm.pseudolegal_moves(Color::Black);
 }
 
-#[allow(dead_code)]
 fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
     let movetable = movetable::MoveTable::default();
     let possibilities = movetable.get_moves_as_bitboard(color, piece, square);
@@ -19,7 +22,6 @@ fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
     print_bitboard(possibilities);
 }
 
-#[allow(dead_code)]
 fn board_to_and_from_fen_demo() {
     let tests = [
         "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2",
@@ -55,7 +57,6 @@ fn board_to_and_from_fen_demo() {
     }
 }
 
-#[allow(dead_code)]
 fn enum_coord_system_demo() {
     let mut position = 0x80000000_00000000;
 
@@ -75,7 +76,6 @@ fn enum_coord_system_demo() {
     }
 }
 
-#[allow(dead_code)]
 fn print_bitboard(board: u64) {
     let bitstr = format!("{:064b}", board);
     let mut count = 0;
