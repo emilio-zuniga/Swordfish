@@ -600,7 +600,21 @@ impl GameManager {
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
+                                   // It's a capture move if the destination is occupied by an enemy piece
+                                   knight_pseudo_legal_moves.push((
+                                    PieceType::Knight,
+                                    from,
+                                    to,
+                                    MoveType::Capture,
+                                ));
+                            } else {
+                                // It's a quiet move (no capture)
+                                knight_pseudo_legal_moves.push((
+                                    PieceType::Knight,
+                                    from,
+                                    to,
+                                    MoveType::QuietMove,
+                                ));
                             }
                         }
                     }
@@ -614,7 +628,29 @@ impl GameManager {
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
+                                if m & friendly_pieces == 0 {
+                                    // The knight's move does not intersect any friendly pieces
+                                    let from = Square::from_u64(knight)
+                                        .expect("Each u64 is a power of two");
+                                    let to = Square::from_u64(m)
+                                        .expect("Each u64 is a power of two");
+        
+                                    if m & enemy_pieces != 0 {
+                                        // It's a capture move if the destination is occupied by an enemy piece
+                                        knight_pseudo_legal_moves.push((
+                                            PieceType::Knight,
+                                            from,
+                                            to,
+                                            MoveType::Capture,
+                                        ));
+                                    } else {
+                                        // It's a quiet move (no capture)
+                                        knight_pseudo_legal_moves.push((
+                                            PieceType::Knight,
+                                            from,
+                                            to,
+                                            MoveType::QuietMove,
+                                        ));
                             }
                         }
                     }
