@@ -412,7 +412,7 @@ impl GameManager {
             }
             Color::White => {
                 for pawn in pawn_locations {
-                    for r in self.movetable.moves(color, PieceType::Pawn, pawn) {
+                    for r in self.movetable.get_moves(color, PieceType::Pawn, pawn) {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
