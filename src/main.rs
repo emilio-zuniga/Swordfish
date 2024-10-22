@@ -9,15 +9,15 @@ mod movetable;
 mod types;
 
 fn main() {
-    let fen_str = "k7/8/8/2pP4/8/8/8/K7 w - c6 0 1";
+    let fen_str = "k7/8/8/4n3/8/3N4/RN6/K7 w - - 0 1";
     let gm = GameManager::from_fen_string(fen_str);
     gm.pseudolegal_moves(Color::White);
     gm.pseudolegal_moves(Color::Black);
 }
 
-fn get_move_demo(color: Color, piece: PieceType, square: (usize, usize)) {
+fn get_move_demo(color: Color, piece: PieceType, position: Square) {
     let movetable = movetable::MoveTable::default();
-    let possibilities = movetable.get_moves_as_bitboard(color, piece, square);
+    let possibilities = movetable.get_moves_as_bitboard(color, piece, position.to_u64());
 
     print_bitboard(possibilities);
 }
