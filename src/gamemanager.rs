@@ -657,17 +657,17 @@ impl GameManager {
                                             to,
                                             MoveType::QuietMove,
                                         ));
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
-            knight_pseudo_legal_moves
-        }
+            knight_pseudo_legal_moves 
     }
-
+    
     /// Return all bishop moves from the given locations as `(PieceType, Square, Square, MoveType)`.
     fn pseudolegal_bishop_moves(
         &self,
