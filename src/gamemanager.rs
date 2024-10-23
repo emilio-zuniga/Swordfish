@@ -677,7 +677,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut bishop_pseudo_legal_moves = Vec::new();
-
+    
         match color {
             Color::Black => {
                 for bishop in bishop_locations {
@@ -687,8 +687,29 @@ impl GameManager {
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
-                                todo!()
+                                // Move does not intersect any friendly pieces
+                                let from = Square::from_u64(bishop)
+                                    .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                    .expect("Each u64 is a power of two");
+    
+                                if m & enemy_pieces != 0 {
+                                    // This move is a capture if an enemy piece occupies the destination
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                } else {
+                                    // This move is a quiet move (no capture)
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -702,18 +723,39 @@ impl GameManager {
                     {
                         for m in r {
                             if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
-                                todo!()
+                                // Move does not intersect any friendly pieces
+                                let from = Square::from_u64(bishop)
+                                    .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                    .expect("Each u64 is a power of two");
+    
+                                if m & enemy_pieces != 0 {
+                                    // This move is a capture if an enemy piece occupies the destination
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                } else {
+                                    // This move is a quiet move (no capture)
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+    
         bishop_pseudo_legal_moves
     }
-
+    
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_rook_moves(
         &self,
