@@ -728,7 +728,10 @@ impl GameManager {
                 for queen in queen_locations {
                     for r in self.movetable.get_moves(Color::Black, PieceType::Queen, queen) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
+                            if m & friendly_pieces =! 0 { 
+                                // then this move encounters a collision with a friendly piece
+                                break;
+                            } else {
                                 // ...then this move does not intersect any friendly pieces
                                 let from = Square::from_u64(queen).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(queen).expect("Each u64 is a power of two");
@@ -759,8 +762,11 @@ impl GameManager {
                 for queen in queen_locations {
                     for r in self.movetable.get_moves(Color::White, PieceType::Queen, queen) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
+                            if m & friendly_pieces =! 0 { 
+                                // then this move does not intersect with a friendly piece
+                                break;
+                            } else { 
+                                // then this move does not collide with any friendly pieces
                                 let from = Square::from_u64(queen).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(queen).expect("Each u64 is a power of two");
 
