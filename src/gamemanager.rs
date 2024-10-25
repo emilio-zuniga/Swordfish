@@ -693,6 +693,27 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(rook).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    //capture if space is occupied by an enemy piece
+                                    rook_pseudo_legal_moves.push((
+                                        PieceType::Rook,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    break; //breaks the loop
+                                } else {
+                                    //Quiet move (no capture)
+                                    rook_pseudo_legal_moves.push((
+                                        PieceType::Rook,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -704,6 +725,27 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(rook).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    //capture if space is occupied by an enemy piece
+                                    rook_pseudo_legal_moves.push((
+                                        PieceType::Rook,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    break; //breaks the loop
+                                } else {
+                                    //Quiet move (no capture)
+                                    rook_pseudo_legal_moves.push((
+                                        PieceType::Rook,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                }
                             }
                         }
                     }
