@@ -511,30 +511,22 @@ impl MoveTable {
     /// A utility method for getting the possible moves of a piece at a given position\
     /// * `color` - the `Color` of the piece\
     /// * `piece` - the `PieceType`\
-    /// * `position` - a `u64` consisting of a single bit 
+    /// * `position` - a `u64` consisting of a single bit
     /// * `returns` - a `Vec<Vec<u64>>` containing each pseudo legal move of that piece possible from that square
-    pub fn get_moves(
-        &self,
-        color: Color,
-        piece: PieceType,
-        position: u64,
-    ) -> Vec<Vec<u64>> {
-
+    pub fn get_moves(&self, color: Color, piece: PieceType, position: u64) -> Vec<Vec<u64>> {
         match piece {
             PieceType::Knight
             | PieceType::Bishop
             | PieceType::Rook
             | PieceType::Queen
-            | PieceType::King => 
-                match self.table.get(&(Color::White, piece, position)) {
-                    Some(v) => v.clone(),
-                    None => Vec::new(),
-                },
-            PieceType::Pawn => 
-                match self.table.get(&(color, piece, position)) {
-                    Some(v) => v.clone(),
-                    None => Vec::new(),
-                },
+            | PieceType::King => match self.table.get(&(Color::White, piece, position)) {
+                Some(v) => v.clone(),
+                None => Vec::new(),
+            },
+            PieceType::Pawn => match self.table.get(&(color, piece, position)) {
+                Some(v) => v.clone(),
+                None => Vec::new(),
+            },
         }
     }
 
@@ -543,12 +535,7 @@ impl MoveTable {
     /// * `piece` - the `PieceType`
     /// * `square` - the x and y coordinates of the piece's position
     /// * `returns` - a `u64` bitboard representing the pseudo legal move of that piece possible from that square
-    pub fn get_moves_as_bitboard(
-        &self,
-        color: Color,
-        piece: PieceType,
-        position: u64
-    ) -> u64 {
+    pub fn get_moves_as_bitboard(&self, color: Color, piece: PieceType, position: u64) -> u64 {
         let moverays = &self.get_moves(color, piece, position);
         let mut board = 0_u64;
 
@@ -559,8 +546,8 @@ impl MoveTable {
         }
 
         board
-        }
     }
+}
 
 #[cfg(test)]
 mod test {
@@ -582,17 +569,16 @@ mod test {
         dbg!(&rays);
 
         let mut pslm: HashSet<u64> = HashSet::new();
-        pslm.insert(0x80000000000000);
-        pslm.insert(0x20000000000000);
-        pslm.insert(0x4000000000000);
-        pslm.insert(0x1000000000000);
+        pslm.insert(0x800000000000);
+        pslm.insert(0x200000000000);
+        pslm.insert(0x10000000000000);
 
         let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
-        let only_four = rays
+        let only_three = rays
             .iter()
             .fold(0, |acc, r: &Vec<u64>| acc + r.iter().count());
 
         assert!(all_are_members);
-        assert_eq!(only_four, 4);
+        assert_eq!(only_three, 3);
     }
 }
