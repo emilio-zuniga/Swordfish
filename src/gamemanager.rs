@@ -831,6 +831,25 @@ impl GameManager {
                                         MoveType::Capture,
                                     ));
                                     break; //breaks the loop
+                                } else if !self.castling_rights.contains("-") {
+                                    if self.castling_rights.contains("k") {
+                                        //Kingside castling (black)
+                                        king_pseudo_legal_moves.push((
+                                            PieceType::King,
+                                            from,
+                                            to,
+                                            MoveType::KingCastle,
+                                        ));
+                                    } 
+                                    if self.castling_rights.contains("q") {
+                                        //Queenside castling (black)
+                                        king_pseudo_legal_moves.push((
+                                            PieceType::King,
+                                            from,
+                                            to,
+                                            MoveType::QueenCastle,
+                                        ));
+                                    }
                                 } else {
                                     //Quiet move (no capture)
                                     king_pseudo_legal_moves.push((
@@ -867,6 +886,25 @@ impl GameManager {
                                         MoveType::Capture,
                                     ));
                                     break; //breaks the loop
+                                } else if !self.castling_rights.contains("-") {
+                                    if self.castling_rights.contains("K") {
+                                        //Kingside castling (white)
+                                        king_pseudo_legal_moves.push((
+                                            PieceType::King,
+                                            from,
+                                            to,
+                                            MoveType::KingCastle,
+                                        ));
+                                    } 
+                                    if self.castling_rights.contains("Q") {
+                                        //Queenside castling (white)
+                                        king_pseudo_legal_moves.push((
+                                            PieceType::King,
+                                            from,
+                                            to,
+                                            MoveType::QueenCastle,
+                                        ));
+                                    }
                                 } else {
                                     //Quiet move (no capture)
                                     king_pseudo_legal_moves.push((
