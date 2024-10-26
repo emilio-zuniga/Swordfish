@@ -691,7 +691,10 @@ impl GameManager {
                 for rook in rook_locations {
                     for r in self.movetable.get_moves(Color::Black, PieceType::Rook, rook) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
+                            if m & friendly_pieces != 0 {
+                                //Intersects a friendly piece and cannot proceed
+                                break;
+                            } else {
                                 // ...then this move does not intersect any friendly pieces
                                 let from = Square::from_u64(rook).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(m).expect("Each u64 is a power of two");
@@ -723,7 +726,10 @@ impl GameManager {
                 for rook in rook_locations {
                     for r in self.movetable.get_moves(Color::White, PieceType::Rook, rook) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
+                            if m & friendly_pieces != 0 {
+                                //Intersects a friendly piece and cannot proceed
+                                break;
+                            } else {
                                 // ...then this move does not intersect any friendly pieces
                                 let from = Square::from_u64(rook).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(m).expect("Each u64 is a power of two");
@@ -808,8 +814,32 @@ impl GameManager {
                 for king in king_locations {
                     for r in self.movetable.get_moves(Color::Black, PieceType::King, king) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
+                            if m & friendly_pieces != 0 {
+                                //This piece intersects friendly piecees and cannot proceed
+                                break;
+                            } else {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(king).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    //capture if space is occupied by an enemy piece
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    break; //breaks the loop
+                                } else {
+                                    //Quiet move (no capture)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -819,8 +849,33 @@ impl GameManager {
                 for king in king_locations {
                     for r in self.movetable.get_moves(Color::White, PieceType::King, king) {
                         for m in r {
-                            if m & friendly_pieces == 0 {
+                            if m & friendly_pieces != 0 {
+                                //This piece intersects friendly pieces and cannot proceed
+                                break;
+                            }
+                            else {
                                 // ...then this move does not intersect any friendly pieces
+                                let from = Square::from_u64(king).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
+                                if m & enemy_pieces != 0 {
+                                    //capture if space is occupied by an enemy piece
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    break; //breaks the loop
+                                } else {
+                                    //Quiet move (no capture)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                }
                             }
                         }
                     }
