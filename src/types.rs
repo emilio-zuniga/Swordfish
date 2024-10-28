@@ -7,6 +7,7 @@ pub enum PieceType {
     Knight,
     King,
     Pawn,
+    Super,
 }
 
 #[derive(Debug, Clone, Copy, Eq, Hash, PartialEq)]
@@ -109,7 +110,7 @@ impl Square {
             _ => None,
         }
     }
-    
+
     /// A function that generates the `u64` representation of a `Square`.\
     /// * `returns` - a `u64` indicating the position given by the `Square`
     pub fn to_u64(&self) -> u64 {
@@ -201,7 +202,7 @@ impl Square {
             "F8" | "f8" => Some(Square::F8),
             "G8" | "g8" => Some(Square::G8),
             "H8" | "h8" => Some(Square::H8),
-        
+
             "A7" | "a7" => Some(Square::A7),
             "B7" | "b7" => Some(Square::B7),
             "C7" | "c7" => Some(Square::C7),
@@ -210,7 +211,7 @@ impl Square {
             "F7" | "f7" => Some(Square::F7),
             "G7" | "g7" => Some(Square::G7),
             "H7" | "h7" => Some(Square::H7),
-        
+
             "A6" | "a6" => Some(Square::A6),
             "B6" | "b6" => Some(Square::B6),
             "C6" | "c6" => Some(Square::C6),
@@ -219,7 +220,7 @@ impl Square {
             "F6" | "f6" => Some(Square::F6),
             "G6" | "g6" => Some(Square::G6),
             "H6" | "h6" => Some(Square::H6),
-        
+
             "A5" | "a5" => Some(Square::A5),
             "B5" | "b5" => Some(Square::B5),
             "C5" | "c5" => Some(Square::C5),
@@ -228,7 +229,7 @@ impl Square {
             "F5" | "f5" => Some(Square::F5),
             "G5" | "g5" => Some(Square::G5),
             "H5" | "h5" => Some(Square::H5),
-        
+
             "A4" | "a4" => Some(Square::A4),
             "B4" | "b4" => Some(Square::B4),
             "C4" | "c4" => Some(Square::C4),
@@ -237,7 +238,7 @@ impl Square {
             "F4" | "f4" => Some(Square::F4),
             "G4" | "g4" => Some(Square::G4),
             "H4" | "h4" => Some(Square::H4),
-        
+
             "A3" | "a3" => Some(Square::A3),
             "B3" | "b3" => Some(Square::B3),
             "C3" | "c3" => Some(Square::C3),
@@ -246,7 +247,7 @@ impl Square {
             "F3" | "f3" => Some(Square::F3),
             "G3" | "g3" => Some(Square::G3),
             "H3" | "h3" => Some(Square::H3),
-        
+
             "A2" | "a2" => Some(Square::A2),
             "B2" | "b2" => Some(Square::B2),
             "C2" | "c2" => Some(Square::C2),
@@ -255,7 +256,7 @@ impl Square {
             "F2" | "f2" => Some(Square::F2),
             "G2" | "g2" => Some(Square::G2),
             "H2" | "h2" => Some(Square::H2),
-        
+
             "A1" | "a1" => Some(Square::A1),
             "B1" | "b1" => Some(Square::B1),
             "C1" | "c1" => Some(Square::C1),
@@ -348,7 +349,7 @@ impl Square {
 }
 
 pub enum MoveType {
-    QuietMove, 
+    QuietMove,
     DoublePawnPush,
     KingCastle,
     QueenCastle,
@@ -361,7 +362,7 @@ pub enum MoveType {
     NPromoCapture,
     BPromoCapture,
     RPromoCapture,
-    QPromoCapture
+    QPromoCapture,
 }
 
 impl MoveType {
@@ -373,7 +374,7 @@ impl MoveType {
     /// 4th bit: special 0
     pub fn to_str(&self) -> &str {
         match self {
-            MoveType::QuietMove => "0000", 
+            MoveType::QuietMove => "0000",
             MoveType::DoublePawnPush => "0001",
             MoveType::KingCastle => "0010",
             MoveType::QueenCastle => "0011",
