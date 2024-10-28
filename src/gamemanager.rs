@@ -630,7 +630,6 @@ impl GameManager {
         knight_pseudo_legal_moves
     }
 
-    /// Return all bishop moves from the given locations as `(PieceType, Square, Square, MoveType)`.
     fn pseudolegal_bishop_moves(
         &self,
         color: Color,
@@ -639,7 +638,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut bishop_pseudo_legal_moves = Vec::new();
-
+    
         match color {
             Color::Black => {
                 for bishop in bishop_locations {
@@ -648,9 +647,34 @@ impl GameManager {
                         .get_moves(Color::Black, PieceType::Bishop, bishop)
                     {
                         for m in r {
-                            if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
-                                todo!()
+                            if m & friendly_pieces != 0 {
+                                // If the move is blocked by a friendly piece, stop in this direction
+                                break;
+                            } else {
+                                let from = Square::from_u64(bishop)
+                                    .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                    .expect("Each u64 is a power of two");
+    
+                                if m & enemy_pieces != 0 {
+                                    // It's a capture move
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    // Stop after capturing the enemy piece
+                                    break;
+                                } else {
+                                    // It's a quiet move (no piece in the way)
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
@@ -663,19 +687,45 @@ impl GameManager {
                         .get_moves(Color::White, PieceType::Bishop, bishop)
                     {
                         for m in r {
-                            if m & friendly_pieces == 0 {
-                                // ...then this move does not intersect any friendly pieces
-                                todo!()
+                            if m & friendly_pieces != 0 {
+                                // If the move is blocked by a friendly piece, stop in this direction
+                                break;
+                            } else {
+                                let from = Square::from_u64(bishop)
+                                    .expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m)
+                                    .expect("Each u64 is a power of two");
+    
+                                if m & enemy_pieces != 0 {
+                                    // It's a capture move
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::Capture,
+                                    ));
+                                    // Stop after capturing the enemy piece
+                                    break;
+                                } else {
+                                    // It's a quiet move (no piece in the way)
+                                    bishop_pseudo_legal_moves.push((
+                                        PieceType::Bishop,
+                                        from,
+                                        to,
+                                        MoveType::QuietMove,
+                                    ));
+                                }
                             }
                         }
                     }
                 }
             }
         }
-
+    
         bishop_pseudo_legal_moves
     }
-
+    
+    
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_rook_moves(
         &self,
