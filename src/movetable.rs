@@ -73,6 +73,21 @@ impl Default for MoveTable {
             }
         }
 
+        shift = 0x8000000000000000; // Piece in the top left corner.
+        for y in 0..8_usize {
+            for x in 0..8_usize {
+                table.insert(
+                    (Color::White, PieceType::Super, shift),
+                    rook_move_rays((x, y))
+                        .into_iter()
+                        .chain(bishop_move_rays((x, y)))
+                        .chain(knight_move_hops((x, y)))
+                        .collect(), // Chain rook, bishop, and knight moves together for the Super piece.
+                );
+                shift >>= 1;
+            }
+        }
+
         shift = 0x0080000000000000; // Piece on a7
         for y in 1..7_usize {
             for x in 0..8_usize {
@@ -519,7 +534,8 @@ impl MoveTable {
             | PieceType::Bishop
             | PieceType::Rook
             | PieceType::Queen
-            | PieceType::King => match self.table.get(&(Color::White, piece, position)) {
+            | PieceType::King
+            | PieceType::Super => match self.table.get(&(Color::White, piece, position)) {
                 Some(v) => v.clone(),
                 None => Vec::new(),
             },

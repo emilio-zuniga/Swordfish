@@ -189,6 +189,7 @@ impl BitBoard {
                 PieceType::Rook => self.rooks_white,
                 PieceType::Queen => self.queens_white,
                 PieceType::King => self.king_white,
+                PieceType::Super => 0,
             },
             Color::Black => match piece {
                 PieceType::Pawn => self.pawns_black,
@@ -197,6 +198,7 @@ impl BitBoard {
                 PieceType::Rook => self.rooks_black,
                 PieceType::Queen => self.queens_black,
                 PieceType::King => self.king_black,
+                PieceType::Super => 0,
             },
         }
     }
