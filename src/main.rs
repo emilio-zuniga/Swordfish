@@ -63,13 +63,9 @@ fn enum_coord_system_demo() {
     while position != 0_u64 {
         let coordinate = Square::from_u64(position);
 
-        match coordinate {
-            Some(variant) => {
-                println!("\n{:?}", variant);
-                let coordinate = variant.to_u64();
-                print_bitboard(coordinate);
-            }
-            None => (),
+        if let Some(variant) = coordinate {
+            println!("\n{:?}", variant);
+            print_bitboard(variant.to_u64());
         }
 
         position >>= 1;
