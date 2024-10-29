@@ -171,12 +171,10 @@ impl GameManager {
                 let mut pawn_pseudo_legal_moves =
                     self.pseudolegal_pawn_moves(color, pawns, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
-                
+
                 let mut knight_pseudo_legal_moves =
                     self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
-
-
 
                 /*
                 let mut bishop_pseudo_legal_moves =
@@ -231,7 +229,7 @@ impl GameManager {
                 let mut knight_pseudo_legal_moves =
                     self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
                 pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
-                
+
                 //Add the rest of the piece movements here
             }
         }
@@ -286,10 +284,9 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
-                                let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
+                                let from =
+                                    Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                 if (m & (pawn >> 8)) == m {
                                     // then this move is a type of pawn push
@@ -416,11 +413,10 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
-                                let from = Square::from_u64(pawn)
-                                                .expect("Each u64 is a power of two");
-                                let to = Square::from_u64(m)
-                                                .expect("Each u64 is a power of two");
-                                
+                                let from =
+                                    Square::from_u64(pawn).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
                                 if (m & (pawn << 8)) == m {
                                     // then this move is a type of pawn push
                                     if m & enemy_pieces == 0 {
@@ -565,8 +561,9 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // The knight's move does not intersect any friendly pieces
-                                
-                                let from = Square::from_u64(knight).expect("Each u64 is a power of two");
+
+                                let from =
+                                    Square::from_u64(knight).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                 if m & enemy_pieces != 0 {
@@ -600,7 +597,8 @@ impl GameManager {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // The knight's move does not intersect any friendly pieces
-                                let from = Square::from_u64(knight).expect("Each u64 is a power of two");
+                                let from =
+                                    Square::from_u64(knight).expect("Each u64 is a power of two");
                                 let to = Square::from_u64(m).expect("Each u64 is a power of two");
 
                                 if m & enemy_pieces != 0 {
@@ -638,7 +636,7 @@ impl GameManager {
         enemy_pieces: u64,
     ) -> Vec<(PieceType, Square, Square, MoveType)> {
         let mut bishop_pseudo_legal_moves = Vec::new();
-    
+
         match color {
             Color::Black => {
                 for bishop in bishop_locations {
@@ -651,11 +649,10 @@ impl GameManager {
                                 // If the move is blocked by a friendly piece, stop in this direction
                                 break;
                             } else {
-                                let from = Square::from_u64(bishop)
-                                    .expect("Each u64 is a power of two");
-                                let to = Square::from_u64(m)
-                                    .expect("Each u64 is a power of two");
-    
+                                let from =
+                                    Square::from_u64(bishop).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
                                 if m & enemy_pieces != 0 {
                                     // It's a capture move
                                     bishop_pseudo_legal_moves.push((
@@ -691,11 +688,10 @@ impl GameManager {
                                 // If the move is blocked by a friendly piece, stop in this direction
                                 break;
                             } else {
-                                let from = Square::from_u64(bishop)
-                                    .expect("Each u64 is a power of two");
-                                let to = Square::from_u64(m)
-                                    .expect("Each u64 is a power of two");
-    
+                                let from =
+                                    Square::from_u64(bishop).expect("Each u64 is a power of two");
+                                let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
                                 if m & enemy_pieces != 0 {
                                     // It's a capture move
                                     bishop_pseudo_legal_moves.push((
@@ -721,11 +717,10 @@ impl GameManager {
                 }
             }
         }
-    
+
         bishop_pseudo_legal_moves
     }
-    
-    
+
     ///returned as (piece type, from square, to square, move type)
     fn pseudolegal_rook_moves(
         &self,
@@ -739,7 +734,10 @@ impl GameManager {
         match color {
             Color::Black => {
                 for rook in rook_locations {
-                    for r in self.movetable.get_moves(Color::Black, PieceType::Rook, rook) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::Black, PieceType::Rook, rook)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -750,7 +748,10 @@ impl GameManager {
             }
             Color::White => {
                 for rook in rook_locations {
-                    for r in self.movetable.get_moves(Color::White, PieceType::Rook, rook) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::White, PieceType::Rook, rook)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -776,17 +777,22 @@ impl GameManager {
         match color {
             Color::Black => {
                 for queen in queen_locations {
-                    for r in self.movetable.get_moves(Color::Black, PieceType::Queen, queen) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::Black, PieceType::Queen, queen)
+                    {
                         for m in r {
-                            if m & friendly_pieces =! 0 { 
+                            if m & friendly_pieces != 0 {
                                 // then this move encounters a collision with a friendly piece
                                 break;
                             } else {
                                 // ...then this move does not intersect any friendly pieces
-                                let from = Square::from_u64(queen).expect("Each u64 is a power of two");
-                                let to = Square::from_u64(queen).expect("Each u64 is a power of two");
+                                let from =
+                                    Square::from_u64(queen).expect("Each u64 is a power of two");
+                                let to =
+                                    Square::from_u64(queen).expect("Each u64 is a power of two");
 
-                                if m & enemy_pieces != 0{
+                                if m & enemy_pieces != 0 {
                                     // then this move is a capture
                                     queen_pseudo_legal_moves.push((
                                         PieceType::Queen,
@@ -810,17 +816,22 @@ impl GameManager {
             }
             Color::White => {
                 for queen in queen_locations {
-                    for r in self.movetable.get_moves(Color::White, PieceType::Queen, queen) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::White, PieceType::Queen, queen)
+                    {
                         for m in r {
-                            if m & friendly_pieces =! 0 { 
+                            if m & friendly_pieces != 0 {
                                 // then this move does not intersect with a friendly piece
                                 break;
-                            } else { 
+                            } else {
                                 // then this move does not collide with any friendly pieces
-                                let from = Square::from_u64(queen).expect("Each u64 is a power of two");
-                                let to = Square::from_u64(queen).expect("Each u64 is a power of two");
+                                let from =
+                                    Square::from_u64(queen).expect("Each u64 is a power of two");
+                                let to =
+                                    Square::from_u64(queen).expect("Each u64 is a power of two");
 
-                                if m & enemy_pieces != 0{
+                                if m & enemy_pieces != 0 {
                                     // then this move is a capture
                                     queen_pseudo_legal_moves.push((
                                         PieceType::Queen,
@@ -860,7 +871,10 @@ impl GameManager {
         match color {
             Color::Black => {
                 for king in king_locations {
-                    for r in self.movetable.get_moves(Color::Black, PieceType::King, king) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::Black, PieceType::King, king)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
@@ -871,7 +885,10 @@ impl GameManager {
             }
             Color::White => {
                 for king in king_locations {
-                    for r in self.movetable.get_moves(Color::White, PieceType::King, king) {
+                    for r in self
+                        .movetable
+                        .get_moves(Color::White, PieceType::King, king)
+                    {
                         for m in r {
                             if m & friendly_pieces == 0 {
                                 // ...then this move does not intersect any friendly pieces
