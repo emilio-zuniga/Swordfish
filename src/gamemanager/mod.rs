@@ -7,6 +7,8 @@ use crate::{
 use bitboard::BitBoard;
 use regex::Regex;
 
+mod pseudolegal_moves;
+
 /// This is a representation of a chess game and the various states of each element.
 pub struct GameManager {
     /*FEN Notes:
@@ -235,7 +237,7 @@ impl GameManager {
         }
 
         println!(
-            "Number of moves accross all {} piece types recorded: {}",
+            "Number of moves across all {} piece types recorded: {}",
             match color {
                 Color::Black => "Black",
                 Color::White => "White",
@@ -827,7 +829,9 @@ impl GameManager {
 
     // TODO: Implement move legality checks.
     pub fn legal_moves(&self, color: Color) -> () {
-        match color {
+        let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, BitBoard)> = vec![];
+
+        let (friendly_pieces, enemy_pieces) = match color {
             Color::Black => {
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
@@ -842,7 +846,7 @@ impl GameManager {
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
-                let pseudolegal_moves = todo!();
+                (friendly_pieces, enemy_pieces)
             }
             Color::White => {
                 let friendly_pieces = self.bitboard.pawns_white
@@ -857,8 +861,109 @@ impl GameManager {
                     | self.bitboard.bishops_black
                     | self.bitboard.queens_black
                     | self.bitboard.king_black;
+
+                (friendly_pieces, enemy_pieces)
+            }
+        };
+
+        let (friendly_king, enemy_king) = match color {
+            Color::Black => (self.bitboard.king_black, self.bitboard.king_white),
+            Color::White => (self.bitboard.king_white, self.bitboard.king_black),
+        };
+
+        // First get all the pseudolegal moves.
+        let pslm = self.pseudolegal_moves(color);
+        // ASSERT: We will never have Super moves in the pseudolegal moves vector.
+        debug_assert!(pslm
+            .iter()
+            .all(|(piecetype, _, _, _)| *piecetype != PieceType::Super));
+        // A pseudolegal move may be illegal iff it leaves the king in check.
+
+        // For each possible move, check legality.
+        for (piecetype, from, to, movetype) in pslm {
+            // Test for king safety against each enemy bitboard,
+            // by grabbing all the moves a super piece can make
+            // from the king's square.
+
+            // Create a new bitboard here.
+            let modified_bitboard = match color {
+                Color::Black => match piecetype {
+                    PieceType::Bishop => BitBoard {
+                        bishops_black: (self.bitboard.bishops_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Rook => BitBoard {
+                        rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::King => BitBoard {
+                        king_black: (self.bitboard.king_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Knight => BitBoard {
+                        knights_black: (self.bitboard.knights_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Pawn => BitBoard {
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Queen => BitBoard {
+                        queens_black: (self.bitboard.queens_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Super => {
+                        unreachable!("We will never generate pseudolegal Super moves.")
+                    }
+                },
+                Color::White => match piecetype {
+                    PieceType::Bishop => BitBoard {
+                        bishops_white: (self.bitboard.bishops_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Rook => BitBoard {
+                        rooks_white: (self.bitboard.rooks_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::King => BitBoard {
+                        king_white: (self.bitboard.king_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Knight => BitBoard {
+                        knights_white: (self.bitboard.knights_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Pawn => BitBoard {
+                        pawns_white: (self.bitboard.pawns_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Queen => BitBoard {
+                        queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    PieceType::Super => {
+                        unreachable!("We will never generate pseudolegal Super moves.")
+                    }
+                },
+            };
+
+            // NOTE: Maybe pass a bitboard and movetable reference to a check_legality function? IDK...
+            let super_moves = self
+                .movetable
+                .get_moves(color, PieceType::Super, friendly_king);
+
+            let all_super_moves: u64 = super_moves
+                .iter()
+                .fold(0, |acc, ray| acc | ray.iter().fold(0, |acc2, &i| acc2 | i));
+
+            if all_super_moves & enemy_pieces == 0 {
+                // The king is not under threat...
+            } else {
+                // ...he POTENTIALLY is.
+                // Continue to check against each bitboard with moves from the corresponding piece type.
             }
         }
+
         todo!()
     }
 }
