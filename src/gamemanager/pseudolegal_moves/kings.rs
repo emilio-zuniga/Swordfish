@@ -1,5 +1,46 @@
 use crate::{movetable::MoveTable, types::*};
 
+/// Returns all pseudolegal moves the kings can make from their positions.
+/// ## Inputs
+/// - color: [`Color`][Color] enum for the current player,
+/// - movetable: reference to a [`MoveTable`][MoveTable],
+/// - king_locations: list of individual pieces,
+/// - friendly_pieces: all friendly pieces and-ed together,
+/// - enemy_pieces: ditto for enemies
+///
+/// ## Returns
+/// Returns a list of pseudolegal moves with the type alias [`Move`][Move],
+/// which expands to `(PieceType, Square, Square, MoveType)`.
+///
+/// ## Examples
+/// ```rust
+/// use crate::{movetable::MoveTable, types::*, gamemanager::pseudolegal_moves::kings};
+/// use Square::*;
+///
+/// let pslnm = kings::pseudolegal_knight_moves(
+///     Color::Black,
+///     &MoveTable::default(),
+///     vec![B5.to_u64()],
+///     0,
+///     0,
+/// );
+/// let moves: HashSet<u64> = HashSet::from_iter(
+///         vec![
+///             A6.to_u64(),
+///             B6.to_u64(),
+///             C6.to_u64(),
+///             A5.to_u64(),
+///             C5.to_u64(),
+///             A4.to_u64(),
+///             B4.to_u64(),
+///             C4.to_u64(),
+///         ]
+///         .iter()
+///         .cloned(),
+///     );
+/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+/// assert_eq!(pslnm.len(), moves.len())
+/// ```
 fn pseudolegal_king_moves(
     color: Color,
     movetable: &MoveTable,
