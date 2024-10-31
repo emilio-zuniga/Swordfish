@@ -49,7 +49,9 @@ pub fn pseudolegal_bishop_moves(
     let mut bishop_pseudo_legal_moves = Vec::new();
 
     for bishop in bishop_locations {
+        debug_assert!(bishop.is_power_of_two()); // Must be a power of two.
         for r in movetable.get_moves(color, PieceType::Bishop, bishop) {
+            dbg!(&r);
             for m in r {
                 if m & friendly_pieces != 0 {
                     // If the move is blocked by a friendly piece, stop in this direction
@@ -82,6 +84,7 @@ pub fn pseudolegal_bishop_moves(
         }
     }
 
+    dbg!(&bishop_pseudo_legal_moves);
     bishop_pseudo_legal_moves
 }
 

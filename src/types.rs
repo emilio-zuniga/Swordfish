@@ -406,6 +406,7 @@ impl Square {
     }
 }
 
+#[derive(Debug)]
 pub enum MoveType {
     QuietMove,
     DoublePawnPush,
