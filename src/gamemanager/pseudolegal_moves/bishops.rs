@@ -36,7 +36,8 @@ use crate::{movetable::MoveTable, types::*};
 ///     .iter()
 ///     .cloned(),
 /// );
-/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())))
+/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+/// assert_eq!(pslnm.len(), moves.len())
 /// ```
 pub fn pseudolegal_bishop_moves(
     color: Color,
@@ -111,6 +112,7 @@ mod test {
             .iter()
             .cloned(),
         );
-        assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())))
+        assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+        assert_eq!(pslnm.len(), moves.len())
     }
 }

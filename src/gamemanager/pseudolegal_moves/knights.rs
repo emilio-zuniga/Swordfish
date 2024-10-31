@@ -24,7 +24,8 @@ use crate::{movetable::MoveTable, types::*};
 ///     0xFFFF,
 /// );
 /// let moves: HashSet<u64> = HashSet::from_iter(vec![0x00008000_00000000, 0x00002000_00000000].iter().cloned());
-/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())))
+/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+/// assert_eq!(pslnm.len(), moves.len())
 /// ```
 pub fn pseudolegal_knight_moves(
     color: Color,
