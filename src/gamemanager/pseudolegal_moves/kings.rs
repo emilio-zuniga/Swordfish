@@ -47,6 +47,7 @@ fn pseudolegal_king_moves(
     king_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
+    castling_rights: &str,
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
@@ -58,15 +59,34 @@ fn pseudolegal_king_moves(
                         if m & friendly_pieces == 0 {
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
-                            if m & enemy_pieces == 0 {
+                            if m & enemy_pieces != 0 {
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
                                     to,
                                     MoveType::QuietMove,
                                 ));
+                            } else if !castling_rights.contains("-") {
+                                if castling_rights.contains("k") {
+                                    //Kingside castling (black)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::KingCastle,
+                                    ));
+                                }
+                                if castling_rights.contains("q") {
+                                    //Queenside castling (black)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::QueenCastle,
+                                    ));
+                                }
                             } else {
-                                // Capture.
+                                //Quiet move (no capture)
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -85,17 +105,38 @@ fn pseudolegal_king_moves(
                     for m in r {
                         if m & friendly_pieces == 0 {
                             // ...then this move does not intersect any friendly pieces
+                            println!("Test for m & enemy_pieces reached!");
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
                             if m & enemy_pieces == 0 {
+                                println!("### Reached m & enemy_pieces!");
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
                                     to,
                                     MoveType::QuietMove,
                                 ));
+                            } else if !castling_rights.contains("-") {
+                                if castling_rights.contains("K") {
+                                    //Kingside castling (black)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::KingCastle,
+                                    ));
+                                }
+                                if castling_rights.contains("Q") {
+                                    //Queenside castling (black)
+                                    king_pseudo_legal_moves.push((
+                                        PieceType::King,
+                                        from,
+                                        to,
+                                        MoveType::QueenCastle,
+                                    ));
+                                }
                             } else {
-                                // Capture.
+                                //Quiet move (no capture)
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -109,7 +150,6 @@ fn pseudolegal_king_moves(
             }
         }
     }
-
     king_pseudo_legal_moves
 }
 
@@ -127,6 +167,7 @@ mod tests {
             vec![B5.to_u64()],
             0,
             0,
+            "",
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -142,6 +183,36 @@ mod tests {
             .iter()
             .cloned(),
         );
+        assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+        assert_eq!(pslnm.len(), moves.len())
+    }
+
+    #[test]
+    fn check_king_pslm_castling() {
+        let pslnm = kings::pseudolegal_king_moves(
+            Color::Black,
+            &MoveTable::default(),
+            vec![E8.to_u64()],
+            0,
+            0,
+            "kq",
+        );
+        let moves: HashSet<u64> = HashSet::from_iter(
+            vec![
+                D8.to_u64(),
+                F8.to_u64(),
+                D7.to_u64(),
+                E7.to_u64(),
+                F7.to_u64(),
+                B8.to_u64(), // Queen-side castling.
+                G8.to_u64(), // King-side castling.
+            ]
+            .iter()
+            .cloned(),
+        );
+
+        dbg!(&pslnm);
+
         assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
         assert_eq!(pslnm.len(), moves.len())
     }
