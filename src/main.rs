@@ -11,8 +11,15 @@ mod types;
 fn main() {
     let fen_str = "k7/8/8/4n3/8/3N4/RN6/K7 w - - 0 1";
     let gm = GameManager::from_fen_string(fen_str);
-    gm.pseudolegal_moves(Color::White);
-    gm.pseudolegal_moves(Color::Black);
+    crate::gamemanager::pseudolegal_moves::pseudolegal_moves(
+        Color::Black,
+        gm.bitboard,
+        &gm.movetable,
+        &gm.castling_rights,
+        &gm.en_passant_target,
+        gm.halfmoves,
+        gm.fullmoves,
+    );
 }
 
 fn get_move_demo(color: Color, piece: PieceType, position: Square) {
