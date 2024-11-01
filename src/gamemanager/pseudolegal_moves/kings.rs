@@ -59,34 +59,16 @@ fn pseudolegal_king_moves(
                         if m & friendly_pieces == 0 {
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
-                            if m & enemy_pieces != 0 {
+
+                            if m & enemy_pieces == 0 {
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
                                     to,
                                     MoveType::QuietMove,
                                 ));
-                            } else if !castling_rights.contains("-") {
-                                if castling_rights.contains("k") {
-                                    //Kingside castling (black)
-                                    king_pseudo_legal_moves.push((
-                                        PieceType::King,
-                                        from,
-                                        to,
-                                        MoveType::KingCastle,
-                                    ));
-                                }
-                                if castling_rights.contains("q") {
-                                    //Queenside castling (black)
-                                    king_pseudo_legal_moves.push((
-                                        PieceType::King,
-                                        from,
-                                        to,
-                                        MoveType::QueenCastle,
-                                    ));
-                                }
                             } else {
-                                //Quiet move (no capture)
+                                // Quiet move (no capture)
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -97,6 +79,25 @@ fn pseudolegal_king_moves(
                         }
                     }
                 }
+            }
+
+            if castling_rights.contains("k") {
+                // Kingside castling (black)
+                king_pseudo_legal_moves.push((
+                    PieceType::King,
+                    Square::E8,
+                    Square::G8,
+                    MoveType::KingCastle,
+                ));
+            }
+            if castling_rights.contains("q") {
+                // Queenside castling (black)
+                king_pseudo_legal_moves.push((
+                    PieceType::King,
+                    Square::E8,
+                    Square::B8,
+                    MoveType::QueenCastle,
+                ));
             }
         }
         Color::White => {
@@ -148,6 +149,24 @@ fn pseudolegal_king_moves(
                     }
                 }
             }
+            if castling_rights.contains("K") {
+                // Kingside castling (white)
+                king_pseudo_legal_moves.push((
+                    PieceType::King,
+                    Square::E1,
+                    Square::G1,
+                    MoveType::KingCastle,
+                ));
+            }
+            if castling_rights.contains("Q") {
+                // Queenside castling (white)
+                king_pseudo_legal_moves.push((
+                    PieceType::King,
+                    Square::E1,
+                    Square::B1,
+                    MoveType::QueenCastle,
+                ));
+            }
         }
     }
     king_pseudo_legal_moves
@@ -188,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn check_king_pslm_castling() {
+    fn check_black_king_pslm_castling() {
         let pslnm = kings::pseudolegal_king_moves(
             Color::Black,
             &MoveTable::default(),
@@ -206,6 +225,36 @@ mod tests {
                 F7.to_u64(),
                 B8.to_u64(), // Queen-side castling.
                 G8.to_u64(), // King-side castling.
+            ]
+            .iter()
+            .cloned(),
+        );
+
+        dbg!(&pslnm);
+
+        assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
+        assert_eq!(pslnm.len(), moves.len())
+    }
+
+    #[test]
+    fn check_white_king_pslm_castling() {
+        let pslnm = kings::pseudolegal_king_moves(
+            Color::White,
+            &MoveTable::default(),
+            vec![E1.to_u64()],
+            0,
+            0,
+            "KQ",
+        );
+        let moves: HashSet<u64> = HashSet::from_iter(
+            vec![
+                D1.to_u64(),
+                F1.to_u64(),
+                D2.to_u64(),
+                E2.to_u64(),
+                F2.to_u64(),
+                B1.to_u64(), // Queen-side castling.
+                G1.to_u64(), // King-side castling.
             ]
             .iter()
             .cloned(),
