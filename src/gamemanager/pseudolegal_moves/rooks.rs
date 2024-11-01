@@ -1,32 +1,16 @@
 use crate::{movetable::MoveTable, types::*};
 
-/// Returns all pseudolegal moves the knights can make from their positions.
+/// Returns all pseudolegal moves the rooks can make from their positions.
 /// ## Inputs
 /// - color: [`Color`][Color] enum for the current player,
 /// - movetable: reference to a [`MoveTable`][MoveTable],
-/// - knight_locations: list of individual pieces,
+/// - rook_locations: list of individual pieces,
 /// - friendly_pieces: all friendly pieces and-ed together,
 /// - enemy_pieces: ditto for enemies
 ///
 /// ## Returns
 /// Returns a list of pseudolegal moves with the type alias [`Move`][Move],
 /// which expands to `(PieceType, Square, Square, MoveType)`.
-///
-/// ## Examples
-/// ```rust
-/// use crate::{movetable::MoveTable, types::*, gamemanager::pseudolegal_moves::knights};
-///
-/// let pslnm = knights::pseudolegal_knight_moves(
-///     Color::Black,
-///     &MoveTable::default(),
-///     vec![0x40000000_00000000],
-///     0xFFFF0000_00000000,
-///     0xFFFF,
-/// );
-/// let moves: HashSet<u64> = HashSet::from_iter(vec![0x00008000_00000000, 0x00002000_00000000].iter().cloned());
-/// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
-/// assert_eq!(pslnm.len(), moves.len())
-/// ```
 pub fn pseudolegal_rook_moves(
     color: Color,
     movetable: &MoveTable,

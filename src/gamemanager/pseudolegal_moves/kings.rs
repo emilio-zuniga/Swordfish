@@ -41,7 +41,7 @@ use crate::{movetable::MoveTable, types::*};
 /// assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
 /// assert_eq!(pslnm.len(), moves.len())
 /// ```
-fn pseudolegal_king_moves(
+pub fn pseudolegal_king_moves(
     color: Color,
     movetable: &MoveTable,
     king_locations: Vec<u64>,

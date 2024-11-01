@@ -58,74 +58,10 @@ pub fn pseudolegal_moves(
             // To get each black piece, pop each power of two for each piece type.
             let pawns = GameManager::powers_of_two(bitboard.pawns_black);
             let knights = GameManager::powers_of_two(bitboard.knights_black);
-            //let rooks = GameManager::powers_of_two(self.bitboard.rooks_black);
-            //let bishops = GameManager::powers_of_two(self.bitboard.bishops_black);
+            let rooks = GameManager::powers_of_two(bitboard.rooks_black);
+            let bishops = GameManager::powers_of_two(bitboard.bishops_black);
             let queens = GameManager::powers_of_two(bitboard.queens_black);
-            //let kings = GameManager::powers_of_two(self.bitboard.king_black);
-
-            let mut pawn_pseudo_legal_moves = pawns::pseudolegal_pawn_moves(
-                color,
-                movetable,
-                pawns,
-                friendly_pieces,
-                enemy_pieces,
-                en_passant_target,
-            );
-            pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
-
-            /*
-            let mut knight_pseudo_legal_moves =
-                self.pseudolegal_knight_moves(color, knights, friendly_pieces, enemy_pieces);
-            pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
-            */
-            /*
-            let mut bishop_pseudo_legal_moves =
-                self.pseudolegal_bishop_moves(color, bishops, friendly_pieces, enemy_pieces);
-            pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
-             */
-
-            /*
-            let mut rook_pseudo_legal_moves =
-                self.pseudolegal_rook_moves(color, rooks, friendly_pieces, enemy_pieces);
-            pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
-             */
-
-            let mut queen_pseudo_legal_moves = queens::pseudolegal_queen_moves(
-                color,
-                movetable,
-                queens,
-                friendly_pieces,
-                enemy_pieces,
-            );
-            pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
-
-            /*
-            let mut king_pseudo_legal_moves =
-                self.pseudolegal_king_moves(color, kings, friendly_pieces, enemy_pieces);
-            pseudolegal_moves.append(&mut king_pseudo_legal_moves);
-             */
-        }
-        Color::White => {
-            let friendly_pieces = bitboard.pawns_white
-                | bitboard.knights_white
-                | bitboard.bishops_white
-                | bitboard.rooks_white
-                | bitboard.queens_white
-                | bitboard.king_white;
-
-            let enemy_pieces = bitboard.pawns_black
-                | bitboard.knights_black
-                | bitboard.bishops_black
-                | bitboard.rooks_black
-                | bitboard.queens_black
-                | bitboard.king_black;
-
-            let pawns = GameManager::powers_of_two(bitboard.pawns_white);
-            let knights = GameManager::powers_of_two(bitboard.knights_white);
-            //let bishops = GameManager::powers_of_two(self.bitboard.bishops_white);
-            //let rooks = GameManager::powers_of_two(self.bitboard.rooks_white);
-            let queens = GameManager::powers_of_two(bitboard.queens_white);
-            //let kings = GameManager::powers_of_two(self.bitboard.king_white);
+            let kings = GameManager::powers_of_two(bitboard.king_black);
 
             let mut pawn_pseudo_legal_moves = pawns::pseudolegal_pawn_moves(
                 color,
@@ -146,7 +82,121 @@ pub fn pseudolegal_moves(
             );
             pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
 
-            //Add the rest of the piece movements here
+            let mut bishop_pseudo_legal_moves = bishops::pseudolegal_bishop_moves(
+                color,
+                movetable,
+                bishops,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
+
+            let mut rook_pseudo_legal_moves = rooks::pseudolegal_rook_moves(
+                color,
+                movetable,
+                rooks,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
+
+            let mut queen_pseudo_legal_moves = queens::pseudolegal_queen_moves(
+                color,
+                movetable,
+                queens,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
+
+            let mut king_pseudo_legal_moves = kings::pseudolegal_king_moves(
+                color,
+                movetable,
+                kings,
+                friendly_pieces,
+                enemy_pieces,
+                castling_rights,
+            );
+            pseudolegal_moves.append(&mut king_pseudo_legal_moves);
+        }
+        Color::White => {
+            let friendly_pieces = bitboard.pawns_white
+                | bitboard.knights_white
+                | bitboard.bishops_white
+                | bitboard.rooks_white
+                | bitboard.queens_white
+                | bitboard.king_white;
+
+            let enemy_pieces = bitboard.pawns_black
+                | bitboard.knights_black
+                | bitboard.bishops_black
+                | bitboard.rooks_black
+                | bitboard.queens_black
+                | bitboard.king_black;
+
+            // To get each black piece, pop each power of two for each piece type.
+            let pawns = GameManager::powers_of_two(bitboard.pawns_white);
+            let knights = GameManager::powers_of_two(bitboard.knights_white);
+            let rooks = GameManager::powers_of_two(bitboard.rooks_white);
+            let bishops = GameManager::powers_of_two(bitboard.bishops_white);
+            let queens = GameManager::powers_of_two(bitboard.queens_white);
+            let kings = GameManager::powers_of_two(bitboard.king_white);
+
+            let mut pawn_pseudo_legal_moves = pawns::pseudolegal_pawn_moves(
+                color,
+                movetable,
+                pawns,
+                friendly_pieces,
+                enemy_pieces,
+                en_passant_target,
+            );
+            pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
+
+            let mut knight_pseudo_legal_moves = knights::pseudolegal_knight_moves(
+                color,
+                movetable,
+                knights,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
+
+            let mut bishop_pseudo_legal_moves = bishops::pseudolegal_bishop_moves(
+                color,
+                movetable,
+                bishops,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
+
+            let mut rook_pseudo_legal_moves = rooks::pseudolegal_rook_moves(
+                color,
+                movetable,
+                rooks,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
+
+            let mut queen_pseudo_legal_moves = queens::pseudolegal_queen_moves(
+                color,
+                movetable,
+                queens,
+                friendly_pieces,
+                enemy_pieces,
+            );
+            pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
+
+            let mut king_pseudo_legal_moves = kings::pseudolegal_king_moves(
+                color,
+                movetable,
+                kings,
+                friendly_pieces,
+                enemy_pieces,
+                castling_rights,
+            );
+            pseudolegal_moves.append(&mut king_pseudo_legal_moves);
         }
     }
 
