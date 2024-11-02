@@ -81,7 +81,8 @@ pub fn pseudolegal_king_moves(
                 }
             }
 
-            if castling_rights.contains("k") {
+            // MAGIC NUMBERS: These are masks for the squares between E8 and the corners.
+            if castling_rights.contains("k") && friendly_pieces & 0x06000000_00000000 == 0 {
                 // Kingside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
@@ -90,7 +91,7 @@ pub fn pseudolegal_king_moves(
                     MoveType::KingCastle,
                 ));
             }
-            if castling_rights.contains("q") {
+            if castling_rights.contains("q") && friendly_pieces & 0x70000000_00000000 == 0 {
                 // Queenside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
@@ -149,7 +150,7 @@ pub fn pseudolegal_king_moves(
                     }
                 }
             }
-            if castling_rights.contains("K") {
+            if castling_rights.contains("K") && friendly_pieces & 0x6 == 0 {
                 // Kingside castling (white)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
@@ -158,7 +159,7 @@ pub fn pseudolegal_king_moves(
                     MoveType::KingCastle,
                 ));
             }
-            if castling_rights.contains("Q") {
+            if castling_rights.contains("Q") && friendly_pieces & 0x70 == 0 {
                 // Queenside castling (white)
                 king_pseudo_legal_moves.push((
                     PieceType::King,

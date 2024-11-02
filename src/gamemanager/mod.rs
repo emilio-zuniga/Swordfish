@@ -310,6 +310,25 @@ mod test {
             game_manager.fullmoves,
         );
 
+        assert_eq!(
+            moves.iter().count(),
+            20 /* 20 valid moves at start of game. */
+        );
+    }
+
+    #[test]
+    fn check_psl_moves_2() {
+        let game_manager = GameManager::default();
+        let moves = pseudolegal_moves(
+            Color::White,
+            game_manager.bitboard,
+            &game_manager.movetable,
+            &game_manager.castling_rights,
+            &game_manager.en_passant_target,
+            game_manager.halfmoves,
+            game_manager.fullmoves,
+        );
+
         dbg!(&moves);
         assert_eq!(
             moves.iter().count(),

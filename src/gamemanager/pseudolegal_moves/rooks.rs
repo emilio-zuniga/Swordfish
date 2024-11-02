@@ -59,7 +59,7 @@ pub fn pseudolegal_rook_moves(
                         let from = Square::from_u64(rook).expect("Must be a power of two!");
                         let to = Square::from_u64(m).expect("Must be a power of two!");
 
-                        if m & friendly_pieces == 0 {
+                        if m & friendly_pieces != 0 {
                             break;
                         } else {
                             if m & enemy_pieces == 0 {
