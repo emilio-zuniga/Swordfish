@@ -143,7 +143,7 @@ impl GameManager {
     }
 
     // TODO: Implement move legality checks.
-    pub fn legal_moves(&self, color: Color) -> () {
+    pub fn legal_moves(&self, color: Color) {
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, BitBoard)> = vec![];
 
         let (friendly_pieces, enemy_pieces) = match color {

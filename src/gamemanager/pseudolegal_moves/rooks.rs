@@ -30,23 +30,21 @@ pub fn pseudolegal_rook_moves(
 
                         if m & friendly_pieces != 0 {
                             break;
+                        } else if m & enemy_pieces == 0 {
+                            rook_pseudo_legal_moves.push((
+                                PieceType::Rook,
+                                from,
+                                to,
+                                MoveType::QuietMove,
+                            ));
                         } else {
-                            if m & enemy_pieces == 0 {
-                                rook_pseudo_legal_moves.push((
-                                    PieceType::Rook,
-                                    from,
-                                    to,
-                                    MoveType::QuietMove,
-                                ));
-                            } else {
-                                rook_pseudo_legal_moves.push((
-                                    PieceType::Rook,
-                                    from,
-                                    to,
-                                    MoveType::Capture,
-                                ));
-                                break;
-                            }
+                            rook_pseudo_legal_moves.push((
+                                PieceType::Rook,
+                                from,
+                                to,
+                                MoveType::Capture,
+                            ));
+                            break;
                         }
                     }
                 }
@@ -61,23 +59,21 @@ pub fn pseudolegal_rook_moves(
 
                         if m & friendly_pieces != 0 {
                             break;
+                        } else if m & enemy_pieces == 0 {
+                            rook_pseudo_legal_moves.push((
+                                PieceType::Rook,
+                                from,
+                                to,
+                                MoveType::QuietMove,
+                            ));
                         } else {
-                            if m & enemy_pieces == 0 {
-                                rook_pseudo_legal_moves.push((
-                                    PieceType::Rook,
-                                    from,
-                                    to,
-                                    MoveType::QuietMove,
-                                ));
-                            } else {
-                                rook_pseudo_legal_moves.push((
-                                    PieceType::Rook,
-                                    from,
-                                    to,
-                                    MoveType::Capture,
-                                ));
-                                break;
-                            }
+                            rook_pseudo_legal_moves.push((
+                                PieceType::Rook,
+                                from,
+                                to,
+                                MoveType::Capture,
+                            ));
+                            break;
                         }
                     }
                 }
