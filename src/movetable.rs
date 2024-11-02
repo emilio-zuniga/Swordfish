@@ -284,7 +284,7 @@ fn bishop_move_rays(square: (usize, usize)) -> Vec<Vec<u64>> {
     moves.push(upper_left_moves);
 
     let mut lower_left_moves = vec![];
-    for y in (0..square.1 + 1).rev() {
+    for y in square.1 + 1..8 {
         for x in (0..square.0).rev() {
             let mut bitstr = String::new();
             if board[x][y] == 1 {
@@ -569,18 +569,14 @@ impl MoveTable {
 mod test {
     use std::collections::HashSet;
 
-    use crate::types::Square;
+    use crate::types::{Color, PieceType, Square};
 
     use super::MoveTable;
 
     #[test]
     fn check_knight_moves() {
         let table = MoveTable::default();
-        let rays = table.get_moves(
-            crate::types::Color::Black,
-            crate::types::PieceType::Knight,
-            Square::B8.to_u64(),
-        );
+        let rays = table.get_moves(Color::Black, PieceType::Knight, Square::B8.to_u64());
 
         dbg!(&rays);
 
@@ -596,5 +592,85 @@ mod test {
 
         assert!(all_are_members);
         assert_eq!(only_three, 3);
+    }
+
+    #[test]
+    fn check_king_moves() {
+        let table = MoveTable::default();
+        let rays = table.get_moves(Color::Black, PieceType::King, Square::B7.to_u64());
+
+        use Square::*;
+        let squares = [
+            A8.to_u64(),
+            B8.to_u64(),
+            C8.to_u64(),
+            A7.to_u64(),
+            C7.to_u64(),
+            A6.to_u64(),
+            B6.to_u64(),
+            C6.to_u64(),
+        ];
+        let pslm: HashSet<u64> = HashSet::from_iter(squares.iter().cloned());
+
+        let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
+        let only_eight = rays.iter().fold(0, |acc, r| acc + r.iter().count());
+
+        assert!(all_are_members);
+        assert_eq!(only_eight, 8);
+    }
+
+    #[test]
+    fn check_rook_moves() {
+        let table = MoveTable::default();
+        let rays = table.get_moves(Color::Black, PieceType::Rook, Square::B7.to_u64());
+
+        use Square::*;
+        let squares = [
+            B8.to_u64(),
+            B6.to_u64(),
+            B5.to_u64(),
+            B4.to_u64(),
+            B3.to_u64(),
+            B2.to_u64(),
+            B1.to_u64(),
+            A7.to_u64(),
+            C7.to_u64(),
+            D7.to_u64(),
+            E7.to_u64(),
+            F7.to_u64(),
+            G7.to_u64(),
+            H7.to_u64(),
+        ];
+        let pslm: HashSet<u64> = HashSet::from_iter(squares.iter().cloned());
+
+        let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
+        let only_fourteen = rays.iter().fold(0, |acc, r| acc + r.iter().count());
+
+        assert!(all_are_members);
+        assert_eq!(only_fourteen, 14);
+    }
+
+    #[test]
+    fn check_bishop_moves() {
+        let table = MoveTable::default();
+        let rays = table.get_moves(Color::Black, PieceType::Bishop, Square::C8.to_u64());
+
+        use Square::*;
+        let squares = [
+            B7.to_u64(),
+            A6.to_u64(),
+            D7.to_u64(),
+            E6.to_u64(),
+            F5.to_u64(),
+            G4.to_u64(),
+            H3.to_u64(),
+        ];
+        let pslm: HashSet<u64> = HashSet::from_iter(squares.iter().cloned());
+
+        let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
+        let only_seven = rays.iter().fold(0, |acc, r| acc + r.iter().count());
+        dbg!(&rays);
+        assert!(all_are_members);
+        assert_eq!(only_seven, 7);
     }
 }

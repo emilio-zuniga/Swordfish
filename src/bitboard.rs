@@ -138,7 +138,7 @@ impl BitBoard {
 
         for row in board {
             s.push_str(&String::from_iter(row.iter()));
-            s.push_str("\n");
+            s.push('\n');
         }
 
         s
