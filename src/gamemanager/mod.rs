@@ -294,8 +294,7 @@ impl GameManager {
 #[cfg(test)]
 mod test {
     use super::GameManager;
-    use crate::gamemanager::pseudolegal_moves::*;
-    use crate::types::Color;
+    use crate::{gamemanager::pseudolegal_moves::*, types::Color};
 
     #[test]
     fn check_psl_moves_1() {
