@@ -9,17 +9,10 @@ mod movetable;
 mod types;
 
 fn main() {
-    let fen_str = "k7/8/8/4n3/8/3N4/RN6/K7 w - - 0 1";
+    let fen_str = "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3";
     let gm = GameManager::from_fen_string(fen_str);
-    crate::gamemanager::pseudolegal_moves::pseudolegal_moves(
-        Color::Black,
-        gm.bitboard,
-        &gm.movetable,
-        &gm.castling_rights,
-        &gm.en_passant_target,
-        gm.halfmoves,
-        gm.fullmoves,
-    );
+
+    gm.legal_moves(Color::Black);
 }
 
 fn get_move_demo(color: Color, piece: PieceType, position: Square) {
