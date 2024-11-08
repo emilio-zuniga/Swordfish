@@ -76,11 +76,10 @@ impl GameManager {
             // by grabbing all the moves a super piece can make
             // from the king's square.
 
-            dbg!(&movetype);
-
             // Create a new bitboard here.
             let modified_bitboard = {
                 match color {
+                    // For a black piece move, match on the piece's type.
                     Color::Black => match piecetype {
                         PieceType::Bishop => BitBoard {
                             bishops_black: (self.bitboard.bishops_black ^ from.to_u64())
@@ -119,9 +118,48 @@ impl GameManager {
                                 | to.to_u64(),
                             ..self.bitboard
                         },
-                        PieceType::Pawn => BitBoard {
-                            pawns_black: (self.bitboard.pawns_black ^ from.to_u64()) | to.to_u64(),
-                            ..self.bitboard
+                        PieceType::Pawn => match movetype {
+                            // On a promotion to X, delete the pawn, and place a(n) X on square 'to'.
+                            MoveType::BPromotion => BitBoard {
+                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                                bishops_black: self.bitboard.bishops_black | to.to_u64(),
+                                ..self.bitboard
+                            },
+                            MoveType::RPromotion => BitBoard {
+                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                                rooks_black: self.bitboard.rooks_black | to.to_u64(),
+                                ..self.bitboard
+                            },
+                            MoveType::NPromotion => BitBoard {
+                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                                knights_black: self.bitboard.knights_black | to.to_u64(),
+                                ..self.bitboard
+                            },
+                            MoveType::QPromotion => BitBoard {
+                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                                queens_black: self.bitboard.queens_black | to.to_u64(),
+                                ..self.bitboard
+                            },
+                            // On a promotion capture to X delete all enemy pieces
+                            // at 'to' and place a new X on 'to'.
+                            MoveType::BPromoCapture => {
+                                let to_square = to.to_u64();
+                                BitBoard {
+                                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                                    bishops_black: self.bitboard.bishops_black ^ to_square,
+                                    pawns_white: self.bitboard.pawns_white ^ to_square,
+                                    rooks_white: self.bitboard.rooks_white ^ to_square,
+                                    knights_white: self.bitboard.knights_white ^ to_square,
+                                    bishops_white: self.bitboard.bishops_white ^ to_square,
+                                    queens_white: self.bitboard.queens_white ^ to_square,
+                                    ..self.bitboard
+                                }
+                            }
+                            _ => BitBoard {
+                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64())
+                                    | to.to_u64(),
+                                ..self.bitboard
+                            },
                         },
                         PieceType::Queen => BitBoard {
                             queens_black: (self.bitboard.queens_black ^ from.to_u64())
@@ -214,11 +252,17 @@ impl GameManager {
                         .movetable
                         .get_moves(color, piece.clone(), friendly_king);
 
-                    let all_type_moves = moves.iter()
-                .fold(0, |acc, ray| acc | ray.iter().fold(0, |acc2, &i| acc2 | i));
+                    let all_type_moves = moves
+                        .iter()
+                        .fold(0, |acc, ray| acc | ray.iter().fold(0, |acc2, &i| acc2 | i));
 
-                    match piece {
-                        Bishop => 
+                    match color {
+                        Color::Black => {
+                            todo!()
+                        }
+                        Color::White => {
+                            todo!()
+                        }
                     }
                 }
             }
