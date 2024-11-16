@@ -10,7 +10,7 @@ mod types;
 mod ucimanager;
 
 fn main() {
-    ucimanager::uci_tester();
+    ucimanager::uci_test();
     /*
     let fen_str = "k7/8/8/4n3/8/3N4/RN6/K7 w - - 0 1";
     let gm = GameManager::from_fen_string(fen_str);
