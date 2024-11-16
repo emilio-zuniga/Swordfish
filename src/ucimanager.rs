@@ -64,8 +64,3 @@ fn uci_test() {
     
     println!("UCI Message: {msg}");
 }
-
-fn test_process() {
-    println!("Starting a process...");
-    loop {}
-}
