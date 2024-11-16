@@ -10,6 +10,9 @@ use super::GameManager;
 
 impl GameManager {
     /// Returns all legal moves possible from this GameManager's state.
+    /// This results in a list of possible GameManagers that could result from
+    /// the possible moves, which are also returned. Each can be evaluated for
+    /// strengths and weaknesses.
     pub fn legal_moves(&self, color: Color) {
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, BitBoard)> = vec![];
 
@@ -80,143 +83,12 @@ impl GameManager {
             let modified_bitboard = {
                 match color {
                     // For a black piece move, match on the piece's type.
-                    Color::Black => match piecetype {
-                        PieceType::Bishop => BitBoard {
-                            bishops_black: (self.bitboard.bishops_black ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Rook => BitBoard {
-                            rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::King => match movetype {
-                            // Handle checks on king-side and queen-side castling differently!
-                            MoveType::KingCastle => BitBoard {
-                                // Check castling spaces for attacks.
-                                king_black: (self.bitboard.king_black ^ from.to_u64())
-                                    | to.to_u64(),
-                                rooks_black: (self.bitboard.rooks_black ^ Square::H8.to_u64())
-                                    | Square::F8.to_u64(),
-                                ..self.bitboard
-                            },
-                            MoveType::QueenCastle => BitBoard {
-                                king_black: (self.bitboard.king_black ^ from.to_u64())
-                                    | to.to_u64(),
-                                rooks_black: (self.bitboard.rooks_black ^ Square::A8.to_u64())
-                                    | Square::C8.to_u64(),
-                                ..self.bitboard
-                            },
-                            _ => BitBoard {
-                                king_black: (self.bitboard.king_black ^ from.to_u64())
-                                    | to.to_u64(),
-                                ..self.bitboard
-                            },
-                        },
-                        PieceType::Knight => BitBoard {
-                            knights_black: (self.bitboard.knights_black ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Pawn => match movetype {
-                            // On a promotion to X, delete the pawn, and place a(n) X on square 'to'.
-                            MoveType::BPromotion => BitBoard {
-                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
-                                bishops_black: self.bitboard.bishops_black | to.to_u64(),
-                                ..self.bitboard
-                            },
-                            MoveType::RPromotion => BitBoard {
-                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
-                                rooks_black: self.bitboard.rooks_black | to.to_u64(),
-                                ..self.bitboard
-                            },
-                            MoveType::NPromotion => BitBoard {
-                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
-                                knights_black: self.bitboard.knights_black | to.to_u64(),
-                                ..self.bitboard
-                            },
-                            MoveType::QPromotion => BitBoard {
-                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
-                                queens_black: self.bitboard.queens_black | to.to_u64(),
-                                ..self.bitboard
-                            },
-                            // On a promotion capture to X delete all enemy pieces
-                            // at 'to' and place a new X on 'to'.
-                            MoveType::BPromoCapture => {
-                                let to_square = to.to_u64();
-                                BitBoard {
-                                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
-                                    bishops_black: self.bitboard.bishops_black ^ to_square,
-                                    pawns_white: self.bitboard.pawns_white ^ to_square,
-                                    rooks_white: self.bitboard.rooks_white ^ to_square,
-                                    knights_white: self.bitboard.knights_white ^ to_square,
-                                    bishops_white: self.bitboard.bishops_white ^ to_square,
-                                    queens_white: self.bitboard.queens_white ^ to_square,
-                                    ..self.bitboard
-                                }
-                            }
-                            _ => BitBoard {
-                                pawns_black: (self.bitboard.pawns_black ^ from.to_u64())
-                                    | to.to_u64(),
-                                ..self.bitboard
-                            },
-                        },
-                        PieceType::Queen => BitBoard {
-                            queens_black: (self.bitboard.queens_black ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Super => {
-                            unreachable!("We will never generate pseudolegal Super moves.")
-                        }
-                    },
-                    Color::White => match piecetype {
-                        PieceType::Bishop => BitBoard {
-                            bishops_white: (self.bitboard.bishops_white ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Rook => BitBoard {
-                            rooks_white: (self.bitboard.rooks_white ^ from.to_u64()) | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::King => match movetype {
-                            // Handle checks on king-side and queen-side castling differently!
-                            MoveType::KingCastle => BitBoard {
-                                // Check castling spaces for attacks.
-                                king_white: (self.bitboard.king_white ^ from.to_u64())
-                                    | to.to_u64(),
-                                rooks_white: (self.bitboard.rooks_white ^ Square::H1.to_u64())
-                                    | Square::F1.to_u64(),
-                                ..self.bitboard
-                            },
-                            MoveType::QueenCastle => BitBoard { ..self.bitboard },
-                            _ => BitBoard {
-                                king_white: (self.bitboard.king_white ^ from.to_u64())
-                                    | to.to_u64(),
-                                rooks_white: (self.bitboard.rooks_white ^ Square::A1.to_u64())
-                                    | Square::C1.to_u64(),
-                                ..self.bitboard
-                            },
-                        },
-                        PieceType::Knight => BitBoard {
-                            knights_white: (self.bitboard.knights_white ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Pawn => BitBoard {
-                            pawns_white: (self.bitboard.pawns_white ^ from.to_u64()) | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Queen => BitBoard {
-                            queens_white: (self.bitboard.queens_white ^ from.to_u64())
-                                | to.to_u64(),
-                            ..self.bitboard
-                        },
-                        PieceType::Super => {
-                            unreachable!("We will never generate pseudolegal Super moves.")
-                        }
-                    },
+                    Color::Black => {
+                        self.black_match_block(piecetype.clone(), movetype.clone(), from, to)
+                    }
+                    Color::White => {
+                        self.white_match_block(piecetype.clone(), movetype.clone(), from, to)
+                    }
                 }
             };
 
@@ -268,6 +140,240 @@ impl GameManager {
             }
         }
 
+        todo!()
+    }
+
+    /// Extracted from the large match block above.
+    fn black_match_block(
+        &self,
+        piecetype: PieceType,
+        movetype: MoveType,
+        from: Square,
+        to: Square,
+    ) -> BitBoard {
+        match piecetype {
+            PieceType::Bishop => match movetype {
+                MoveType::QuietMove => BitBoard {
+                    bishops_black: (self.bitboard.bishops_black ^ from.to_u64()) | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        bishops_black: (self.bitboard.bishops_black ^ from.to_u64()) | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                _ => unreachable!("Bishops will never make another type of move."),
+            },
+            PieceType::Rook => match movetype {
+                MoveType::QuietMove => BitBoard {
+                    rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                _ => unreachable!("Rooks will never make another type of move."),
+            },
+            PieceType::King => match movetype {
+                // Handle checks on king-side and queen-side castling differently!
+                MoveType::KingCastle => BitBoard {
+                    // Check castling spaces for attacks.
+                    king_black: (self.bitboard.king_black ^ from.to_u64()) | to.to_u64(),
+                    rooks_black: (self.bitboard.rooks_black ^ Square::H8.to_u64())
+                        | Square::F8.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::QueenCastle => BitBoard {
+                    king_black: (self.bitboard.king_black ^ from.to_u64()) | to.to_u64(),
+                    rooks_black: (self.bitboard.rooks_black ^ Square::A8.to_u64())
+                        | Square::C8.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        king_black: (self.bitboard.king_black ^ from.to_u64()) | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::QuietMove => BitBoard {
+                    king_black: (self.bitboard.king_black ^ from.to_u64()) | to.to_u64(),
+                    ..self.bitboard
+                },
+                _ => unreachable!("Kings will never make another type of move."),
+            },
+            PieceType::Knight => match movetype {
+                MoveType::QuietMove => BitBoard {
+                    knights_black: (self.bitboard.knights_black ^ from.to_u64()) | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        knights_black: (self.bitboard.knights_black ^ from.to_u64()) | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                _ => unreachable!("Knights will never make another type of move."),
+            },
+            PieceType::Pawn => match movetype {
+                // On a promotion to X, delete the pawn, and place a(n) X on square 'to'.
+                MoveType::BPromotion => BitBoard {
+                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                    bishops_black: self.bitboard.bishops_black | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::RPromotion => BitBoard {
+                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                    rooks_black: self.bitboard.rooks_black | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::NPromotion => BitBoard {
+                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                    knights_black: self.bitboard.knights_black | to.to_u64(),
+                    ..self.bitboard
+                },
+                MoveType::QPromotion => BitBoard {
+                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                    queens_black: self.bitboard.queens_black | to.to_u64(),
+                    ..self.bitboard
+                },
+                // On a promotion capture to X delete all enemy pieces
+                // at 'to' and place a new X on 'to'.
+                MoveType::BPromoCapture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                        bishops_black: self.bitboard.bishops_black | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::NPromoCapture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                        knights_black: self.bitboard.knights_black | to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::RPromoCapture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                        rooks_black: self.bitboard.rooks_black | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::QPromoCapture => {
+                    let to_square = to.to_u64();
+                    BitBoard {
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()),
+                        queens_black: self.bitboard.queens_black | to_square,
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        rooks_white: self.bitboard.rooks_white & !to_square,
+                        knights_white: self.bitboard.knights_white & !to_square,
+                        bishops_white: self.bitboard.bishops_white & !to_square,
+                        queens_white: self.bitboard.queens_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::EPCapture => {
+                    // Color-dependent logic.
+                    use Square::*;
+                    let to_square = match to {
+                        A3 => A2.to_u64(),
+                        B3 => B2.to_u64(),
+                        C3 => C2.to_u64(),
+                        D3 => D2.to_u64(),
+                        E3 => E2.to_u64(),
+                        F3 => F2.to_u64(),
+                        G3 => G2.to_u64(),
+                        H3 => H2.to_u64(),
+                        _ => unreachable!(
+                            "We will never have a non-rank-3 square as a valid en passant target."
+                        ),
+                    };
+
+                    BitBoard {
+                        // Move to the target square, behind the targeted piece.
+                        pawns_black: (self.bitboard.pawns_black ^ from.to_u64()) | to.to_u64(),
+                        pawns_white: self.bitboard.pawns_white & !to_square,
+                        ..self.bitboard
+                    }
+                }
+                MoveType::DoublePawnPush => {
+                    // Color-dependent logic.
+                    // Update en_passant_target to square behind the double push.
+                    // Oh, wait. That will update it for all future move searches, regardless of whether or not
+                    // they actually have this property.
+                    //
+                    // OK, the solution will HAVE to be to copy the GameManager struct.
+                    todo!()
+                }
+                MoveType::QuietMove => BitBoard {
+                    pawns_black: (self.bitboard.pawns_black ^ from.to_u64()) | to.to_u64(),
+                    ..self.bitboard
+                },
+                _ => unreachable!("Pawns will never make another type of move."),
+            },
+            PieceType::Queen => BitBoard {
+                queens_black: (self.bitboard.queens_black ^ from.to_u64()) | to.to_u64(),
+                ..self.bitboard
+            },
+            PieceType::Super => {
+                unreachable!("We will never generate pseudolegal Super moves.")
+            }
+        }
+    }
+
+    fn white_match_block(
+        &self,
+        piecetype: PieceType,
+        movetype: MoveType,
+        from: Square,
+        to: Square,
+    ) -> BitBoard {
         todo!()
     }
 }
