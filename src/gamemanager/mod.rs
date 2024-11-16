@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_variables, unused_mut)]
-use std::rc::Rc;
+use std::sync::LazyLock;
 
-use crate::{bitboard, movetable::MoveTable};
+use crate::{bitboard, movetable::MoveTable, MOVETABLE};
 use bitboard::BitBoard;
 use regex::Regex;
 
@@ -27,7 +27,7 @@ pub struct GameManager {
      * fullmove number - number of completed turns (increment when black moves)
      */
     pub bitboard: BitBoard,
-    pub movetable: Rc<MoveTable>,
+    pub movetable: &'static LazyLock<MoveTable>,
     pub white_to_move: bool,
     pub castling_rights: String,
     pub en_passant_target: String,
@@ -40,7 +40,7 @@ impl Default for GameManager {
     fn default() -> Self {
         GameManager {
             bitboard: BitBoard::default(),
-            movetable: Rc::new(MoveTable::default()),
+            movetable: &MOVETABLE,
             white_to_move: true,
             castling_rights: String::from("KQkq"),
             en_passant_target: String::new(),
@@ -60,13 +60,13 @@ impl GameManager {
             GameManager {
                 //board space validation implemented at higher level (is_valid_fen())
                 bitboard: BitBoard::from_fen_string(&tokens[0]),
-                movetable: Rc::new(MoveTable::default()),
+                movetable: &MOVETABLE,
                 white_to_move: tokens[1] == "w",
                 castling_rights: tokens[2].clone(),
                 en_passant_target: tokens[3].clone(),
                 halfmoves: tokens[4].parse().unwrap_or_default(),
                 fullmoves: tokens[5].parse().unwrap_or_default(),
-            }
+            } // TODO: Remove subscript element access to handle malformed FEN strings.
         } else {
             GameManager::default()
         }

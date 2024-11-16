@@ -1,12 +1,17 @@
 #![allow(dead_code)]
+use std::sync::LazyLock;
+
 use crate::types::{Color, PieceType};
 use gamemanager::GameManager;
+use movetable::MoveTable;
 use types::Square;
 
 mod bitboard;
 mod gamemanager;
 mod movetable;
 mod types;
+
+pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(|| MoveTable::default());
 
 fn main() {
     let fen_str = "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3";
