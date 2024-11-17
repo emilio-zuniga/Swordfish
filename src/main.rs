@@ -11,7 +11,7 @@ mod gamemanager;
 mod movetable;
 mod types;
 
-pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(|| MoveTable::default());
+pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::default);
 
 fn main() {
     let fen_str = "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3";
