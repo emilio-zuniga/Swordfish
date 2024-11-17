@@ -25,10 +25,17 @@ fn main() {
     }
 
     for (_, _, _, _, modified_gm) in moves {
-        for (_, _, _, _, modified_gm) in modified_gm.legal_moves() {
+        let moves2 = modified_gm.legal_moves();
+        for (_, _, _, _, modified_gm2) in moves2 {
             println!("SEARCH DEPTH 2");
-            println!("{}", modified_gm.bitboard.to_string());
+            println!("{}", modified_gm2.bitboard.to_string());
             println!();
+
+            for (_, _, _, _, modified_gm3) in modified_gm2.legal_moves() {
+                println!("SEARCH DEPTH 3");
+                println!("{}", modified_gm3.bitboard.to_string());
+                println!();
+            }
         }
     }
 }
