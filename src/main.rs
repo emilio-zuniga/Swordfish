@@ -14,10 +14,23 @@ mod types;
 pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::default);
 
 fn main() {
-    let fen_str = "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3";
-    let gm = GameManager::from_fen_string(fen_str);
+    let gm = GameManager::default();
 
-    gm.legal_moves(Color::Black);
+    let moves = gm.legal_moves();
+
+    for (_, _, _, _, modified_gm) in &moves {
+        println!("SEARCH DEPTH 1");
+        println!("{}", modified_gm.bitboard.to_string());
+        println!();
+    }
+
+    for (_, _, _, _, modified_gm) in moves {
+        for (_, _, _, _, modified_gm) in modified_gm.legal_moves() {
+            println!("SEARCH DEPTH 2");
+            println!("{}", modified_gm.bitboard.to_string());
+            println!();
+        }
+    }
 }
 
 fn get_move_demo(color: Color, piece: PieceType, position: Square) {
