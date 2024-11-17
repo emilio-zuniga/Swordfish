@@ -541,7 +541,6 @@ impl GameManager {
                 }
                 MoveType::EPCapture => {
                     // Color-dependent logic.
-                    dbg!(&from, &to, &self.en_passant_target);
                     use Square::*;
                     let to_square = match to {
                         A3 => A4.to_u64(),
