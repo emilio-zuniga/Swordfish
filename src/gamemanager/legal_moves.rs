@@ -532,6 +532,7 @@ impl GameManager {
                 }
                 MoveType::EPCapture => {
                     // Color-dependent logic.
+                    dbg!(&from, &to, &self.en_passant_target);
                     use Square::*;
                     let to_square = match to {
                         A3 => A4.to_u64(),
@@ -599,17 +600,59 @@ impl GameManager {
                     movetable: &MOVETABLE,
                     ..*self
                 },
-                _ => unreachable!("Pawns will never make another type of move."),
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    GameManager {
+                        bitboard: BitBoard {
+                            pawns_black: (self.bitboard.pawns_black ^ from.to_u64()) | to_square,
+                            pawns_white: self.bitboard.pawns_white & !to_square,
+                            rooks_white: self.bitboard.rooks_white & !to_square,
+                            knights_white: self.bitboard.knights_white & !to_square,
+                            bishops_white: self.bitboard.bishops_white & !to_square,
+                            queens_white: self.bitboard.queens_white & !to_square,
+                            ..self.bitboard
+                        },
+                        castling_rights: self.castling_rights.clone(),
+                        en_passant_target: self.en_passant_target.clone(),
+                        movetable: &MOVETABLE,
+                        ..*self
+                    }
+                }
+                _ => {
+                    eprintln!("{:?}", movetype);
+                    unreachable!("Pawns will never make another type of move.")
+                }
             },
-            PieceType::Queen => GameManager {
-                bitboard: BitBoard {
-                    queens_black: (self.bitboard.queens_black ^ from.to_u64()) | to.to_u64(),
-                    ..self.bitboard
+            PieceType::Queen => match movetype {
+                MoveType::QuietMove => GameManager {
+                    bitboard: BitBoard {
+                        queens_black: (self.bitboard.queens_black ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    castling_rights: self.castling_rights.clone(),
+                    en_passant_target: self.en_passant_target.clone(),
+                    movetable: &MOVETABLE,
+                    ..*self
                 },
-                castling_rights: self.castling_rights.clone(),
-                en_passant_target: self.en_passant_target.clone(),
-                movetable: &MOVETABLE,
-                ..*self
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    GameManager {
+                        bitboard: BitBoard {
+                            queens_black: (self.bitboard.queens_black ^ from.to_u64()) | to_square,
+                            pawns_white: self.bitboard.pawns_white & !to_square,
+                            rooks_white: self.bitboard.rooks_white & !to_square,
+                            knights_white: self.bitboard.knights_white & !to_square,
+                            bishops_white: self.bitboard.bishops_white & !to_square,
+                            queens_white: self.bitboard.queens_white & !to_square,
+                            ..self.bitboard
+                        },
+                        castling_rights: self.castling_rights.clone(),
+                        en_passant_target: self.en_passant_target.clone(),
+                        movetable: &MOVETABLE,
+                        ..*self
+                    }
+                }
+                _ => unreachable!("Queens will never make another type of move."),
             },
             PieceType::Super => {
                 unreachable!("We will never generate pseudolegal Super moves.")
@@ -984,17 +1027,59 @@ impl GameManager {
                     movetable: &MOVETABLE,
                     ..*self
                 },
-                _ => unreachable!("Pawns will never make another type of move."),
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    GameManager {
+                        bitboard: BitBoard {
+                            pawns_white: (self.bitboard.pawns_white ^ from.to_u64()) | to_square,
+                            pawns_black: self.bitboard.pawns_black & !to_square,
+                            rooks_black: self.bitboard.rooks_black & !to_square,
+                            knights_black: self.bitboard.knights_black & !to_square,
+                            bishops_black: self.bitboard.bishops_black & !to_square,
+                            queens_black: self.bitboard.queens_black & !to_square,
+                            ..self.bitboard
+                        },
+                        castling_rights: self.castling_rights.clone(),
+                        en_passant_target: self.en_passant_target.clone(),
+                        movetable: &MOVETABLE,
+                        ..*self
+                    }
+                }
+                _ => {
+                    eprintln!("{:?}", movetype);
+                    unreachable!("Pawns will never make another type of move.")
+                }
             },
-            PieceType::Queen => GameManager {
-                bitboard: BitBoard {
-                    queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to.to_u64(),
-                    ..self.bitboard
+            PieceType::Queen => match movetype {
+                MoveType::Capture => {
+                    let to_square = to.to_u64();
+                    GameManager {
+                        bitboard: BitBoard {
+                            queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to_square,
+                            pawns_black: self.bitboard.pawns_black & !to_square,
+                            rooks_black: self.bitboard.rooks_black & !to_square,
+                            knights_black: self.bitboard.knights_black & !to_square,
+                            bishops_black: self.bitboard.bishops_black & !to_square,
+                            queens_black: self.bitboard.queens_black & !to_square,
+                            ..self.bitboard
+                        },
+                        castling_rights: self.castling_rights.clone(),
+                        en_passant_target: self.en_passant_target.clone(),
+                        movetable: &MOVETABLE,
+                        ..*self
+                    }
+                }
+                MoveType::QuietMove => GameManager {
+                    bitboard: BitBoard {
+                        queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    castling_rights: self.castling_rights.clone(),
+                    en_passant_target: self.en_passant_target.clone(),
+                    movetable: &MOVETABLE,
+                    ..*self
                 },
-                castling_rights: self.castling_rights.clone(),
-                en_passant_target: self.en_passant_target.clone(),
-                movetable: &MOVETABLE,
-                ..*self
+                _ => unreachable!("Queens will never make another type of move."),
             },
             PieceType::Super => {
                 unreachable!("We will never generate pseudolegal Super moves.")

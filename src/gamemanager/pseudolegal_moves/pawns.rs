@@ -32,6 +32,11 @@ pub fn pseudolegal_pawn_moves(
     let rank_7: u64 = 0x00FF0000_00000000;
     let rank_8: u64 = 0xFF000000_00000000;
 
+    let fore_rank = match color {
+        Color::Black => 0x0000FF00_00000000,
+        Color::White => 0x00000000_00FF0000,
+    };
+
     match color {
         Color::Black => {
             for pawn in pawn_locations {
@@ -143,7 +148,9 @@ pub fn pseudolegal_pawn_moves(
                                         ));
                                     }
                                 } else if match Square::from_str(en_passant_target) {
-                                    Some(coord) => m & coord.to_u64() == m,
+                                    Some(coord) => {
+                                        m & coord.to_u64() == m && coord.to_u64() & fore_rank == 0
+                                    }
                                     None => false,
                                 } {
                                     //then this move is an en passant capture
@@ -271,7 +278,9 @@ pub fn pseudolegal_pawn_moves(
                                         ));
                                     }
                                 } else if match Square::from_str(en_passant_target) {
-                                    Some(coord) => m & coord.to_u64() == m,
+                                    Some(coord) => {
+                                        m & coord.to_u64() == m && coord.to_u64() & fore_rank == 0
+                                    }
                                     None => false,
                                 } {
                                     //then this move is an en passant capture
