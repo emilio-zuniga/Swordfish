@@ -2,7 +2,7 @@
 use std::sync::LazyLock;
 
 use crate::types::{Color, PieceType};
-use gamemanager::GameManager;
+use gamemanager::{legal_moves, GameManager};
 use movetable::MoveTable;
 use types::Square;
 
@@ -15,33 +15,9 @@ pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::
 
 fn main() {
     let gm = GameManager::default();
-
-    let moves = gm.legal_moves();
-    for (_, _, _, _, modified_gm) in moves {
-        println!("SEARCH DEPTH 1");
-        println!("{}", modified_gm.bitboard.to_string());
-        println!();
-
-        let moves2 = modified_gm.legal_moves();
-        for (_, _, _, _, modified_gm2) in moves2 {
-            println!("SEARCH DEPTH 2");
-            println!("{}", modified_gm2.bitboard.to_string());
-            println!();
-
-            let moves3 = modified_gm2.legal_moves();
-            for (_, _, _, _, modified_gm3) in moves3 {
-                println!("SEARCH DEPTH 3");
-                println!("{}", modified_gm3.bitboard.to_string());
-                println!();
-
-                let moves4 = modified_gm3.legal_moves();
-                for (_, _, _, _, modified_gm4) in moves4 {
-                    println!("SEARCH DEPTH 4");
-                    println!("{}", modified_gm4.bitboard.to_string());
-                    println!();
-                }
-            }
-        }
+    let mvlst = gm.legal_moves();
+    for mv in mvlst {
+        legal_moves::perft::perft(1, 4, (mv.0, mv.1, mv.2, mv.3), mv.4);
     }
 }
 

@@ -7,6 +7,8 @@ use crate::{
     MOVETABLE,
 };
 
+pub mod perft;
+
 impl GameManager {
     /// Returns all legal moves possible from this GameManager's state.
     /// This results in a list of possible GameManagers that could result from
@@ -108,7 +110,14 @@ impl GameManager {
             // Increment the halfmove counter every quiet/non-pawn move.
             use MoveType::*;
             match movetype {
-                QuietMove | KingCastle | QueenCastle => modified_gm.halfmoves += 1,
+                QuietMove | KingCastle | QueenCastle => {
+                    modified_gm.halfmoves += 1;
+                    modified_gm.en_passant_target = String::new(); // Made a quiet move instead of EPCapture.
+                }
+                EPCapture => {
+                    modified_gm.halfmoves = 0;
+                    modified_gm.en_passant_target = String::new()
+                }
                 _ => modified_gm.halfmoves = 0,
             }
 
