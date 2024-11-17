@@ -3,12 +3,19 @@
 //! pulls all the modules together, and generates the pseudolegal moves for an arbitrary piece, on an
 //! arbitrary bitboard.
 
-mod bishops;
-mod kings;
-mod knights;
-mod pawns;
-mod queens;
-mod rooks;
+pub mod bishops;
+pub mod kings;
+pub mod knights;
+pub mod pawns;
+pub mod queens;
+pub mod rooks;
+
+pub use bishops::pseudolegal_bishop_moves;
+pub use kings::pseudolegal_king_moves;
+pub use knights::pseudolegal_knight_moves;
+pub use pawns::pseudolegal_pawn_moves;
+pub use queens::pseudolegal_queen_moves;
+pub use rooks::pseudolegal_rook_moves;
 
 use crate::{
     bitboard::BitBoard,
