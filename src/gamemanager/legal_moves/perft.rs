@@ -4,18 +4,14 @@ use super::GameManager;
 use rayon::prelude::*;
 
 pub fn perft(depth: u16, maxdepth: u16, mv: Move, gm: GameManager) {
-    if depth >= maxdepth + 1 {
+    if depth > maxdepth {
         return;
     }
-    println!("SEARCHING AT DEPTH {depth}/{maxdepth}.");
-    println!(
-        "{:?} from {} to {} as {:?}",
-        mv.0,
-        mv.1.to_str(),
-        mv.2.to_str(),
-        mv.3
-    );
     let mvlst = gm.legal_moves();
+    let count = mvlst.iter().count();
+    if depth == maxdepth {
+        println!("MOVE AT DEPTH {depth}");
+    }
     mvlst
         .into_par_iter()
         .for_each(|(pc, from, to, mvtp, modgm)| {

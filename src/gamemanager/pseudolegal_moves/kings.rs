@@ -47,7 +47,7 @@ pub fn pseudolegal_king_moves(
     king_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
-    castling_rights: &str,
+    castling_rights: CastlingRecord,
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
@@ -107,11 +107,9 @@ pub fn pseudolegal_king_moves(
                     for m in r {
                         if m & friendly_pieces == 0 {
                             // ...then this move does not intersect any friendly pieces
-                            println!("Test for m & enemy_pieces reached!");
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
                             if m & enemy_pieces == 0 {
-                                println!("### Reached m & enemy_pieces!");
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -187,7 +185,10 @@ mod tests {
             vec![B5.to_u64()],
             0,
             0,
-            "",
+            CastlingRecord {
+                black: CastlingRights::Neither,
+                white: CastlingRights::Neither,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -215,7 +216,10 @@ mod tests {
             vec![E8.to_u64()],
             0,
             0,
-            "kq",
+            CastlingRecord {
+                black: CastlingRights::Both,
+                white: CastlingRights::Neither,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -245,7 +249,10 @@ mod tests {
             vec![E1.to_u64()],
             0,
             0,
-            "KQ",
+            CastlingRecord {
+                black: CastlingRights::Neither,
+                white: CastlingRights::Both,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![

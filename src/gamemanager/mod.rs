@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_variables, unused_mut)]
 use std::sync::LazyLock;
 
-use crate::{bitboard, movetable::MoveTable, MOVETABLE};
+use crate::{bitboard, movetable::MoveTable, types::CastlingRecord, MOVETABLE};
 use bitboard::BitBoard;
 use regex::Regex;
 
@@ -29,7 +29,7 @@ pub struct GameManager {
     pub bitboard: BitBoard,
     pub movetable: &'static LazyLock<MoveTable>,
     pub white_to_move: bool,
-    pub castling_rights: String,
+    pub castling_rights: CastlingRecord,
     pub en_passant_target: String,
     pub halfmoves: u32,
     pub fullmoves: u32,
@@ -42,7 +42,7 @@ impl Default for GameManager {
             bitboard: BitBoard::default(),
             movetable: &MOVETABLE,
             white_to_move: true,
-            castling_rights: String::from("KQkq"),
+            castling_rights: CastlingRecord::default(),
             en_passant_target: String::new(),
             halfmoves: 0,
             fullmoves: 1,
@@ -62,7 +62,8 @@ impl GameManager {
                 bitboard: BitBoard::from_fen_string(&tokens[0]),
                 movetable: &MOVETABLE,
                 white_to_move: tokens[1] == "w",
-                castling_rights: tokens[2].clone(),
+                castling_rights: CastlingRecord::try_from(tokens[2].as_str())
+                    .expect("We expect FEN strings to be well-formed."),
                 en_passant_target: tokens[3].clone(),
                 halfmoves: tokens[4].parse().unwrap_or_default(),
                 fullmoves: tokens[5].parse().unwrap_or_default(),
@@ -75,14 +76,15 @@ impl GameManager {
     /// A utility method generating a complete FEN string representation of the game
     /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {
+        let cstlng_rights = format!("{}", self.castling_rights);
         let mut s = self.bitboard.to_fen_string();
         s.push(' ');
         s.push(if self.white_to_move { 'w' } else { 'b' });
         s.push(' ');
-        s.push_str(if self.castling_rights.is_empty() {
+        s.push_str(if self.castling_rights.are_none() {
             "-"
         } else {
-            &self.castling_rights
+            cstlng_rights.as_str()
         });
         s.push(' ');
         s.push_str(if self.en_passant_target.is_empty() {
@@ -154,7 +156,7 @@ mod test {
             Color::Black,
             game_manager.bitboard,
             &game_manager.movetable,
-            &game_manager.castling_rights,
+            game_manager.castling_rights,
             &game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,
@@ -173,7 +175,7 @@ mod test {
             Color::White,
             game_manager.bitboard,
             &game_manager.movetable,
-            &game_manager.castling_rights,
+            game_manager.castling_rights,
             &game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,

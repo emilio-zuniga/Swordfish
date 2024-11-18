@@ -15,6 +15,10 @@ impl GameManager {
     /// the possible moves, which are also returned. Each can be evaluated for
     /// strengths and weaknesses.
     pub fn legal_moves(&self) -> Vec<(PieceType, Square, Square, MoveType, GameManager)> {
+        /* ************************************************************************************* */
+        /* WARNING: THIS FUNCTION WILL ERROR SILENTLY IF ANY COLOR-DEPENDENT LOGIC IS USED HERE. */
+        /*          ALL LOGIC IN THIS FUNCTION MUST BE COLOR-AGNOSTIC.                           */
+        /* ************************************************************************************* */
         let color = if self.white_to_move {
             Color::White
         } else {
@@ -68,7 +72,7 @@ impl GameManager {
             color,
             self.bitboard,
             &MOVETABLE,
-            &self.castling_rights,
+            self.castling_rights,
             &self.en_passant_target,
             self.halfmoves,
             self.fullmoves,
@@ -121,28 +125,20 @@ impl GameManager {
                 _ => modified_gm.halfmoves = 0,
             }
 
-            let super_moves = MOVETABLE.get_moves(color, PieceType::Super, friendly_king);
-
-            // Just all the Super moves ORed together.
-            let all_super_moves: u64 = super_moves
-                .iter()
-                .fold(0, |acc, ray| acc | ray.iter().fold(0, |acc2, &i| acc2 | i));
-
-            // ...he POTENTIALLY is.
             // Continue to check against each bitboard with moves from the corresponding piece type.
             let psl_pawn_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_pawn_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.pawns_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.pawns_white,
+                        Color::White => modified_gm.bitboard.pawns_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
                     &modified_gm.en_passant_target,
                 );
-            if psl_pawn_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
-                != 0
-            {
+            if psl_pawn_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
                 // Position is bad.
                 continue 'pslms;
             }
@@ -151,14 +147,14 @@ impl GameManager {
                 pseudolegal_moves::pseudolegal_rook_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.rooks_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.rooks_white,
+                        Color::White => modified_gm.bitboard.rooks_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
                 );
-            if psl_rook_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
-                != 0
-            {
+            if psl_rook_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
                 // Position is bad.
                 continue 'pslms;
             }
@@ -167,14 +163,17 @@ impl GameManager {
                 pseudolegal_moves::pseudolegal_knight_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.knights_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.knights_white,
+                        Color::White => modified_gm.bitboard.knights_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
                 );
             if psl_knight_moves
                 .iter()
                 .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
+                & friendly_king
                 != 0
             {
                 // Position is bad.
@@ -185,14 +184,17 @@ impl GameManager {
                 pseudolegal_moves::pseudolegal_bishop_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.bishops_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.bishops_white,
+                        Color::White => modified_gm.bitboard.bishops_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
                 );
             if psl_bishop_moves
                 .iter()
                 .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
+                & friendly_king
                 != 0
             {
                 // Position is bad.
@@ -203,14 +205,17 @@ impl GameManager {
                 pseudolegal_moves::pseudolegal_queen_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.queens_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.queens_white,
+                        Color::White => modified_gm.bitboard.queens_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
                 );
             if psl_queen_moves
                 .iter()
                 .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
+                & friendly_king
                 != 0
             {
                 // Position is bad.
@@ -221,15 +226,15 @@ impl GameManager {
                 pseudolegal_moves::pseudolegal_king_moves(
                     color,
                     &MOVETABLE,
-                    GameManager::powers_of_two(modified_gm.bitboard.king_white),
+                    GameManager::powers_of_two(match color {
+                        Color::Black => modified_gm.bitboard.king_white,
+                        Color::White => modified_gm.bitboard.king_black,
+                    }),
                     friendly_pieces,
                     enemy_pieces,
-                    &modified_gm.castling_rights,
+                    modified_gm.castling_rights,
                 );
-            if psl_king_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64())
-                & modified_gm.bitboard.king_black
-                != 0
-            {
+            if psl_king_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
                 // Position is bad.
                 continue 'pslms;
             }

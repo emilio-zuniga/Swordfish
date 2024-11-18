@@ -126,7 +126,8 @@ mod test {
             let game = GameManager::from_fen_string(fen);
             let generated_fen = game.to_fen_string();
 
-            assert!(fen == generated_fen);
+            dbg!(&fen, &generated_fen);
+            assert_eq!(fen, generated_fen);
         }
     }
 }
