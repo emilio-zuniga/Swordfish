@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// An `enum` to represent which type the piece is. This provides indexing for our hash table of moves.
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum PieceType {
@@ -406,7 +408,7 @@ impl Square {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MoveType {
     QuietMove,
     DoublePawnPush,
@@ -447,6 +449,193 @@ impl MoveType {
             MoveType::BPromoCapture => "1101",
             MoveType::RPromoCapture => "1110",
             MoveType::QPromoCapture => "1111",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CastlingRights {
+    Kingside,
+    Queenside,
+    Both,
+    Neither,
+}
+
+impl Display for CastlingRights {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match *self {
+                Self::Both => "kq",
+                Self::Kingside => "k",
+                Self::Queenside => "q",
+                Self::Neither => "",
+            }
+        )
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CastlingRecord {
+    pub white: CastlingRights,
+    pub black: CastlingRights,
+}
+
+impl CastlingRecord {
+    /// Returns true if there are no castling rights remaining, else returns false.
+    pub fn are_none(&self) -> bool {
+        use CastlingRights::*;
+        self.black == Neither && self.white == Neither
+    }
+
+    /// Returns true if the input string representation intersects the current state.
+    /// ## Panics
+    /// - if the input is not a single character string in ["K", "Q", "k", "q"].
+    pub fn contains(&self, s: &str) -> bool {
+        match s {
+            "K" => {
+                if self.white == CastlingRights::Both || self.white == CastlingRights::Kingside {
+                    true
+                } else {
+                    false
+                }
+            }
+            "Q" => {
+                if self.white == CastlingRights::Both || self.white == CastlingRights::Queenside {
+                    true
+                } else {
+                    false
+                }
+            }
+            "k" => {
+                if self.black == CastlingRights::Both || self.black == CastlingRights::Kingside {
+                    true
+                } else {
+                    false
+                }
+            }
+            "q" => {
+                if self.black == CastlingRights::Both || self.black == CastlingRights::Queenside {
+                    true
+                } else {
+                    false
+                }
+            }
+            "-" => {
+                if self.black == CastlingRights::Neither && self.white == CastlingRights::Neither {
+                    true
+                } else {
+                    false
+                }
+            }
+            other => {
+                eprintln!("Caught str {other}");
+                unreachable!("We will never have malformed FEN input at this point.");
+            }
+        }
+    }
+}
+
+impl Display for CastlingRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let blackstr = format!("{}", self.black).to_ascii_lowercase();
+        let whitestr = format!("{}", self.white).to_ascii_uppercase();
+        if whitestr.is_empty() && blackstr.is_empty() {
+            write!(f, "-")
+        } else {
+            write!(f, "{}{}", whitestr, blackstr)
+        }
+    }
+}
+
+impl Into<String> for CastlingRecord {
+    fn into(self) -> String {
+        format!("{self}")
+    }
+}
+
+impl Default for CastlingRecord {
+    fn default() -> Self {
+        use CastlingRights::*;
+        Self {
+            black: Both,
+            white: Both,
+        }
+    }
+}
+
+impl TryFrom<&str> for CastlingRecord {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        use CastlingRights::*;
+        match value.trim() {
+            "KQkq" => Ok(Self {
+                black: Both,
+                white: Both,
+            }),
+            "KQk" => Ok(Self {
+                black: Kingside,
+                white: Both,
+            }),
+            "KQq" => Ok(Self {
+                black: Queenside,
+                white: Both,
+            }),
+            "KQ" => Ok(Self {
+                white: Both,
+                black: Neither,
+            }),
+            "Kkq" => Ok(Self {
+                black: Both,
+                white: Kingside,
+            }),
+            "Qkq" => Ok(Self {
+                black: Both,
+                white: Queenside,
+            }),
+            "kq" => Ok(Self {
+                white: Neither,
+                black: Both,
+            }),
+            "Kk" => Ok(Self {
+                black: Kingside,
+                white: Kingside,
+            }),
+            "Kq" => Ok(Self {
+                white: Kingside,
+                black: Queenside,
+            }),
+            "Qk" => Ok(Self {
+                white: Queenside,
+                black: Kingside,
+            }),
+            "Qq" => Ok(Self {
+                black: Queenside,
+                white: Queenside,
+            }),
+            "K" => Ok(Self {
+                black: Neither,
+                white: Kingside,
+            }),
+            "k" => Ok(Self {
+                black: Kingside,
+                white: Neither,
+            }),
+            "Q" => Ok(Self {
+                black: Neither,
+                white: Queenside,
+            }),
+            "q" => Ok(Self {
+                white: Neither,
+                black: Queenside,
+            }),
+            "-" => Ok(Self {
+                black: Neither,
+                white: Neither,
+            }),
+            _ => Err(format!("Invalid castling rights {}!", value)),
         }
     }
 }
