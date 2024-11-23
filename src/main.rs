@@ -17,7 +17,7 @@ fn main() {
     let gm = GameManager::default();
     let mvlst = gm.legal_moves();
     for mv in mvlst {
-        legal_moves::perft::perft(1, 5, (mv.0, mv.1, mv.2, mv.3), mv.4);
+        legal_moves::perft::perft(1, 4, (mv.0, mv.1, mv.2, mv.3), mv.4);
     }
 }
 

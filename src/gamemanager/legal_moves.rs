@@ -3,7 +3,7 @@
 use crate::{
     bitboard::*,
     gamemanager::*,
-    types::{Color, MoveType, PieceType, Square},
+    types::{CastlingRights, Color, MoveType, PieceType, Square},
     MOVETABLE,
 };
 
@@ -27,6 +27,7 @@ impl GameManager {
 
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, GameManager)> = vec![];
 
+        // Based on color, union all the friendly and enemy pieces.
         let (friendly_pieces, enemy_pieces) = match color {
             Color::Black => {
                 let friendly_pieces = self.bitboard.pawns_black
@@ -62,6 +63,7 @@ impl GameManager {
             }
         };
 
+        // Based on color, extract the friendly and enemy kings.
         let (friendly_king, enemy_king) = match color {
             Color::Black => (self.bitboard.king_black, self.bitboard.king_white),
             Color::White => (self.bitboard.king_white, self.bitboard.king_black),
@@ -93,7 +95,6 @@ impl GameManager {
             // Create a new GameManager here.
             let mut modified_gm = {
                 match color {
-                    // For a black piece move, match on the piece's type.
                     Color::Black => {
                         self.black_match_block(piecetype.clone(), movetype.clone(), from, to)
                     }
@@ -128,7 +129,12 @@ impl GameManager {
             // Continue to check against each bitboard with moves from the corresponding piece type.
             let psl_pawn_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_pawn_moves(
-                    color,
+                    // Should be the opposite of the current color.
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.pawns_white,
@@ -145,7 +151,11 @@ impl GameManager {
 
             let psl_rook_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_rook_moves(
-                    color,
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.rooks_white,
@@ -161,7 +171,11 @@ impl GameManager {
 
             let psl_knight_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_knight_moves(
-                    color,
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.knights_white,
@@ -182,7 +196,11 @@ impl GameManager {
 
             let psl_bishop_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_bishop_moves(
-                    color,
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.bishops_white,
@@ -203,7 +221,11 @@ impl GameManager {
 
             let psl_queen_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_queen_moves(
-                    color,
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.queens_white,
@@ -224,7 +246,11 @@ impl GameManager {
 
             let psl_king_moves: Vec<(PieceType, Square, Square, MoveType)> =
                 pseudolegal_moves::pseudolegal_king_moves(
-                    color,
+                    if color == Color::Black {
+                        Color::White
+                    } else {
+                        Color::Black
+                    },
                     &MOVETABLE,
                     GameManager::powers_of_two(match color {
                         Color::Black => modified_gm.bitboard.king_white,
@@ -300,37 +326,55 @@ impl GameManager {
                 }
                 _ => unreachable!("Bishops will never make another type of move."),
             },
-            PieceType::Rook => match movetype {
-                MoveType::QuietMove => GameManager {
-                    bitboard: BitBoard {
-                        rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to.to_u64(),
-                        ..self.bitboard
-                    },
-                    castling_rights: self.castling_rights.clone(),
-                    en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
-                    ..*self
-                },
-                MoveType::Capture => {
-                    let to_square = to.to_u64();
-                    GameManager {
+            PieceType::Rook => {
+                // NOTE: Color-dependent logic.
+                let new_castling_rights = if from == Square::A8 {
+                    CastlingRecord {
+                        black: CastlingRights::Kingside,
+                        ..self.castling_rights
+                    }
+                } else if from == Square::H8 {
+                    CastlingRecord {
+                        black: CastlingRights::Queenside,
+                        ..self.castling_rights
+                    }
+                } else {
+                    self.castling_rights
+                };
+
+                match movetype {
+                    MoveType::QuietMove => GameManager {
                         bitboard: BitBoard {
-                            rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to_square,
-                            pawns_white: self.bitboard.pawns_white & !to_square,
-                            rooks_white: self.bitboard.rooks_white & !to_square,
-                            knights_white: self.bitboard.knights_white & !to_square,
-                            bishops_white: self.bitboard.bishops_white & !to_square,
-                            queens_white: self.bitboard.queens_white & !to_square,
+                            rooks_black: (self.bitboard.rooks_black ^ from.to_u64()) | to.to_u64(),
                             ..self.bitboard
                         },
-                        castling_rights: self.castling_rights.clone(),
+                        castling_rights: new_castling_rights,
                         en_passant_target: self.en_passant_target.clone(),
                         movetable: &MOVETABLE,
                         ..*self
+                    },
+                    MoveType::Capture => {
+                        let to_square = to.to_u64();
+                        GameManager {
+                            bitboard: BitBoard {
+                                rooks_black: (self.bitboard.rooks_black ^ from.to_u64())
+                                    | to_square,
+                                pawns_white: self.bitboard.pawns_white & !to_square,
+                                rooks_white: self.bitboard.rooks_white & !to_square,
+                                knights_white: self.bitboard.knights_white & !to_square,
+                                bishops_white: self.bitboard.bishops_white & !to_square,
+                                queens_white: self.bitboard.queens_white & !to_square,
+                                ..self.bitboard
+                            },
+                            castling_rights: new_castling_rights,
+                            en_passant_target: self.en_passant_target.clone(),
+                            movetable: &MOVETABLE,
+                            ..*self
+                        }
                     }
+                    _ => unreachable!("Rooks will never make another type of move."),
                 }
-                _ => unreachable!("Rooks will never make another type of move."),
-            },
+            }
             PieceType::King => match movetype {
                 // Handle checks on king-side and queen-side castling differently!
                 MoveType::KingCastle => GameManager {
@@ -727,37 +771,55 @@ impl GameManager {
                 }
                 _ => unreachable!("Bishops will never make another type of move."),
             },
-            PieceType::Rook => match movetype {
-                MoveType::QuietMove => GameManager {
-                    bitboard: BitBoard {
-                        rooks_white: (self.bitboard.rooks_white ^ from.to_u64()) | to.to_u64(),
-                        ..self.bitboard
-                    },
-                    castling_rights: self.castling_rights.clone(),
-                    en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
-                    ..*self
-                },
-                MoveType::Capture => {
-                    let to_square = to.to_u64();
-                    GameManager {
+            PieceType::Rook => {
+                // NOTE: Color-dependent logic.
+                let new_castling_rights = if from == Square::A1 {
+                    CastlingRecord {
+                        white: CastlingRights::Kingside,
+                        ..self.castling_rights
+                    }
+                } else if from == Square::H1 {
+                    CastlingRecord {
+                        white: CastlingRights::Queenside,
+                        ..self.castling_rights
+                    }
+                } else {
+                    self.castling_rights
+                };
+
+                match movetype {
+                    MoveType::QuietMove => GameManager {
                         bitboard: BitBoard {
-                            rooks_white: (self.bitboard.rooks_white ^ from.to_u64()) | to_square,
-                            pawns_black: self.bitboard.pawns_black & !to_square,
-                            rooks_black: self.bitboard.rooks_black & !to_square,
-                            knights_black: self.bitboard.knights_black & !to_square,
-                            bishops_black: self.bitboard.bishops_black & !to_square,
-                            queens_black: self.bitboard.queens_black & !to_square,
+                            rooks_white: (self.bitboard.rooks_white ^ from.to_u64()) | to.to_u64(),
                             ..self.bitboard
                         },
-                        castling_rights: self.castling_rights.clone(),
+                        castling_rights: new_castling_rights,
                         en_passant_target: self.en_passant_target.clone(),
                         movetable: &MOVETABLE,
                         ..*self
+                    },
+                    MoveType::Capture => {
+                        let to_square = to.to_u64();
+                        GameManager {
+                            bitboard: BitBoard {
+                                rooks_white: (self.bitboard.rooks_white ^ from.to_u64())
+                                    | to_square,
+                                pawns_black: self.bitboard.pawns_black & !to_square,
+                                rooks_black: self.bitboard.rooks_black & !to_square,
+                                knights_black: self.bitboard.knights_black & !to_square,
+                                bishops_black: self.bitboard.bishops_black & !to_square,
+                                queens_black: self.bitboard.queens_black & !to_square,
+                                ..self.bitboard
+                            },
+                            castling_rights: new_castling_rights,
+                            en_passant_target: self.en_passant_target.clone(),
+                            movetable: &MOVETABLE,
+                            ..*self
+                        }
                     }
+                    _ => unreachable!("Rooks will never make another type of move."),
                 }
-                _ => unreachable!("Rooks will never make another type of move."),
-            },
+            }
             PieceType::King => match movetype {
                 // Handle checks on king-side and queen-side castling differently!
                 MoveType::KingCastle => GameManager {
@@ -1064,6 +1126,16 @@ impl GameManager {
                 }
             },
             PieceType::Queen => match movetype {
+                MoveType::QuietMove => GameManager {
+                    bitboard: BitBoard {
+                        queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to.to_u64(),
+                        ..self.bitboard
+                    },
+                    castling_rights: self.castling_rights.clone(),
+                    en_passant_target: self.en_passant_target.clone(),
+                    movetable: &MOVETABLE,
+                    ..*self
+                },
                 MoveType::Capture => {
                     let to_square = to.to_u64();
                     GameManager {
@@ -1082,16 +1154,6 @@ impl GameManager {
                         ..*self
                     }
                 }
-                MoveType::QuietMove => GameManager {
-                    bitboard: BitBoard {
-                        queens_white: (self.bitboard.queens_white ^ from.to_u64()) | to.to_u64(),
-                        ..self.bitboard
-                    },
-                    castling_rights: self.castling_rights.clone(),
-                    en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
-                    ..*self
-                },
                 _ => unreachable!("Queens will never make another type of move."),
             },
             PieceType::Super => {
