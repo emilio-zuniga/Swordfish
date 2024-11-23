@@ -22,7 +22,7 @@ pub enum Color {
 }
 
 /// An `enum` representing a single coordinate of a chess board
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Square {
     A8,
     B8,
