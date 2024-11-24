@@ -10,7 +10,10 @@ pub fn perft(depth: u16, maxdepth: u16, mv: Move, gm: GameManager) {
     let mvlst = gm.legal_moves();
     let count = mvlst.iter().count();
     if depth == maxdepth {
-        println!("MOVE AT DEPTH {depth}");
+        //let s = format!("{}{}: ", mv.1.to_str(), mv.2.to_str()).to_ascii_lowercase();
+        //println!("{}", s);
+        //eprintln!("MOVE AT DEPTH {depth}");
+        //println!("{s}{}", mvlst.iter().count());
     }
     mvlst
         .into_par_iter()

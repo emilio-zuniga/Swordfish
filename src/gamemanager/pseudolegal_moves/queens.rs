@@ -20,8 +20,8 @@ pub fn pseudolegal_queen_moves(
                         } else {
                             // ...then this move does not intersect any friendly pieces
                             let from = Square::from_u64(queen).expect("Each u64 is a power of two");
-                            let to = Square::from_u64(queen).expect("Each u64 is a power of two");
-
+                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
+                            debug_assert!(from != to);
                             if m & enemy_pieces != 0 {
                                 // then this move is a capture
                                 queen_pseudo_legal_moves.push((
@@ -54,8 +54,8 @@ pub fn pseudolegal_queen_moves(
                         } else {
                             // then this move does not collide with any friendly pieces
                             let from = Square::from_u64(queen).expect("Each u64 is a power of two");
-                            let to = Square::from_u64(queen).expect("Each u64 is a power of two");
-
+                            let to = Square::from_u64(m).expect("Each u64 is a power of two");
+                            debug_assert!(from != to);
                             if m & enemy_pieces != 0 {
                                 // then this move is a capture
                                 queen_pseudo_legal_moves.push((

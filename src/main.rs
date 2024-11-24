@@ -18,8 +18,10 @@ fn main() {
     let gm =
         GameManager::from_fen_string("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
     let mvlst = gm.legal_moves();
-    for mv in mvlst {
-        legal_moves::perft::perft(1, 4, (mv.0, mv.1, mv.2, mv.3), mv.4);
+    for mv in &mvlst {
+        let s = format!("{}{}: ", mv.1.to_str(), mv.2.to_str()).to_ascii_lowercase();
+        //println!("{}", s);
+        println!("{s}{}", mvlst.iter().count());
     }
   
     ucimanager::communicate();
