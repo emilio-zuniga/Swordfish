@@ -121,6 +121,7 @@ pub fn pseudolegal_moves(
                 movetable,
                 kings,
                 friendly_pieces,
+                bitboard.rooks_black,
                 enemy_pieces,
                 castling_rights,
             );
@@ -200,6 +201,7 @@ pub fn pseudolegal_moves(
                 movetable,
                 kings,
                 friendly_pieces,
+                bitboard.rooks_white,
                 enemy_pieces,
                 castling_rights,
             );

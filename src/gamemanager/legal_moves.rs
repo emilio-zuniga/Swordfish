@@ -69,6 +69,12 @@ impl GameManager {
             Color::White => (self.bitboard.king_white, self.bitboard.king_black),
         };
 
+        // Based on color, extract the friendly and enemy rooks.
+        let (friendly_rooks, enemy_rooks) = match color {
+            Color::Black => (self.bitboard.rooks_black, self.bitboard.rooks_white),
+            Color::White => (self.bitboard.rooks_white, self.bitboard.rooks_black),
+        };
+
         // First get all the pseudolegal moves.
         let pslm = pseudolegal_moves::pseudolegal_moves(
             color,
@@ -257,6 +263,7 @@ impl GameManager {
                         Color::White => modified_gm.bitboard.king_black,
                     }),
                     friendly_pieces,
+                    friendly_rooks,
                     enemy_pieces,
                     modified_gm.castling_rights,
                 );
