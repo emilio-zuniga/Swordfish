@@ -232,7 +232,7 @@ mod tests {
             &MoveTable::default(),
             vec![E8.to_u64()],
             0,
-            0,
+            Square::A8.to_u64() | Square::H8.to_u64(),
             0,
             CastlingRecord {
                 black: CastlingRights::Both,
