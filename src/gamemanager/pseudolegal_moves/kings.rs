@@ -52,6 +52,7 @@ pub fn pseudolegal_king_moves(
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
+    // TODO: Check that castling paths are not attacked.
     match color {
         Color::Black => {
             for king in king_locations {
@@ -69,7 +70,7 @@ pub fn pseudolegal_king_moves(
                                     MoveType::QuietMove,
                                 ));
                             } else {
-                                // Quiet move (no capture)
+                                // Capturing move.
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -81,6 +82,8 @@ pub fn pseudolegal_king_moves(
                     }
                 }
             }
+
+            // Add castling moves to the normal moves.
 
             // MAGIC NUMBERS: These are masks for the squares between E8 and the corners.
             // Conditions:

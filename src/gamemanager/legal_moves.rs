@@ -27,8 +27,10 @@ impl GameManager {
 
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, GameManager)> = vec![];
 
-        // Based on color, union all the friendly and enemy pieces.
-        let (friendly_pieces, enemy_pieces) = match color {
+        // Based on color, union all the friendly and enemy pieces, and determine
+        // which squares the enemy is attacking. We'll need that info for checking
+        // whether the king is in danger.
+        let (friendly_pieces, enemy_pieces, enemy_attacked) = match color {
             Color::Black => {
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
@@ -43,7 +45,9 @@ impl GameManager {
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
-                (friendly_pieces, enemy_pieces)
+                let enemy_attacked = self.attacked_by(Color::White);
+
+                (friendly_pieces, enemy_pieces, enemy_attacked)
             }
             Color::White => {
                 let friendly_pieces = self.bitboard.pawns_white
@@ -59,7 +63,9 @@ impl GameManager {
                     | self.bitboard.queens_black
                     | self.bitboard.king_black;
 
-                (friendly_pieces, enemy_pieces)
+                let enemy_attacked = self.attacked_by(Color::Black);
+
+                (friendly_pieces, enemy_pieces, enemy_attacked)
             }
         };
 
