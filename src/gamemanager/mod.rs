@@ -69,6 +69,7 @@ impl GameManager {
                 fullmoves: tokens[5].parse().unwrap_or_default(),
             } // TODO: Remove subscript element access to handle malformed FEN strings.
         } else {
+            eprintln!("WARNING: Malformed FEN string; defaulting to startpos.");
             GameManager::default()
         }
     }
