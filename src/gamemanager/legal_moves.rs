@@ -30,7 +30,7 @@ impl GameManager {
         // Based on color, union all the friendly and enemy pieces, and determine
         // which squares the enemy is attacking. We'll need that info for checking
         // whether the king is in danger.
-        let (friendly_pieces, enemy_pieces, enemy_attacked) = match color {
+        let (friendly_pieces, enemy_pieces, currently_attacked) = match color {
             Color::Black => {
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
@@ -105,9 +105,6 @@ impl GameManager {
         /* ************************************************************************************* */
 
         for mv in &pslm {
-            if mv.2 == Square::F2 {
-                dbg!(&mv.3);
-            }
             debug_assert!(mv.1 != mv.2);
             // Create a new GameManager here.
             let mut modified_gm = {
@@ -140,191 +137,25 @@ impl GameManager {
             }
 
             // TODO: Test mask and king intersection.
-        }
+            let enemy_attacked = modified_gm.attacked_by(match color {
+                Color::Black => Color::White,
+                Color::White => Color::Black,
+            });
 
-        // A pseudolegal move may be illegal iff it puts the king in check.
-        // For each possible move, check legality.
-        'pslms: for (piecetype, from, to, movetype) in pslm {
-            // Test for king safety against each enemy bitboard,
-            // by grabbing all the moves a super piece can make
-            // from the king's square.
-
-            // Create a new GameManager here.
-            let mut modified_gm = {
-                match color {
-                    Color::Black => {
-                        self.black_match_block(piecetype.clone(), movetype.clone(), from, to)
-                    }
-                    Color::White => {
-                        self.white_match_block(piecetype.clone(), movetype.clone(), from, to)
+            match color {
+                Color::Black => {
+                    if modified_gm.bitboard.king_black & enemy_attacked == 0 {
+                        // Good move; push it.
+                        legal_moves.push((mv.0.clone(), mv.1, mv.2, mv.3.clone(), modified_gm));
                     }
                 }
-            };
-
-            // Increment the fullmove clock every black move.
-            if color == Color::Black {
-                modified_gm.fullmoves += 1;
-                modified_gm.white_to_move = true;
-            } else {
-                modified_gm.white_to_move = false;
-            }
-
-            // Increment the halfmove counter every quiet/non-pawn move.
-            use MoveType::*;
-            match movetype {
-                QuietMove | KingCastle | QueenCastle => {
-                    modified_gm.halfmoves += 1;
-                    modified_gm.en_passant_target = String::new(); // Made a quiet move instead of EPCapture.
+                Color::White => {
+                    if modified_gm.bitboard.king_white & enemy_attacked == 0 {
+                        // Good move; push it.
+                        legal_moves.push((mv.0.clone(), mv.1, mv.2, mv.3.clone(), modified_gm));
+                    }
                 }
-                EPCapture => {
-                    modified_gm.halfmoves = 0;
-                    modified_gm.en_passant_target = String::new()
-                }
-                _ => modified_gm.halfmoves = 0,
             }
-
-            // Continue to check against each bitboard with moves from the corresponding piece type.
-            let psl_pawn_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_pawn_moves(
-                    // Should be the opposite of the current color.
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.pawns_white,
-                        Color::White => modified_gm.bitboard.pawns_black,
-                    }),
-                    friendly_pieces,
-                    enemy_pieces,
-                    &modified_gm.en_passant_target,
-                );
-            if psl_pawn_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            let psl_rook_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_rook_moves(
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.rooks_white,
-                        Color::White => modified_gm.bitboard.rooks_black,
-                    }),
-                    friendly_pieces,
-                    enemy_pieces,
-                );
-            if psl_rook_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            let psl_knight_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_knight_moves(
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.knights_white,
-                        Color::White => modified_gm.bitboard.knights_black,
-                    }),
-                    friendly_pieces,
-                    enemy_pieces,
-                );
-            if psl_knight_moves
-                .iter()
-                .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & friendly_king
-                != 0
-            {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            let psl_bishop_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_bishop_moves(
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.bishops_white,
-                        Color::White => modified_gm.bitboard.bishops_black,
-                    }),
-                    friendly_pieces,
-                    enemy_pieces,
-                );
-            if psl_bishop_moves
-                .iter()
-                .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & friendly_king
-                != 0
-            {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            let psl_queen_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_queen_moves(
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.queens_white,
-                        Color::White => modified_gm.bitboard.queens_black,
-                    }),
-                    friendly_pieces,
-                    enemy_pieces,
-                );
-            if psl_queen_moves
-                .iter()
-                .fold(0, |acc, mv| acc | mv.2.to_u64())
-                & friendly_king
-                != 0
-            {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            let psl_king_moves: Vec<(PieceType, Square, Square, MoveType)> =
-                pseudolegal_moves::pseudolegal_king_moves(
-                    if color == Color::Black {
-                        Color::White
-                    } else {
-                        Color::Black
-                    },
-                    &MOVETABLE,
-                    GameManager::powers_of_two(match color {
-                        Color::Black => modified_gm.bitboard.king_white,
-                        Color::White => modified_gm.bitboard.king_black,
-                    }),
-                    friendly_pieces,
-                    friendly_rooks,
-                    enemy_pieces,
-                    modified_gm.castling_rights,
-                );
-            if psl_king_moves.iter().fold(0, |acc, mv| acc | mv.2.to_u64()) & friendly_king != 0 {
-                // Position is bad.
-                continue 'pslms;
-            }
-
-            // Passed all the checks against every enemy piece. King wasn't under threat after all.
-            legal_moves.push((piecetype, from, to, movetype, modified_gm));
         }
 
         legal_moves
