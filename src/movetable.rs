@@ -578,8 +578,6 @@ mod test {
         let table = MoveTable::default();
         let rays = table.get_moves(Color::Black, PieceType::Knight, Square::B8.to_u64());
 
-        dbg!(&rays);
-
         let mut pslm: HashSet<u64> = HashSet::new();
         pslm.insert(0x800000000000);
         pslm.insert(0x200000000000);
@@ -669,7 +667,6 @@ mod test {
 
         let all_are_members = rays.iter().all(|r| r.iter().all(|m| pslm.contains(m)));
         let only_seven = rays.iter().fold(0, |acc, r| acc + r.iter().count());
-        dbg!(&rays);
         assert!(all_are_members);
         assert_eq!(only_seven, 7);
     }

@@ -119,7 +119,6 @@ pub fn pseudolegal_king_moves(
                 ));
             }
         }
-        // TODO, BUG: Why is the White match arm so much different from the Black one?
         Color::White => {
             for king in king_locations {
                 for r in movetable.get_moves(Color::White, PieceType::King, king) {
@@ -255,8 +254,6 @@ mod tests {
             .cloned(),
         );
 
-        dbg!(&pslnm);
-
         assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
         assert_eq!(pslnm.len(), moves.len())
     }
@@ -288,8 +285,6 @@ mod tests {
             .iter()
             .cloned(),
         );
-
-        dbg!(&pslnm);
 
         assert!(pslnm.iter().all(|m| moves.contains(&m.2.to_u64())));
         assert_eq!(pslnm.len(), moves.len())

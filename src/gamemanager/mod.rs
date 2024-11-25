@@ -206,7 +206,6 @@ mod test {
             game_manager.fullmoves,
         );
 
-        dbg!(&moves);
         assert_eq!(
             moves.iter().count(),
             20 /* 20 valid moves at start of game. */
