@@ -1,4 +1,10 @@
 #![allow(dead_code)]
+use std::sync::LazyLock;
+
+use crate::types::{Color, PieceType};
+use gamemanager::{legal_moves, GameManager};
+use movetable::MoveTable;
+use types::Square;
 
 mod bitboard;
 mod gamemanager;
@@ -6,7 +12,16 @@ mod movetable;
 mod types;
 mod ucimanager;
 
+pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::default);
+
 fn main() {
+    let gm =
+        GameManager::from_fen_string("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
+    let mvlst = gm.legal_moves();
+    for mv in mvlst {
+        legal_moves::perft::perft(1, 4, (mv.0, mv.1, mv.2, mv.3), mv.4);
+    }
+  
     ucimanager::communicate();
 }
 
@@ -46,7 +61,8 @@ mod test {
             let game = GameManager::from_fen_string(fen);
             let generated_fen = game.to_fen_string();
 
-            assert!(fen == generated_fen);
+            dbg!(&fen, &generated_fen);
+            assert_eq!(fen, generated_fen);
         }
     }
 }

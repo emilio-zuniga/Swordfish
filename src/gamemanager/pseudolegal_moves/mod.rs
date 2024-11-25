@@ -3,18 +3,25 @@
 //! pulls all the modules together, and generates the pseudolegal moves for an arbitrary piece, on an
 //! arbitrary bitboard.
 
-mod bishops;
-mod kings;
-mod knights;
-mod pawns;
-mod queens;
-mod rooks;
+pub mod bishops;
+pub mod kings;
+pub mod knights;
+pub mod pawns;
+pub mod queens;
+pub mod rooks;
+
+pub use bishops::pseudolegal_bishop_moves;
+pub use kings::pseudolegal_king_moves;
+pub use knights::pseudolegal_knight_moves;
+pub use pawns::pseudolegal_pawn_moves;
+pub use queens::pseudolegal_queen_moves;
+pub use rooks::pseudolegal_rook_moves;
 
 use crate::{
     bitboard::BitBoard,
     gamemanager::GameManager,
     movetable::MoveTable,
-    types::{Color, Move},
+    types::{CastlingRecord, Color, Move},
 };
 
 /// Returns a [`Vec`] of pseudolegal moves encoded as a [`Move`](Move) type,
@@ -24,7 +31,7 @@ pub fn pseudolegal_moves(
     color: Color,
     bitboard: BitBoard,
     movetable: &MoveTable,
-    castling_rights: &str,
+    castling_rights: CastlingRecord,
     en_passant_target: &str,
     halfmoves: u32,
     fullmoves: u32,
@@ -114,6 +121,7 @@ pub fn pseudolegal_moves(
                 movetable,
                 kings,
                 friendly_pieces,
+                bitboard.rooks_black,
                 enemy_pieces,
                 castling_rights,
             );
@@ -193,6 +201,7 @@ pub fn pseudolegal_moves(
                 movetable,
                 kings,
                 friendly_pieces,
+                bitboard.rooks_white,
                 enemy_pieces,
                 castling_rights,
             );
@@ -200,14 +209,14 @@ pub fn pseudolegal_moves(
         }
     }
 
-    println!(
-        "Number of moves across all {} piece types recorded: {}",
-        match color {
-            Color::Black => "Black",
-            Color::White => "White",
-        },
-        pseudolegal_moves.len()
-    );
+    // println!(
+    //     "Number of moves across all {} piece types recorded: {}",
+    //     match color {
+    //         Color::Black => "Black",
+    //         Color::White => "White",
+    //     },
+    //     pseudolegal_moves.len()
+    // );
 
     pseudolegal_moves
 }

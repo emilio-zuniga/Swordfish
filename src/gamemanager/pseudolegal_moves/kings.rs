@@ -46,8 +46,9 @@ pub fn pseudolegal_king_moves(
     movetable: &MoveTable,
     king_locations: Vec<u64>,
     friendly_pieces: u64,
+    friendly_rooks: u64,
     enemy_pieces: u64,
-    castling_rights: &str,
+    castling_rights: CastlingRecord,
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
@@ -82,7 +83,16 @@ pub fn pseudolegal_king_moves(
             }
 
             // MAGIC NUMBERS: These are masks for the squares between E8 and the corners.
-            if castling_rights.contains("k") && friendly_pieces & 0x06000000_00000000 == 0 {
+            // Conditions:
+            // - Correct side castling rights
+            // - No friendly pieces in the way
+            // - No enemy pieces in the way
+            // - Rook present and not captured
+            if castling_rights.contains("k")
+                && friendly_pieces & 0x06000000_00000000 == 0
+                && enemy_pieces & 0x06000000_00000000 == 0
+                && friendly_rooks & Square::H8.to_u64() != 0
+            {
                 // Kingside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
@@ -91,7 +101,12 @@ pub fn pseudolegal_king_moves(
                     MoveType::KingCastle,
                 ));
             }
-            if castling_rights.contains("q") && friendly_pieces & 0x70000000_00000000 == 0 {
+            // Conditions: ditto.
+            if castling_rights.contains("q")
+                && friendly_pieces & 0x70000000_00000000 == 0
+                && enemy_pieces & 0x70000000_00000000 == 0
+                && friendly_rooks & Square::A8.to_u64() != 0
+            {
                 // Queenside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
@@ -101,17 +116,16 @@ pub fn pseudolegal_king_moves(
                 ));
             }
         }
+        // TODO, BUG: Why is the White match arm so much different from the Black one?
         Color::White => {
             for king in king_locations {
                 for r in movetable.get_moves(Color::White, PieceType::King, king) {
                     for m in r {
                         if m & friendly_pieces == 0 {
                             // ...then this move does not intersect any friendly pieces
-                            println!("Test for m & enemy_pieces reached!");
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
                             if m & enemy_pieces == 0 {
-                                println!("### Reached m & enemy_pieces!");
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -187,7 +201,11 @@ mod tests {
             vec![B5.to_u64()],
             0,
             0,
-            "",
+            0,
+            CastlingRecord {
+                black: CastlingRights::Neither,
+                white: CastlingRights::Neither,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -214,8 +232,12 @@ mod tests {
             &MoveTable::default(),
             vec![E8.to_u64()],
             0,
+            Square::A8.to_u64() | Square::H8.to_u64(),
             0,
-            "kq",
+            CastlingRecord {
+                black: CastlingRights::Both,
+                white: CastlingRights::Neither,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -245,7 +267,11 @@ mod tests {
             vec![E1.to_u64()],
             0,
             0,
-            "KQ",
+            0,
+            CastlingRecord {
+                black: CastlingRights::Neither,
+                white: CastlingRights::Both,
+            },
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
