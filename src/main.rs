@@ -2,7 +2,7 @@
 use std::sync::LazyLock;
 
 use gamemanager::GameManager;
-use movetable::MoveTable;
+use movetable::{noarc, MoveTable};
 
 mod bitboard;
 mod gamemanager;
@@ -13,6 +13,8 @@ mod ucimanager;
 pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::default);
 
 fn main() {
+    let movetable = noarc::NoArc::new(MoveTable::default());
+
     let gm =
         GameManager::from_fen_string("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
     let mvlst = gm.legal_moves();

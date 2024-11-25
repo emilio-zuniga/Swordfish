@@ -1,6 +1,8 @@
 use crate::types::{Color, PieceType};
 use dashmap::DashMap;
 
+pub mod noarc;
+
 /// A HashMap of [`(Color, PieceType, u64)`] indexing [`Vec<Vec<u64>>`] where
 /// the index integer is a position on the board (must be a power of two) and
 /// the list of lists is a list of rays---that is, each direction the object
