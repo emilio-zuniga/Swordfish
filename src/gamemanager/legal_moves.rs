@@ -140,6 +140,9 @@ impl GameManager {
             }
 
             // TODO: Test mask and king intersection.
+            if friendly_king & enemy_attacked != 0 {
+                // BAAAAAAD MOOOOOVE!
+            }
         }
 
         // A pseudolegal move may be illegal iff it puts the king in check.
