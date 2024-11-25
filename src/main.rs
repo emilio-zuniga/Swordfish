@@ -2,7 +2,7 @@
 use std::sync::LazyLock;
 
 use crate::types::{Color, PieceType};
-use gamemanager::{legal_moves, GameManager};
+use gamemanager::GameManager;
 use movetable::MoveTable;
 use types::Square;
 
@@ -20,8 +20,18 @@ fn main() {
     let mvlst = gm.legal_moves();
     for mv in &mvlst {
         let s = format!("{}{}: ", mv.1.to_str(), mv.2.to_str()).to_ascii_lowercase();
-        //println!("{}", s);
-        println!("{s}{}", mvlst.iter().count());
+        println!("{}{}", s, mv.4.legal_moves().iter().count());
+        // println!(
+        //     "{}: 1",
+        //     format!(
+        //         "{s}{}",
+        //         mv.4.legal_moves()
+        //             .iter()
+        //             .map(|newmv| format!("{}{}", newmv.1.to_str(), newmv.2.to_str()))
+        //             .fold(String::new(), |acc, s| acc.to_owned() + " " + &s)
+        //             .to_ascii_lowercase()
+        //     )
+        // );
     }
   
     ucimanager::communicate();

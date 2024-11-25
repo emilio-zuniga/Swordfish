@@ -30,6 +30,7 @@ pub fn pseudolegal_queen_moves(
                                     to,
                                     MoveType::Capture,
                                 ));
+                                break;
                             } else {
                                 // this is a quiet move
                                 queen_pseudo_legal_moves.push((
@@ -64,6 +65,7 @@ pub fn pseudolegal_queen_moves(
                                     to,
                                     MoveType::Capture,
                                 ));
+                                break;
                             } else {
                                 // this is a quiet move
                                 queen_pseudo_legal_moves.push((
