@@ -1,10 +1,8 @@
 #![allow(dead_code)]
 use std::sync::LazyLock;
 
-use crate::types::{Color, PieceType};
 use gamemanager::GameManager;
 use movetable::MoveTable;
-use types::Square;
 
 mod bitboard;
 mod gamemanager;
@@ -33,8 +31,6 @@ fn main() {
         //     )
         // );
     }
-  
-    ucimanager::communicate();
 }
 
 #[cfg(test)]
@@ -73,7 +69,6 @@ mod test {
             let game = GameManager::from_fen_string(fen);
             let generated_fen = game.to_fen_string();
 
-            dbg!(&fen, &generated_fen);
             assert_eq!(fen, generated_fen);
         }
     }
