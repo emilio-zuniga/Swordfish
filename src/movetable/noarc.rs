@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct NoArc<T> {
     ptr: *mut T,
 }

@@ -1,23 +1,13 @@
-use crate::types::Move;
-
-use super::GameManager;
+use super::{GameManager, MoveTable, NoArc};
 use rayon::prelude::*;
 
-pub fn perft(depth: u16, maxdepth: u16, mv: Move, gm: GameManager) {
-    if depth > maxdepth {
-        return;
-    }
-    let mvlst = gm.legal_moves();
-    let count = mvlst.iter().count();
+pub fn perft(depth: u16, maxdepth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> u64 {
     if depth == maxdepth {
-        //let s = format!("{}{}: ", mv.1.to_str(), mv.2.to_str()).to_ascii_lowercase();
-        //println!("{}", s);
-        //eprintln!("MOVE AT DEPTH {depth}");
-        //println!("{s}{}", mvlst.iter().count());
+        1
+    } else {
+        gm.legal_moves(tbl)
+            .into_par_iter()
+            .map(|mv| perft(depth + 1, maxdepth, mv.4, tbl))
+            .sum::<u64>()
     }
-    mvlst
-        .into_par_iter()
-        .for_each(|(pc, from, to, mvtp, modgm)| {
-            perft(depth + 1, maxdepth, (pc, from, to, mvtp.clone()), modgm)
-        });
 }

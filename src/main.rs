@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-use std::sync::LazyLock;
 
-use gamemanager::GameManager;
+use gamemanager::{legal_moves::perft::perft, GameManager};
 use movetable::{noarc, MoveTable};
 
 mod bitboard;
@@ -10,29 +9,11 @@ mod movetable;
 mod types;
 mod ucimanager;
 
-pub static MOVETABLE: LazyLock<MoveTable> = std::sync::LazyLock::new(MoveTable::default);
-
 fn main() {
-    let movetable = noarc::NoArc::new(MoveTable::default());
+    let tbl = noarc::NoArc::new(MoveTable::default());
 
-    let gm =
-        GameManager::from_fen_string("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
-    let mvlst = gm.legal_moves();
-    for mv in &mvlst {
-        let s = format!("{}{}: ", mv.1.to_str(), mv.2.to_str()).to_ascii_lowercase();
-        println!("{}{}", s, mv.4.legal_moves().iter().count());
-        // println!(
-        //     "{}: 1",
-        //     format!(
-        //         "{s}{}",
-        //         mv.4.legal_moves()
-        //             .iter()
-        //             .map(|newmv| format!("{}{}", newmv.1.to_str(), newmv.2.to_str()))
-        //             .fold(String::new(), |acc, s| acc.to_owned() + " " + &s)
-        //             .to_ascii_lowercase()
-        //     )
-        // );
-    }
+    let gm = GameManager::default();
+    println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
 }
 
 #[cfg(test)]
@@ -68,7 +49,7 @@ mod test {
         ];
 
         for fen in tests {
-            let game = GameManager::from_fen_string(fen);
+            let game = GameManager::from_fen_str(fen);
             let generated_fen = game.to_fen_string();
 
             assert_eq!(fen, generated_fen);

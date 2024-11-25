@@ -1,4 +1,7 @@
-use crate::{movetable::MoveTable, types::*};
+use crate::{
+    movetable::{noarc::NoArc, MoveTable},
+    types::*,
+};
 
 /// A method returning a list of pseudo-legal pawn moves playable according to
 /// the information encoded in this instance of GameManager
@@ -11,11 +14,11 @@ use crate::{movetable::MoveTable, types::*};
 ///     the target `Square`, and the `MoveType`)
 pub fn pseudolegal_pawn_moves(
     color: Color,
-    movetable: &MoveTable,
     pawn_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
     en_passant_target: &str,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut pawn_pseudo_legal_moves = Vec::new();
 

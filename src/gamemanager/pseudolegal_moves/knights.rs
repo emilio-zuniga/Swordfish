@@ -1,4 +1,7 @@
-use crate::{movetable::MoveTable, types::*};
+use crate::{
+    movetable::{noarc::NoArc, MoveTable},
+    types::*,
+};
 
 /// Returns all pseudolegal moves the knights can make from their positions.
 /// ## Inputs
@@ -29,10 +32,10 @@ use crate::{movetable::MoveTable, types::*};
 /// ```
 pub fn pseudolegal_knight_moves(
     color: Color,
-    movetable: &MoveTable,
     knight_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut knight_pseudo_legal_moves = Vec::new();
 
@@ -73,6 +76,7 @@ pub fn pseudolegal_knight_moves(
 #[cfg(test)]
 mod tests {
     use crate::gamemanager::pseudolegal_moves::knights;
+    use crate::movetable::noarc::NoArc;
     use crate::{movetable::MoveTable, types::*};
     use std::collections::HashSet;
 
@@ -80,10 +84,10 @@ mod tests {
     fn check_knight_pslm() {
         let pslnm = knights::pseudolegal_knight_moves(
             Color::Black,
-            &MoveTable::default(),
             vec![0x40000000_00000000],
             0xFFFF0000_00000000,
             0xFFFF,
+            &NoArc::new(MoveTable::default()),
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![0x00008000_00000000, 0x00002000_00000000]

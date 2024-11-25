@@ -1,4 +1,7 @@
-use crate::{movetable::MoveTable, types::*};
+use crate::{
+    movetable::{noarc::NoArc, MoveTable},
+    types::*,
+};
 
 /// Returns all pseudolegal moves the rooks can make from their positions.
 /// ## Inputs
@@ -13,10 +16,10 @@ use crate::{movetable::MoveTable, types::*};
 /// which expands to `(PieceType, Square, Square, MoveType)`.
 pub fn pseudolegal_rook_moves(
     color: Color,
-    movetable: &MoveTable,
     rook_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut rook_pseudo_legal_moves = Vec::new();
 
@@ -87,6 +90,7 @@ pub fn pseudolegal_rook_moves(
 #[cfg(test)]
 mod tests {
     use crate::gamemanager::pseudolegal_moves::rooks;
+    use crate::movetable::noarc::NoArc;
     use crate::{movetable::MoveTable, types::*};
     use std::collections::HashSet;
 
@@ -96,10 +100,10 @@ mod tests {
 
         let pslm = rooks::pseudolegal_rook_moves(
             Color::Black,
-            &MoveTable::default(),
             vec![B5.to_u64()],
             0,
             0,
+            &NoArc::new(MoveTable::default()),
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
