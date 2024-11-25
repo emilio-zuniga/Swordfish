@@ -268,7 +268,7 @@ mod tests {
             &MoveTable::default(),
             vec![E1.to_u64()],
             0,
-            0,
+            Square::A1.to_u64() | Square::H1.to_u64(),
             0,
             CastlingRecord {
                 black: CastlingRights::Neither,
