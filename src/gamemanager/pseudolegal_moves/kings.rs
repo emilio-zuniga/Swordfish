@@ -52,6 +52,7 @@ pub fn pseudolegal_king_moves(
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
+    // TODO: Check that castling paths are not attacked.
     match color {
         Color::Black => {
             for king in king_locations {
@@ -69,7 +70,7 @@ pub fn pseudolegal_king_moves(
                                     MoveType::QuietMove,
                                 ));
                             } else {
-                                // Quiet move (no capture)
+                                // Capturing move.
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -81,6 +82,8 @@ pub fn pseudolegal_king_moves(
                     }
                 }
             }
+
+            // Add castling moves to the normal moves.
 
             // MAGIC NUMBERS: These are masks for the squares between E8 and the corners.
             // Conditions:
@@ -122,9 +125,9 @@ pub fn pseudolegal_king_moves(
                 for r in movetable.get_moves(Color::White, PieceType::King, king) {
                     for m in r {
                         if m & friendly_pieces == 0 {
-                            // ...then this move does not intersect any friendly pieces
                             let from = Square::from_u64(king).expect("Each u64 is a power of two");
                             let to = Square::from_u64(m).expect("Each u64 is a power of two");
+
                             if m & enemy_pieces == 0 {
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
@@ -132,27 +135,8 @@ pub fn pseudolegal_king_moves(
                                     to,
                                     MoveType::QuietMove,
                                 ));
-                            } else if !castling_rights.contains("-") {
-                                if castling_rights.contains("K") {
-                                    //Kingside castling (black)
-                                    king_pseudo_legal_moves.push((
-                                        PieceType::King,
-                                        from,
-                                        to,
-                                        MoveType::KingCastle,
-                                    ));
-                                }
-                                if castling_rights.contains("Q") {
-                                    //Queenside castling (black)
-                                    king_pseudo_legal_moves.push((
-                                        PieceType::King,
-                                        from,
-                                        to,
-                                        MoveType::QueenCastle,
-                                    ));
-                                }
                             } else {
-                                //Quiet move (no capture)
+                                // Capturing move.
                                 king_pseudo_legal_moves.push((
                                     PieceType::King,
                                     from,
@@ -164,8 +148,21 @@ pub fn pseudolegal_king_moves(
                     }
                 }
             }
-            if castling_rights.contains("K") && friendly_pieces & 0x6 == 0 {
-                // Kingside castling (white)
+
+            // Add castling moves to the normal moves.
+
+            // MAGIC NUMBERS: These are masks for the squares between E8 and the corners.
+            // Conditions:
+            // - Correct side castling rights
+            // - No friendly pieces in the way
+            // - No enemy pieces in the way
+            // - Rook present and not captured
+            if castling_rights.contains("K")
+                && friendly_pieces & 0x06 == 0
+                && enemy_pieces & 0x06 == 0
+                && friendly_rooks & Square::H1.to_u64() != 0
+            {
+                // Kingside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
                     Square::E1,
@@ -173,8 +170,13 @@ pub fn pseudolegal_king_moves(
                     MoveType::KingCastle,
                 ));
             }
-            if castling_rights.contains("Q") && friendly_pieces & 0x70 == 0 {
-                // Queenside castling (white)
+            // Conditions: ditto.
+            if castling_rights.contains("Q")
+                && friendly_pieces & 0x70 == 0
+                && enemy_pieces & 0x70 == 0
+                && friendly_rooks & Square::A1.to_u64() != 0
+            {
+                // Queenside castling (black)
                 king_pseudo_legal_moves.push((
                     PieceType::King,
                     Square::E1,
@@ -266,7 +268,7 @@ mod tests {
             &MoveTable::default(),
             vec![E1.to_u64()],
             0,
-            0,
+            Square::A1.to_u64() | Square::H1.to_u64(),
             0,
             CastlingRecord {
                 black: CastlingRights::Neither,

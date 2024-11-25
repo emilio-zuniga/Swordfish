@@ -27,8 +27,10 @@ impl GameManager {
 
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, GameManager)> = vec![];
 
-        // Based on color, union all the friendly and enemy pieces.
-        let (friendly_pieces, enemy_pieces) = match color {
+        // Based on color, union all the friendly and enemy pieces, and determine
+        // which squares the enemy is attacking. We'll need that info for checking
+        // whether the king is in danger.
+        let (friendly_pieces, enemy_pieces, enemy_attacked) = match color {
             Color::Black => {
                 let friendly_pieces = self.bitboard.pawns_black
                     | self.bitboard.rooks_black
@@ -43,7 +45,9 @@ impl GameManager {
                     | self.bitboard.queens_white
                     | self.bitboard.king_white;
 
-                (friendly_pieces, enemy_pieces)
+                let enemy_attacked = self.attacked_by(Color::White);
+
+                (friendly_pieces, enemy_pieces, enemy_attacked)
             }
             Color::White => {
                 let friendly_pieces = self.bitboard.pawns_white
@@ -59,7 +63,9 @@ impl GameManager {
                     | self.bitboard.queens_black
                     | self.bitboard.king_black;
 
-                (friendly_pieces, enemy_pieces)
+                let enemy_attacked = self.attacked_by(Color::Black);
+
+                (friendly_pieces, enemy_pieces, enemy_attacked)
             }
         };
 
@@ -91,7 +97,52 @@ impl GameManager {
             .iter()
             .all(|(piecetype, _, _, _)| *piecetype != PieceType::Super));
 
-        // A pseudolegal move may be illegal iff it leaves the king in check.
+        /* ************************************************************************************* */
+        /* DESIGN NOTE: We can make a pslm, then check whether the king intersects the attacked  */
+        /*              mask. If the king doesn't intersect the attacked mask, and made no       */
+        /*              castling move that put him in danger, then the move was valid. Otherwise */
+        /*              discard it and carry on. That should be more performant.                 */
+        /* ************************************************************************************* */
+
+        for mv in &pslm {
+            if mv.2 == Square::F2 {
+                dbg!(&mv.3);
+            }
+            debug_assert!(mv.1 != mv.2);
+            // Create a new GameManager here.
+            let mut modified_gm = {
+                match color {
+                    Color::Black => self.black_match_block(mv.0.clone(), mv.3.clone(), mv.1, mv.2),
+                    Color::White => self.white_match_block(mv.0.clone(), mv.3.clone(), mv.1, mv.2),
+                }
+            };
+
+            // Increment the fullmove clock every black move.
+            if color == Color::Black {
+                modified_gm.fullmoves += 1;
+                modified_gm.white_to_move = true;
+            } else {
+                modified_gm.white_to_move = false;
+            }
+
+            // Increment the halfmove counter every quiet/non-pawn move.
+            use MoveType::*;
+            match mv.3 {
+                QuietMove | KingCastle | QueenCastle => {
+                    modified_gm.halfmoves += 1;
+                    modified_gm.en_passant_target = String::new(); // Made a quiet move instead of EPCapture.
+                }
+                EPCapture => {
+                    modified_gm.halfmoves = 0;
+                    modified_gm.en_passant_target = String::new()
+                }
+                _ => modified_gm.halfmoves = 0,
+            }
+
+            // TODO: Test mask and king intersection.
+        }
+
+        // A pseudolegal move may be illegal iff it puts the king in check.
         // For each possible move, check legality.
         'pslms: for (piecetype, from, to, movetype) in pslm {
             // Test for king safety against each enemy bitboard,

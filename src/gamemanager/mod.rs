@@ -1,8 +1,14 @@
 #![allow(dead_code, unused_variables, unused_mut)]
 use std::sync::LazyLock;
 
-use crate::{bitboard, movetable::MoveTable, types::CastlingRecord, MOVETABLE};
+use crate::{
+    bitboard,
+    movetable::MoveTable,
+    types::{CastlingRecord, Color},
+    MOVETABLE,
+};
 use bitboard::BitBoard;
+use pseudolegal_moves::pseudolegal_moves;
 use regex::Regex;
 
 pub mod legal_moves;
@@ -142,6 +148,24 @@ impl GameManager {
             i <<= 1;
         }
         res
+    }
+
+    /// Returns a bitmask of all the pieces attacked by the given color on this GameManager's state.
+    pub fn attacked_by(&self, color: Color) -> u64 {
+        let moves = pseudolegal_moves(
+            color,
+            self.bitboard,
+            &MOVETABLE,
+            self.castling_rights,
+            &self.en_passant_target,
+            self.halfmoves,
+            self.fullmoves,
+        );
+
+        moves
+            .iter()
+            .map(|(_, _, to, _)| to.to_u64())
+            .fold(0_u64, |acc, v| acc | v)
     }
 }
 
