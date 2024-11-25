@@ -13,7 +13,7 @@ pub struct MoveTable {
 impl Default for MoveTable {
     /// Generates a `MoveTable` containing the possible moves for each piece type at each square
     fn default() -> Self {
-        let mut table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = HashMap::new();
+        let table: DashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = DashMap::new();
 
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {
