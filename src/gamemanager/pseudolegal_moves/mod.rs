@@ -10,13 +10,6 @@ pub mod pawns;
 pub mod queens;
 pub mod rooks;
 
-pub use bishops::pseudolegal_bishop_moves;
-pub use kings::pseudolegal_king_moves;
-pub use knights::pseudolegal_knight_moves;
-pub use pawns::pseudolegal_pawn_moves;
-pub use queens::pseudolegal_queen_moves;
-pub use rooks::pseudolegal_rook_moves;
-
 use crate::{
     bitboard::BitBoard,
     gamemanager::GameManager,

@@ -31,8 +31,6 @@ fn main() {
         //     )
         // );
     }
-
-    ucimanager::communicate();
 }
 
 #[cfg(test)]
