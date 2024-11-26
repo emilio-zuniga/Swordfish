@@ -1,9 +1,10 @@
 use std::io::{self, BufRead};
-use vampirc_uci::{UciFen, UciMessage, UciMove, UciSquare};
+use vampirc_uci::{UciFen, UciMessage, UciMove, UciPiece, UciSquare};
+use crate::{enginemanager::Engine, gamemanager::GameManager};
+use crate::types::MoveType;
 
-pub fn communicate() {
-    println!("Waiting for messages...");
-
+pub fn communicate(mut e: Engine) {
+    //Waiting for messages...
     for line in io::stdin().lock().lines() {
         let msg = vampirc_uci::parse_one(&line.unwrap());
 
@@ -11,36 +12,92 @@ pub fn communicate() {
             UciMessage::Uci => {
                 println!("id name Swordfish");
                 println!("id author Emilio Zuniga, Ethan Barry, Eric Oliver, Grace Kizer, & Zachary Wilson");
-                // if we want configurable options, then we would list them here
                 println!("uciok");
             }
             UciMessage::IsReady => {
-                // a function should initalize the movetable for the engine
-                // as well as set up any internal parameters
                 println!("readyok")
             }
             UciMessage::UciNewGame => {
-                // a function call here should clear the move history
-                // and starting FEN of any ongoing game
-                // - the history should just be set to an empty vec
-                // - the saved inital FEN should be reset to a None value (we will need to create this)
-                // then, the engine should wait for the GUI
-                // to send the inital position
-                // - that position should be saved as the starting FEN
+                e.set_new_game = true;
             }
             UciMessage::Position {
                 startpos,
                 fen,
                 moves,
             } => {
-                
-                // if the saved inital position is a None value,
-                // then, set the above position as the inital position
-                // - if startpos is given as true, then just use standard board's FEN
-                // - otherwise, grab the given FEN
-                
-                // if so, setup default position
-                // if not, check moves & resume from last move
+                if e.set_new_game {
+                    if startpos {
+                        e.board = GameManager::default();
+                        e.move_history = moves;
+                        
+                        for m in e.move_history {
+                            let h_from = m.from.to_string();
+                            let h_to = m.to.to_string();
+                            //determine if there was a promotion
+                            //determine the promotion type
+                            let legal_moves = e.board.legal_moves(&e.tbl);
+                            //|data| data.1.to_str() == h_from && data.2.to_str() == h_to
+                            let updated_data = legal_moves.iter().find(|data|
+                                data.1.to_str() == h_from 
+                                && data.2.to_str() == h_to
+                                && match m.promotion {
+                                    Some(p) => 
+                                        match p {
+                                            UciPiece::Knight => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::NPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::NPromotion
+                                                },
+                                            UciPiece::Bishop => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::BPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::BPromotion
+                                                },
+                                            UciPiece::Rook => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::RPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::RPromotion
+                                                },
+                                            UciPiece::Queen => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::QPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::QPromotion
+                                                },
+                                            _ => panic!("We should never promote to a Pawn or King"),
+                                        },
+                                    None => true,
+                                }
+                                ).unwrap();
+
+                            e.board = updated_data.4.clone();
+                        }
+
+                        e.set_new_game = false;
+                    } else {
+                        e.board = GameManager::from_fen_str(fen.unwrap().as_str());
+                        e.move_history = moves;
+                        //for move in move_history {
+                        //  GameManager.make_move(move)
+                        //}
+                        e.set_new_game = false;
+                    }
+                } else {            //if we're using the current position
+                    //new game is not being set up
+                    //if (position does not match current information)
+                    //setup position accordingly
+                }
             }
             UciMessage::Go {
                 time_control,
@@ -50,23 +107,21 @@ pub fn communicate() {
                     _ => (),
                 }
                 match search_control {
-                    _ => todo!(),
+                    _ => (),
                 }
-                // engine actually does thinking/computing here
-                // sends info regularly until "stop" message is received
+                //engine starts calculating here
+                //TODO: send info regularly until "stop" msg received
             }
             UciMessage::Stop => {
-                // engine should print info about last depth searched to
-                // then, send "bestmove 'move'" (we may include ponder here)
-                todo!()
+                println!("{}", e.board.to_fen_string());
+                //engine should print info about last depth searched to
+                //println!("bestmove {}", UciMove);
             }
-            UciMessage::Quit => todo!(), //engine should shutdown
+            UciMessage::Quit => break, //engine should shutdown
 
-            _ => println!("Received message: {msg}"),
+            _ => eprintln!("Received message: {msg}"),
         }
     }
-
-    println!("We made it out the loop");
 }
 
 fn crate_investigation() {

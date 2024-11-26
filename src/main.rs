@@ -1,19 +1,25 @@
 #![allow(dead_code)]
 
+use enginemanager::Engine;
 use gamemanager::{legal_moves::perft::perft, GameManager};
-use movetable::{noarc, MoveTable};
+use movetable::{noarc::{self, NoArc}, MoveTable};
 
 mod bitboard;
 mod gamemanager;
 mod movetable;
 mod types;
 mod ucimanager;
+mod enginemanager;
 
 fn main() {
-    let tbl = noarc::NoArc::new(MoveTable::default());
+    //let tbl = noarc::NoArc::new(MoveTable::default());
+    //let gm = GameManager::default();
+    //println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
+    
+    //ucimanager::communicate();
+    let e: Engine = Engine::default();
+    ucimanager::communicate(e);
 
-    let gm = GameManager::default();
-    println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
 }
 
 #[cfg(test)]

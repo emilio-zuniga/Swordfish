@@ -11,6 +11,7 @@ pub mod legal_moves;
 pub mod pseudolegal_moves;
 
 /// This is a representation of a chess game and the various states of each element.
+#[derive(Clone)]
 pub struct GameManager {
     /*FEN Notes:
      * active color - get whose turn it is to move {w, b}
