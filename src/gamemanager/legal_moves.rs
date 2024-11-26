@@ -71,17 +71,21 @@ impl GameManager {
             }
 
             // Increment the halfmove counter every quiet/non-pawn move.
+            // En passant target always equals an empty string unless the
+            // move was a double pawn push.
             use MoveType::*;
             match mv.3 {
                 QuietMove | KingCastle | QueenCastle => {
                     modified_gm.halfmoves += 1;
                     modified_gm.en_passant_target = String::new(); // Made a quiet move instead of EPCapture.
                 }
-                EPCapture => {
-                    modified_gm.halfmoves = 0;
-                    modified_gm.en_passant_target = String::new()
+                DoublePawnPush => {
+                    modified_gm.halfmoves = 0; // Leave en passant target alone; it was set by the color-specific function.
                 }
-                _ => modified_gm.halfmoves = 0,
+                _ => {
+                    modified_gm.halfmoves = 0;
+                    modified_gm.en_passant_target = String::new();
+                }
             }
 
             // TODO: Test mask and king intersection.
@@ -92,6 +96,30 @@ impl GameManager {
                     Color::White => Color::Black,
                 },
             );
+
+            // Test that the castle is not castling through/out of check.
+            use Square::*;
+            match mv.3 {
+                KingCastle => {
+                    if color == Color::Black
+                        && (E8.to_u64() | F8.to_u64() | G8.to_u64()) & enemy_attacked != 0
+                        || color == Color::White
+                            && (E1.to_u64() | F1.to_u64() | G1.to_u64()) & enemy_attacked != 0
+                    {
+                        continue; // We don't want this move!
+                    }
+                }
+                QueenCastle => {
+                    if color == Color::Black
+                        && (E8.to_u64() | D8.to_u64() | C8.to_u64()) & enemy_attacked != 0
+                        || color == Color::White
+                            && (E1.to_u64() | D1.to_u64() | C1.to_u64()) & enemy_attacked != 0
+                    {
+                        continue; // Ditto.
+                    }
+                }
+                _ => {}
+            }
 
             match color {
                 Color::Black => {
@@ -224,7 +252,10 @@ impl GameManager {
                             | Square::F8.to_u64(),
                         ..self.bitboard
                     },
-                    castling_rights: self.castling_rights.clone(),
+                    castling_rights: CastlingRecord {
+                        black: CastlingRights::Neither,
+                        ..self.castling_rights
+                    },
                     en_passant_target: self.en_passant_target.clone(),
 
                     ..*self
@@ -233,10 +264,13 @@ impl GameManager {
                     bitboard: BitBoard {
                         king_black: (self.bitboard.king_black ^ from.to_u64()) | to.to_u64(),
                         rooks_black: (self.bitboard.rooks_black ^ Square::A8.to_u64())
-                            | Square::C8.to_u64(),
+                            | Square::D8.to_u64(),
                         ..self.bitboard
                     },
-                    castling_rights: self.castling_rights.clone(),
+                    castling_rights: CastlingRecord {
+                        black: CastlingRights::Neither,
+                        ..self.castling_rights
+                    },
                     en_passant_target: self.en_passant_target.clone(),
 
                     ..*self
@@ -669,7 +703,10 @@ impl GameManager {
                             | Square::F1.to_u64(),
                         ..self.bitboard
                     },
-                    castling_rights: self.castling_rights.clone(),
+                    castling_rights: CastlingRecord {
+                        white: CastlingRights::Neither,
+                        ..self.castling_rights
+                    },
                     en_passant_target: self.en_passant_target.clone(),
 
                     ..*self
@@ -678,10 +715,13 @@ impl GameManager {
                     bitboard: BitBoard {
                         king_white: (self.bitboard.king_white ^ from.to_u64()) | to.to_u64(),
                         rooks_white: (self.bitboard.rooks_white ^ Square::A1.to_u64())
-                            | Square::C1.to_u64(),
+                            | Square::D1.to_u64(),
                         ..self.bitboard
                     },
-                    castling_rights: self.castling_rights.clone(),
+                    castling_rights: CastlingRecord {
+                        white: CastlingRights::Neither,
+                        ..self.castling_rights
+                    },
                     en_passant_target: self.en_passant_target.clone(),
 
                     ..*self

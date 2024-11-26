@@ -55,7 +55,6 @@ pub fn pseudolegal_king_moves(
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
-    // TODO: Check that castling paths are not attacked.
     match color {
         Color::Black => {
             for king in king_locations {
@@ -117,7 +116,7 @@ pub fn pseudolegal_king_moves(
                 king_pseudo_legal_moves.push((
                     PieceType::King,
                     Square::E8,
-                    Square::B8,
+                    Square::C8,
                     MoveType::QueenCastle,
                 ));
             }
@@ -182,7 +181,7 @@ pub fn pseudolegal_king_moves(
                 king_pseudo_legal_moves.push((
                     PieceType::King,
                     Square::E1,
-                    Square::B1,
+                    Square::C1,
                     MoveType::QueenCastle,
                 ));
             }
@@ -254,7 +253,7 @@ mod tests {
                 D7.to_u64(),
                 E7.to_u64(),
                 F7.to_u64(),
-                B8.to_u64(), // Queen-side castling.
+                C8.to_u64(), // Queen-side castling.
                 G8.to_u64(), // King-side castling.
             ]
             .iter()
@@ -286,7 +285,7 @@ mod tests {
                 D2.to_u64(),
                 E2.to_u64(),
                 F2.to_u64(),
-                B1.to_u64(), // Queen-side castling.
+                C1.to_u64(), // Queen-side castling.
                 G1.to_u64(), // King-side castling.
             ]
             .iter()

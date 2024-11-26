@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
-use gamemanager::{legal_moves::perft::perft, GameManager};
+use gamemanager::{
+    legal_moves::perft::{perft, printing_perft},
+    GameManager,
+};
 use movetable::{noarc, MoveTable};
 
 mod bitboard;
@@ -14,6 +17,7 @@ fn main() {
 
     let gm = GameManager::default();
     println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
+    //printing_perft(0, 2, gm, &tbl);
 }
 
 #[cfg(test)]
