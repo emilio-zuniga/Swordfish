@@ -1,4 +1,7 @@
-use crate::{movetable::MoveTable, types::*};
+use crate::{
+    movetable::{noarc::NoArc, MoveTable},
+    types::*,
+};
 
 /// Returns all pseudolegal moves the kings can make from their positions.
 /// ## Inputs
@@ -43,12 +46,12 @@ use crate::{movetable::MoveTable, types::*};
 /// ```
 pub fn pseudolegal_king_moves(
     color: Color,
-    movetable: &MoveTable,
     king_locations: Vec<u64>,
     friendly_pieces: u64,
     friendly_rooks: u64,
     enemy_pieces: u64,
     castling_rights: CastlingRecord,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut king_pseudo_legal_moves = Vec::new();
 
@@ -190,7 +193,11 @@ pub fn pseudolegal_king_moves(
 
 #[cfg(test)]
 mod tests {
-    use crate::{gamemanager::pseudolegal_moves::kings, movetable::MoveTable, types::*};
+    use crate::{
+        gamemanager::pseudolegal_moves::kings,
+        movetable::{noarc::NoArc, MoveTable},
+        types::*,
+    };
     use std::collections::HashSet;
     use Square::*;
 
@@ -198,7 +205,6 @@ mod tests {
     fn check_king_pslm() {
         let pslnm = kings::pseudolegal_king_moves(
             Color::Black,
-            &MoveTable::default(),
             vec![B5.to_u64()],
             0,
             0,
@@ -207,6 +213,7 @@ mod tests {
                 black: CastlingRights::Neither,
                 white: CastlingRights::Neither,
             },
+            &NoArc::new(MoveTable::default()),
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -230,7 +237,6 @@ mod tests {
     fn check_black_king_pslm_castling() {
         let pslnm = kings::pseudolegal_king_moves(
             Color::Black,
-            &MoveTable::default(),
             vec![E8.to_u64()],
             0,
             Square::A8.to_u64() | Square::H8.to_u64(),
@@ -239,6 +245,7 @@ mod tests {
                 black: CastlingRights::Both,
                 white: CastlingRights::Neither,
             },
+            &NoArc::new(MoveTable::default()),
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![
@@ -262,7 +269,6 @@ mod tests {
     fn check_white_king_pslm_castling() {
         let pslnm = kings::pseudolegal_king_moves(
             Color::White,
-            &MoveTable::default(),
             vec![E1.to_u64()],
             0,
             Square::A1.to_u64() | Square::H1.to_u64(),
@@ -271,6 +277,7 @@ mod tests {
                 black: CastlingRights::Neither,
                 white: CastlingRights::Both,
             },
+            &NoArc::new(MoveTable::default()),
         );
         let moves: HashSet<u64> = HashSet::from_iter(
             vec![

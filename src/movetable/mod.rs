@@ -1,5 +1,7 @@
 use crate::types::{Color, PieceType};
-use std::collections::HashMap;
+use dashmap::DashMap;
+
+pub mod noarc;
 
 /// A HashMap of [`(Color, PieceType, u64)`] indexing [`Vec<Vec<u64>>`] where
 /// the index integer is a position on the board (must be a power of two) and
@@ -7,13 +9,13 @@ use std::collections::HashMap;
 /// can move in is a separate list. This facilitates move legality checking,
 /// because sliding pieces simply start at the head of the list and work out.
 pub struct MoveTable {
-    table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>>,
+    table: DashMap<(Color, PieceType, u64), Vec<Vec<u64>>>,
 }
 
 impl Default for MoveTable {
     /// Generates a `MoveTable` containing the possible moves for each piece type at each square
     fn default() -> Self {
-        let mut table: HashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = HashMap::new();
+        let table: DashMap<(Color, PieceType, u64), Vec<Vec<u64>>> = DashMap::new();
 
         let mut shift = 0x8000000000000000; // Piece in the top left corner.
         for y in 0..8_usize {

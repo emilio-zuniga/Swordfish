@@ -4,7 +4,6 @@ use crate::{
     bitboard::*,
     gamemanager::*,
     types::{CastlingRights, Color, MoveType, PieceType, Square},
-    MOVETABLE,
 };
 
 pub mod perft;
@@ -14,7 +13,10 @@ impl GameManager {
     /// This results in a list of possible GameManagers that could result from
     /// the possible moves, which are also returned. Each can be evaluated for
     /// strengths and weaknesses.
-    pub fn legal_moves(&self) -> Vec<(PieceType, Square, Square, MoveType, GameManager)> {
+    pub fn legal_moves(
+        &self,
+        tbl: &NoArc<MoveTable>,
+    ) -> Vec<(PieceType, Square, Square, MoveType, GameManager)> {
         /* ************************************************************************************* */
         /* WARNING: THIS FUNCTION WILL ERROR SILENTLY IF ANY COLOR-DEPENDENT LOGIC IS USED HERE. */
         /*          ALL LOGIC IN THIS FUNCTION MUST BE COLOR-AGNOSTIC.                           */
@@ -27,69 +29,15 @@ impl GameManager {
 
         let mut legal_moves: Vec<(PieceType, Square, Square, MoveType, GameManager)> = vec![];
 
-        // Based on color, union all the friendly and enemy pieces, and determine
-        // which squares the enemy is attacking. We'll need that info for checking
-        // whether the king is in danger.
-        let (friendly_pieces, enemy_pieces, currently_attacked) = match color {
-            Color::Black => {
-                let friendly_pieces = self.bitboard.pawns_black
-                    | self.bitboard.rooks_black
-                    | self.bitboard.knights_black
-                    | self.bitboard.bishops_black
-                    | self.bitboard.queens_black
-                    | self.bitboard.king_black;
-                let enemy_pieces = self.bitboard.pawns_white
-                    | self.bitboard.rooks_white
-                    | self.bitboard.knights_white
-                    | self.bitboard.bishops_white
-                    | self.bitboard.queens_white
-                    | self.bitboard.king_white;
-
-                let enemy_attacked = self.attacked_by(Color::White);
-
-                (friendly_pieces, enemy_pieces, enemy_attacked)
-            }
-            Color::White => {
-                let friendly_pieces = self.bitboard.pawns_white
-                    | self.bitboard.rooks_white
-                    | self.bitboard.knights_white
-                    | self.bitboard.bishops_white
-                    | self.bitboard.queens_white
-                    | self.bitboard.king_white;
-                let enemy_pieces = self.bitboard.pawns_black
-                    | self.bitboard.rooks_black
-                    | self.bitboard.knights_black
-                    | self.bitboard.bishops_black
-                    | self.bitboard.queens_black
-                    | self.bitboard.king_black;
-
-                let enemy_attacked = self.attacked_by(Color::Black);
-
-                (friendly_pieces, enemy_pieces, enemy_attacked)
-            }
-        };
-
-        // Based on color, extract the friendly and enemy kings.
-        let (friendly_king, enemy_king) = match color {
-            Color::Black => (self.bitboard.king_black, self.bitboard.king_white),
-            Color::White => (self.bitboard.king_white, self.bitboard.king_black),
-        };
-
-        // Based on color, extract the friendly and enemy rooks.
-        let (friendly_rooks, enemy_rooks) = match color {
-            Color::Black => (self.bitboard.rooks_black, self.bitboard.rooks_white),
-            Color::White => (self.bitboard.rooks_white, self.bitboard.rooks_black),
-        };
-
         // First get all the pseudolegal moves.
         let pslm = pseudolegal_moves::pseudolegal_moves(
             color,
             self.bitboard,
-            &MOVETABLE,
             self.castling_rights,
             &self.en_passant_target,
             self.halfmoves,
             self.fullmoves,
+            &tbl,
         );
 
         // ASSERT: We will never have Super moves in the pseudolegal moves vector.
@@ -137,10 +85,13 @@ impl GameManager {
             }
 
             // TODO: Test mask and king intersection.
-            let enemy_attacked = modified_gm.attacked_by(match color {
-                Color::Black => Color::White,
-                Color::White => Color::Black,
-            });
+            let enemy_attacked = modified_gm.attacked_by(
+                &tbl,
+                match color {
+                    Color::Black => Color::White,
+                    Color::White => Color::Black,
+                },
+            );
 
             match color {
                 Color::Black => {
@@ -191,7 +142,6 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
                     ..*self
                 },
                 MoveType::Capture => {
@@ -209,7 +159,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -239,7 +189,7 @@ impl GameManager {
                         },
                         castling_rights: new_castling_rights,
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     },
                     MoveType::Capture => {
@@ -257,7 +207,7 @@ impl GameManager {
                             },
                             castling_rights: new_castling_rights,
                             en_passant_target: self.en_passant_target.clone(),
-                            movetable: &MOVETABLE,
+
                             ..*self
                         }
                     }
@@ -276,7 +226,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::QueenCastle => GameManager {
@@ -288,7 +238,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -305,7 +255,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -316,7 +266,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 _ => unreachable!("Kings will never make another type of move."),
@@ -329,7 +279,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -347,7 +297,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -363,7 +313,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::RPromotion => GameManager {
@@ -374,7 +324,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::NPromotion => GameManager {
@@ -385,7 +335,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::QPromotion => GameManager {
@@ -396,7 +346,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 // On a promotion capture to X delete all enemy pieces
@@ -416,7 +366,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -435,7 +385,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -454,7 +404,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -473,7 +423,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -503,7 +453,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -532,7 +482,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: String::from(target_coord),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -543,7 +493,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -560,7 +510,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -577,7 +527,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -594,7 +544,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -636,7 +586,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -654,7 +604,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -684,7 +634,7 @@ impl GameManager {
                         },
                         castling_rights: new_castling_rights,
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     },
                     MoveType::Capture => {
@@ -702,7 +652,7 @@ impl GameManager {
                             },
                             castling_rights: new_castling_rights,
                             en_passant_target: self.en_passant_target.clone(),
-                            movetable: &MOVETABLE,
+
                             ..*self
                         }
                     }
@@ -721,7 +671,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::QueenCastle => GameManager {
@@ -733,7 +683,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -750,7 +700,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -761,7 +711,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 _ => unreachable!("Kings will never make another type of move."),
@@ -774,7 +724,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -792,7 +742,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -808,7 +758,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::RPromotion => GameManager {
@@ -819,7 +769,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::NPromotion => GameManager {
@@ -830,7 +780,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::QPromotion => GameManager {
@@ -841,7 +791,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 // On a promotion capture to X delete all enemy pieces
@@ -861,7 +811,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -880,7 +830,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -899,7 +849,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -918,7 +868,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -948,7 +898,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -977,7 +927,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: String::from(target_coord),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -988,7 +938,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -1005,7 +955,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -1022,7 +972,7 @@ impl GameManager {
                     },
                     castling_rights: self.castling_rights.clone(),
                     en_passant_target: self.en_passant_target.clone(),
-                    movetable: &MOVETABLE,
+
                     ..*self
                 },
                 MoveType::Capture => {
@@ -1039,7 +989,7 @@ impl GameManager {
                         },
                         castling_rights: self.castling_rights.clone(),
                         en_passant_target: self.en_passant_target.clone(),
-                        movetable: &MOVETABLE,
+
                         ..*self
                     }
                 }
@@ -1058,7 +1008,7 @@ mod tests {
     #[test]
     fn test_en_passant() {
         let gm = GameManager::black_match_block(
-            &GameManager::from_fen_string("6k1/5p2/4p3/2p1P3/1pP2P2/1P6/8/6K1 b - c3 0 1"),
+            &GameManager::from_fen_str("6k1/5p2/4p3/2p1P3/1pP2P2/1P6/8/6K1 b - c3 0 1"),
             crate::types::PieceType::Pawn,
             crate::types::MoveType::EPCapture,
             crate::types::Square::B4,

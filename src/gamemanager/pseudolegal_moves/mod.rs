@@ -13,7 +13,7 @@ pub mod rooks;
 use crate::{
     bitboard::BitBoard,
     gamemanager::GameManager,
-    movetable::MoveTable,
+    movetable::{noarc::NoArc, MoveTable},
     types::{CastlingRecord, Color, Move},
 };
 
@@ -23,11 +23,11 @@ use crate::{
 pub fn pseudolegal_moves(
     color: Color,
     bitboard: BitBoard,
-    movetable: &MoveTable,
     castling_rights: CastlingRecord,
     en_passant_target: &str,
     halfmoves: u32,
     fullmoves: u32,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut pseudolegal_moves: Vec<Move> = Vec::new();
 
@@ -65,58 +65,58 @@ pub fn pseudolegal_moves(
 
             let mut pawn_pseudo_legal_moves = pawns::pseudolegal_pawn_moves(
                 color,
-                movetable,
                 pawns,
                 friendly_pieces,
                 enemy_pieces,
                 en_passant_target,
+                &movetable,
             );
             pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
 
             let mut knight_pseudo_legal_moves = knights::pseudolegal_knight_moves(
                 color,
-                movetable,
                 knights,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
 
             let mut bishop_pseudo_legal_moves = bishops::pseudolegal_bishop_moves(
                 color,
-                movetable,
                 bishops,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
 
             let mut rook_pseudo_legal_moves = rooks::pseudolegal_rook_moves(
                 color,
-                movetable,
                 rooks,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
 
             let mut queen_pseudo_legal_moves = queens::pseudolegal_queen_moves(
                 color,
-                movetable,
                 queens,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
 
             let mut king_pseudo_legal_moves = kings::pseudolegal_king_moves(
                 color,
-                movetable,
                 kings,
                 friendly_pieces,
                 bitboard.rooks_black,
                 enemy_pieces,
                 castling_rights,
+                &movetable,
             );
             pseudolegal_moves.append(&mut king_pseudo_legal_moves);
         }
@@ -145,58 +145,58 @@ pub fn pseudolegal_moves(
 
             let mut pawn_pseudo_legal_moves = pawns::pseudolegal_pawn_moves(
                 color,
-                movetable,
                 pawns,
                 friendly_pieces,
                 enemy_pieces,
                 en_passant_target,
+                &movetable,
             );
             pseudolegal_moves.append(&mut pawn_pseudo_legal_moves);
 
             let mut knight_pseudo_legal_moves = knights::pseudolegal_knight_moves(
                 color,
-                movetable,
                 knights,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut knight_pseudo_legal_moves);
 
             let mut bishop_pseudo_legal_moves = bishops::pseudolegal_bishop_moves(
                 color,
-                movetable,
                 bishops,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut bishop_pseudo_legal_moves);
 
             let mut rook_pseudo_legal_moves = rooks::pseudolegal_rook_moves(
                 color,
-                movetable,
                 rooks,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut rook_pseudo_legal_moves);
 
             let mut queen_pseudo_legal_moves = queens::pseudolegal_queen_moves(
                 color,
-                movetable,
                 queens,
                 friendly_pieces,
                 enemy_pieces,
+                &movetable,
             );
             pseudolegal_moves.append(&mut queen_pseudo_legal_moves);
 
             let mut king_pseudo_legal_moves = kings::pseudolegal_king_moves(
                 color,
-                movetable,
                 kings,
                 friendly_pieces,
                 bitboard.rooks_white,
                 enemy_pieces,
                 castling_rights,
+                &movetable,
             );
             pseudolegal_moves.append(&mut king_pseudo_legal_moves);
         }

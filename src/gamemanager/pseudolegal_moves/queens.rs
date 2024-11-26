@@ -1,11 +1,14 @@
-use crate::{movetable::MoveTable, types::*};
+use crate::{
+    movetable::{noarc::NoArc, MoveTable},
+    types::*,
+};
 
 pub fn pseudolegal_queen_moves(
     color: Color,
-    movetable: &MoveTable,
     queen_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
+    movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut queen_pseudo_legal_moves = Vec::new();
 

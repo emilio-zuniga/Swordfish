@@ -1,11 +1,7 @@
-#![allow(dead_code, unused_variables, unused_mut)]
-use std::sync::LazyLock;
-
 use crate::{
     bitboard,
-    movetable::MoveTable,
+    movetable::{noarc::NoArc, MoveTable},
     types::{CastlingRecord, Color},
-    MOVETABLE,
 };
 use bitboard::BitBoard;
 use pseudolegal_moves::pseudolegal_moves;
@@ -33,7 +29,6 @@ pub struct GameManager {
      * fullmove number - number of completed turns (increment when black moves)
      */
     pub bitboard: BitBoard,
-    pub movetable: &'static LazyLock<MoveTable>,
     pub white_to_move: bool,
     pub castling_rights: CastlingRecord,
     pub en_passant_target: String,
@@ -42,11 +37,10 @@ pub struct GameManager {
 }
 
 impl Default for GameManager {
-    /// Constructs a new `GameManager`, set to Chess's starting position
+    /// Constructs a new `GameManager` set to startpos.
     fn default() -> Self {
         GameManager {
             bitboard: BitBoard::default(),
-            movetable: &MOVETABLE,
             white_to_move: true,
             castling_rights: CastlingRecord::default(),
             en_passant_target: String::new(),
@@ -60,13 +54,12 @@ impl GameManager {
     /// A utility method for generating a new `GameManager` from a FEN string\
     /// * `fen` - a `&str` representing a game's state in FEN
     /// * `returns` - a `GameManager` as generated from the FEN
-    pub fn from_fen_string(fen: &str) -> Self {
+    pub fn from_fen_str(fen: &str) -> Self {
         if Self::is_valid_fen(fen) {
             let tokens: Vec<String> = fen.split_whitespace().map(str::to_string).collect();
             GameManager {
                 //board space validation implemented at higher level (is_valid_fen())
                 bitboard: BitBoard::from_fen_string(&tokens[0]),
-                movetable: &MOVETABLE,
                 white_to_move: tokens[1] == "w",
                 castling_rights: CastlingRecord::try_from(tokens[2].as_str())
                     .expect("We expect FEN strings to be well-formed."),
@@ -151,15 +144,15 @@ impl GameManager {
     }
 
     /// Returns a bitmask of all the pieces attacked by the given color on this GameManager's state.
-    pub fn attacked_by(&self, color: Color) -> u64 {
+    pub fn attacked_by(&self, tbl: &NoArc<MoveTable>, color: Color) -> u64 {
         let moves = pseudolegal_moves(
             color,
             self.bitboard,
-            &MOVETABLE,
             self.castling_rights,
             &self.en_passant_target,
             self.halfmoves,
             self.fullmoves,
+            tbl,
         );
 
         moves
@@ -172,7 +165,11 @@ impl GameManager {
 #[cfg(test)]
 mod test {
     use super::GameManager;
-    use crate::{gamemanager::pseudolegal_moves::*, types::Color};
+    use crate::{
+        gamemanager::pseudolegal_moves::*,
+        movetable::{noarc::NoArc, MoveTable},
+        types::Color,
+    };
 
     #[test]
     fn check_psl_moves_1() {
@@ -180,11 +177,11 @@ mod test {
         let moves = pseudolegal_moves(
             Color::Black,
             game_manager.bitboard,
-            &game_manager.movetable,
             game_manager.castling_rights,
             &game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,
+            &NoArc::new(MoveTable::default()),
         );
 
         assert_eq!(
@@ -199,11 +196,11 @@ mod test {
         let moves = pseudolegal_moves(
             Color::White,
             game_manager.bitboard,
-            &game_manager.movetable,
             game_manager.castling_rights,
             &game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,
+            &NoArc::new(MoveTable::default()),
         );
 
         assert_eq!(
