@@ -15,8 +15,10 @@ mod ucimanager;
 fn main() {
     let tbl = noarc::NoArc::new(MoveTable::default());
 
-    let gm = GameManager::default();
-    println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
+    let gm = GameManager::from_fen_str(
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
+    );
+    println!("Searched {} nodes.", perft(0, 4, gm, &tbl));
     //printing_perft(0, 2, gm, &tbl);
 }
 
