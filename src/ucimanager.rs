@@ -1,7 +1,7 @@
 use std::io::{self, BufRead};
 use vampirc_uci::{UciFen, UciMessage, UciMove, UciPiece, UciSquare};
 use crate::{enginemanager::Engine, gamemanager::GameManager};
-use crate::types::MoveType;
+use crate::types::{MoveType, Square};
 
 pub fn communicate(mut e: Engine) {
     //Waiting for messages...
@@ -31,15 +31,12 @@ pub fn communicate(mut e: Engine) {
                         e.move_history = moves;
                         
                         for m in e.move_history {
-                            let h_from = m.from.to_string();
-                            let h_to = m.to.to_string();
-                            //determine if there was a promotion
-                            //determine the promotion type
+                            let h_from = Square::from_str(&m.from.to_string()).unwrap();
+                            let h_to = Square::from_str(&m.to.to_string()).unwrap();
                             let legal_moves = e.board.legal_moves(&e.tbl);
-                            //|data| data.1.to_str() == h_from && data.2.to_str() == h_to
                             let updated_data = legal_moves.iter().find(|data|
-                                data.1.to_str() == h_from 
-                                && data.2.to_str() == h_to
+                                data.1 == h_from 
+                                && data.2 == h_to
                                 && match m.promotion {
                                     Some(p) => 
                                         match p {
@@ -88,12 +85,62 @@ pub fn communicate(mut e: Engine) {
                     } else {
                         e.board = GameManager::from_fen_str(fen.unwrap().as_str());
                         e.move_history = moves;
-                        //for move in move_history {
-                        //  GameManager.make_move(move)
-                        //}
+
+                        for m in e.move_history {
+                            let h_from = Square::from_str(&m.from.to_string()).unwrap();
+                            let h_to = Square::from_str(&m.to.to_string()).unwrap();
+                            let legal_moves = e.board.legal_moves(&e.tbl);
+                            let updated_data = legal_moves.iter().find(|data|
+                                data.1 == h_from 
+                                && data.2 == h_to
+                                && match m.promotion {
+                                    Some(p) => 
+                                        match p {
+                                            UciPiece::Knight => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::NPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::NPromotion
+                                                },
+                                            UciPiece::Bishop => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::BPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::BPromotion
+                                                },
+                                            UciPiece::Rook => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::RPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::RPromotion
+                                                },
+                                            UciPiece::Queen => 
+                                                if m.from.rank != m.to.rank {
+                                                    //if the ranks are not the same
+                                                    //then this was a promoting pawn capture
+                                                    data.3 == MoveType::QPromoCapture
+                                                } else {
+                                                    data.3 == MoveType::QPromotion
+                                                },
+                                            _ => panic!("We should never promote to a Pawn or King"),
+                                        },
+                                    None => true,
+                                }
+                                ).unwrap();
+
+                            e.board = updated_data.4.clone();
+                        }
+
                         e.set_new_game = false;
                     }
                 } else {            //if we're using the current position
+                    
                     //new game is not being set up
                     //if (position does not match current information)
                     //setup position accordingly
