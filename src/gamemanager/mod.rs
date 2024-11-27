@@ -144,6 +144,7 @@ impl GameManager {
     }
 
     /// Returns a bitmask of all the pieces attacked by the given color on this GameManager's state.
+    /// TODO, BUG: Needs to be more careful of pawn moves. Pawns' forward moves cannot capture.
     pub fn attacked_by(&self, tbl: &NoArc<MoveTable>, color: Color) -> u64 {
         let moves = pseudolegal_moves(
             color,
@@ -155,8 +156,12 @@ impl GameManager {
             tbl,
         );
 
+        use crate::types::MoveType::*;
+        use crate::types::PieceType::*;
+
         moves
             .iter()
+            .filter(|mv| mv.0 != Pawn || mv.3 != QuietMove) // Isn't a pawn or isn't a pawn's quiet move.
             .map(|(_, _, to, _)| to.to_u64())
             .fold(0_u64, |acc, v| acc | v)
     }
