@@ -40,6 +40,14 @@ impl GameManager {
             &tbl,
         );
 
+        let currently_attacked = self.attacked_by(
+            tbl,
+            match color {
+                Color::Black => Color::White,
+                Color::White => Color::Black,
+            },
+        );
+
         // ASSERT: We will never have Super moves in the pseudolegal moves vector.
         debug_assert!(pslm
             .iter()
@@ -97,23 +105,29 @@ impl GameManager {
                 },
             );
 
-            // Test that the castle is not castling through/out of check.
+            // Test that the castle is not castling through/out of/into check.
             use Square::*;
             match mv.3 {
                 KingCastle => {
-                    if (color == Color::Black
-                        && ((E8.to_u64() | F8.to_u64() | G8.to_u64()) & enemy_attacked) != 0)
-                        || (color == Color::White
-                            && ((E1.to_u64() | F1.to_u64() | G1.to_u64()) & enemy_attacked) != 0)
+                    if color == Color::Black
+                        && ((E8.to_u64() | F8.to_u64() | G8.to_u64()) & enemy_attacked != 0
+                            || (E8.to_u64() | F8.to_u64() | G8.to_u64()) & currently_attacked != 0)
+                        || color == Color::White
+                            && ((E1.to_u64() | F1.to_u64() | G1.to_u64()) & enemy_attacked != 0
+                                || (E1.to_u64() | F1.to_u64() | G1.to_u64()) & currently_attacked
+                                    != 0)
                     {
                         continue; // We don't want this move!
                     }
                 }
                 QueenCastle => {
                     if color == Color::Black
-                        && ((E8.to_u64() | D8.to_u64() | C8.to_u64()) & enemy_attacked) != 0
+                        && ((E8.to_u64() | D8.to_u64() | C8.to_u64()) & enemy_attacked != 0
+                            || (E8.to_u64() | D8.to_u64() | C8.to_u64()) & currently_attacked != 0)
                         || color == Color::White
-                            && ((E1.to_u64() | D1.to_u64() | C1.to_u64()) & enemy_attacked) != 0
+                            && ((E1.to_u64() | D1.to_u64() | C1.to_u64()) & enemy_attacked != 0
+                                || (E1.to_u64() | D1.to_u64() | C1.to_u64()) & currently_attacked
+                                    != 0)
                     {
                         continue; // Ditto.
                     }
