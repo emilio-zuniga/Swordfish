@@ -1,10 +1,19 @@
 use std::io::{self, BufRead};
-use vampirc_uci::{UciMessage, UciPiece};
-use crate::{enginemanager::Engine, gamemanager::GameManager};
+use vampirc_uci::{UciMessage, UciPiece, UciMove};
+use crate::{enginemanager::Engine, gamemanager::GameManager, movetable::{noarc::NoArc, MoveTable}};
 use crate::types::{MoveType, Square};
 
-pub fn communicate(mut e: Engine) {
+pub fn communicate(){
+    
+    let mut e: Engine = Engine {
+        tbl: NoArc::new(MoveTable::default()),
+        board: GameManager::default(),
+        move_history: Vec::<UciMove>::new(),
+        set_new_game: false,
+    };
+
     //Waiting for messages...
+
     for line in io::stdin().lock().lines() {
         let msg = vampirc_uci::parse_one(&line.unwrap());
 
@@ -25,7 +34,6 @@ pub fn communicate(mut e: Engine) {
                 fen,
                 moves,
             } => {
-
                 if e.set_new_game {
                     if startpos {
                         e.board = GameManager::default();
@@ -87,6 +95,7 @@ pub fn communicate(mut e: Engine) {
 
                     e.set_new_game = false;
                 } else {
+                    
                     //if we're using the current position
                     //new game is not being set up
                     //if (position does not match current information)

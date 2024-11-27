@@ -8,15 +8,3 @@ pub struct Engine {
     pub board: GameManager,
     pub set_new_game: bool,
 }
-
-impl Default for Engine {
-    fn default() -> Engine{
-        Engine {
-            tbl: NoArc::new(MoveTable::default()),
-            board: GameManager::default(),
-            move_history: Vec::<UciMove>::new(),
-            set_new_game: false,
-        }
-    }
-}
-

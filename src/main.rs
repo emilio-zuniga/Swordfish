@@ -1,7 +1,4 @@
 #![allow(dead_code)]
-
-use enginemanager::Engine;
-
 mod bitboard;
 mod gamemanager;
 mod movetable;
@@ -10,8 +7,7 @@ mod ucimanager;
 mod enginemanager;
 
 fn main() {
-    let e: Engine = Engine::default();
-    ucimanager::communicate(e);
+    ucimanager::communicate();
 }
 
 #[cfg(test)]
