@@ -25,8 +25,8 @@ pub fn pseudolegal_moves(
     bitboard: BitBoard,
     castling_rights: CastlingRecord,
     en_passant_target: &str,
-    halfmoves: u32,
-    fullmoves: u32,
+    _halfmoves: u32,
+    _fullmoves: u32,
     movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut pseudolegal_moves: Vec<Move> = Vec::new();
