@@ -101,19 +101,19 @@ impl GameManager {
             use Square::*;
             match mv.3 {
                 KingCastle => {
-                    if color == Color::Black
-                        && (E8.to_u64() | F8.to_u64() | G8.to_u64()) & enemy_attacked != 0
-                        || color == Color::White
-                            && (E1.to_u64() | F1.to_u64() | G1.to_u64()) & enemy_attacked != 0
+                    if (color == Color::Black
+                        && ((E8.to_u64() | F8.to_u64() | G8.to_u64()) & enemy_attacked) != 0)
+                        || (color == Color::White
+                            && ((E1.to_u64() | F1.to_u64() | G1.to_u64()) & enemy_attacked) != 0)
                     {
                         continue; // We don't want this move!
                     }
                 }
                 QueenCastle => {
                     if color == Color::Black
-                        && (E8.to_u64() | D8.to_u64() | C8.to_u64()) & enemy_attacked != 0
+                        && ((E8.to_u64() | D8.to_u64() | C8.to_u64()) & enemy_attacked) != 0
                         || color == Color::White
-                            && (E1.to_u64() | D1.to_u64() | C1.to_u64()) & enemy_attacked != 0
+                            && ((E1.to_u64() | D1.to_u64() | C1.to_u64()) & enemy_attacked) != 0
                     {
                         continue; // Ditto.
                     }
@@ -161,7 +161,7 @@ impl GameManager {
         // - castling_rights if it is a KingCastle or QueenCastle move.
         //
         // THESE SHOULD HOLD FOR ALL CODE BLOCKS BELOW! CHECK THIS IN REVIEW, VERY CAREFULLY, OR ELSE!
-        match piecetype {
+        let retval = match piecetype {
             PieceType::Bishop => match movetype {
                 MoveType::QuietMove => GameManager {
                     bitboard: BitBoard {
@@ -196,12 +196,20 @@ impl GameManager {
                 // NOTE: Color-dependent logic.
                 let new_castling_rights = if from == Square::A8 {
                     CastlingRecord {
-                        black: CastlingRights::Kingside,
+                        black: match self.castling_rights.black {
+                            CastlingRights::Both => CastlingRights::Kingside,
+                            CastlingRights::Queenside => CastlingRights::Neither,
+                            _ => self.castling_rights.black,
+                        },
                         ..self.castling_rights
                     }
                 } else if from == Square::H8 {
                     CastlingRecord {
-                        black: CastlingRights::Queenside,
+                        black: match self.castling_rights.black {
+                            CastlingRights::Both => CastlingRights::Queenside,
+                            CastlingRights::Kingside => CastlingRights::Neither,
+                            _ => self.castling_rights.black,
+                        },
                         ..self.castling_rights
                     }
                 } else {
@@ -571,7 +579,28 @@ impl GameManager {
             PieceType::Super => {
                 unreachable!("We will never generate pseudolegal Super moves.")
             }
-        }
+        };
+
+        assert!(
+            retval.bitboard.king_black.is_power_of_two(),
+            "{} {:?} {:?} {:#X} {:#X}\n",
+            retval.bitboard.to_string(),
+            retval.castling_rights.black,
+            retval.castling_rights.white,
+            retval.bitboard.king_black,
+            retval.bitboard.king_white
+        );
+        assert!(
+            retval.bitboard.king_white.is_power_of_two(),
+            "{} {:?} {:?} {:#X} {:#X}\n",
+            retval.bitboard.to_string(),
+            retval.castling_rights.black,
+            retval.castling_rights.white,
+            retval.bitboard.king_black,
+            retval.bitboard.king_white
+        );
+
+        retval
     }
 
     /// Extracted from the large match block above.
@@ -634,12 +663,20 @@ impl GameManager {
                 // NOTE: Color-dependent logic.
                 let new_castling_rights = if from == Square::A1 {
                     CastlingRecord {
-                        white: CastlingRights::Kingside,
+                        white: match self.castling_rights.white {
+                            CastlingRights::Both => CastlingRights::Kingside,
+                            CastlingRights::Queenside => CastlingRights::Neither,
+                            _ => self.castling_rights.white,
+                        },
                         ..self.castling_rights
                     }
                 } else if from == Square::H1 {
                     CastlingRecord {
-                        white: CastlingRights::Queenside,
+                        white: match self.castling_rights.white {
+                            CastlingRights::Both => CastlingRights::Queenside,
+                            CastlingRights::Kingside => CastlingRights::Neither,
+                            _ => self.castling_rights.white,
+                        },
                         ..self.castling_rights
                     }
                 } else {
