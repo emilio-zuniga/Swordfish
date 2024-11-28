@@ -1,6 +1,6 @@
 use rayon::prelude::*;
 
-use crate::types::Move;
+use crate::types::{Move, MoveType};
 
 use super::{GameManager, MoveTable, NoArc};
 
@@ -19,7 +19,7 @@ pub fn root_negamax(maxdepth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (
         .into_par_iter()
         .map(|mv| {
             (
-                negamax(1, maxdepth, alpha, beta, &mv.4, tbl),
+                negamax(1, maxdepth, alpha, beta, mv.3, &mv.4, tbl),
                 ((mv.0, mv.1, mv.2, mv.3), mv.4),
             )
         })
@@ -40,11 +40,12 @@ fn negamax(
     maxdepth: u16,
     mut alpha: i32,
     beta: i32,
+    movetype: MoveType,
     gm: &GameManager,
     tbl: &NoArc<MoveTable>,
 ) -> i32 {
     if depth == maxdepth {
-        gm.evaluate()
+        gm.evaluate(movetype)
     } else {
         let moves = gm.legal_moves(tbl);
         if moves.len() == 0 {
@@ -53,7 +54,7 @@ fn negamax(
         }
         let mut best = i32::MIN + 1;
         for mv in moves {
-            let value = -negamax(depth + 1, maxdepth, alpha, beta, &mv.4, tbl);
+            let value = -negamax(depth + 1, maxdepth, alpha, beta, mv.3, &mv.4, tbl);
             best = i32::max(best, value);
             alpha = i32::max(alpha, best);
             if alpha >= beta {
