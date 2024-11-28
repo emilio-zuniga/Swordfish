@@ -12,6 +12,7 @@ pub fn perft(depth: u16, maxdepth: u16, gm: GameManager, tbl: &NoArc<MoveTable>)
     }
 }
 
+#[allow(dead_code)]
 pub fn printing_perft(depth: u16, maxdepth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) {
     //use crate::types::Square::*;
     for mv in gm.legal_moves(tbl) {

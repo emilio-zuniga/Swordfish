@@ -180,6 +180,7 @@ impl BitBoard {
     /// of this `PieceType` of this `Color`\
     /// * `color` - the `Color` of the pieces\
     /// * `pieces` - the `PieceType` of the pieces
+    #[allow(dead_code)]
     pub fn get_bitboard(&self, color: Color, piece: PieceType) -> u64 {
         match color {
             Color::White => match piece {

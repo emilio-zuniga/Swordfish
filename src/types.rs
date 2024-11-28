@@ -3,12 +3,12 @@ use std::fmt::Display;
 /// An `enum` to represent which type the piece is. This provides indexing for our hash table of moves.
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum PieceType {
-    Queen,
-    Rook,
-    Bishop,
-    Knight,
-    King,
-    Pawn,
+    Queen = 500,
+    Rook = 300,
+    Bishop = 250,
+    Knight = 200,
+    King = 1000,
+    Pawn = 100,
     Super,
 }
 
@@ -433,6 +433,7 @@ impl MoveType {
     /// 2nd bit: capture
     /// 3rd bit: special 1
     /// 4th bit: special 0
+    #[allow(dead_code)]
     pub fn to_str(&self) -> &str {
         match self {
             MoveType::QuietMove => "0000",

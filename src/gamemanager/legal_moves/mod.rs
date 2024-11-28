@@ -7,6 +7,7 @@ use crate::{
 
 mod black;
 pub mod perft;
+pub mod search;
 mod white;
 
 impl GameManager {

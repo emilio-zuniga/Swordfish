@@ -1,9 +1,4 @@
-#![allow(dead_code)]
-
-use gamemanager::{
-    legal_moves::perft::{perft, printing_perft},
-    GameManager,
-};
+use gamemanager::{legal_moves::search::root_negamax, GameManager};
 use movetable::{noarc, MoveTable};
 
 mod bitboard;
@@ -18,8 +13,8 @@ fn main() {
     let gm = GameManager::from_fen_str(
         "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
     );
-    println!("Searched {} nodes.", perft(0, 6, gm, &tbl));
-    //printing_perft(0, 1, gm, &tbl);
+    let bestmove = root_negamax(3, gm, &tbl).0;
+    println!("Best move: {}{}", bestmove.1.to_str(), bestmove.2.to_str())
 }
 
 #[cfg(test)]
