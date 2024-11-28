@@ -4,13 +4,15 @@ use crate::{
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
 };
-use std::io::{self, BufRead};
-use std::sync::atomic::AtomicBool;
+use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
 use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
 pub fn communicate() {
-    let mut flag = AtomicBool::new(false);
-
+    let mut stop_engine = false;
+    let start_search_flag = Arc::new(AtomicBool::new(false));
     let mut e: Engine = Engine {
         tbl: NoArc::new(MoveTable::default()),
         board: GameManager::default(),
@@ -18,8 +20,13 @@ pub fn communicate() {
         set_new_game: false,
     };
 
-    for line in io::stdin().lock().lines() {
-        let msg = vampirc_uci::parse_one(&line.unwrap());
+    while !stop_engine {
+        let mut text = String::new();
+
+        io::stdin()
+            .read_line(&mut text)
+            .expect("Failed to read line");
+        let msg = vampirc_uci::parse_one(&text);
 
         match msg {
             UciMessage::Uci => {
@@ -111,15 +118,33 @@ pub fn communicate() {
                 time_control: _,
                 search_control: _,
             } => {
-                //engine start search on current position...
-                //engine regularly sends info
+                start_search_flag.store(true, Ordering::Relaxed);
+                let clone_flag = start_search_flag.clone();
+
+                thread::spawn(move || {
+                    //dud move searching here
+                    let mut counter = 0;
+                    while clone_flag.load(Ordering::Relaxed) {
+                        thread::sleep(std::time::Duration::from_millis(500));
+                        println!("info depth {counter}");
+                        counter += 1;
+                    }
+                });
             }
             UciMessage::Stop => {
-                *flag.get_mut() = true;
-                println!("bestmove (move name here)");
+                start_search_flag.store(false, Ordering::Relaxed);
+                //dud move selection here:
+                let bestmove = e.board.legal_moves(&e.tbl).get(0).unwrap().clone();
+                let bestmove_algebraic = format!("{}{}", bestmove.1.to_str(), bestmove.2.to_str());
+                println!("bestmove {bestmove_algebraic}");
             }
-            UciMessage::Quit => break,
-            _ => eprintln!("Received message: {msg}"),
+            UciMessage::Quit => {
+                start_search_flag.store(false, Ordering::Relaxed);
+                stop_engine = true;
+            }
+            _ => {
+                println!("Some other message was received.");
+            }
         }
     }
 }
