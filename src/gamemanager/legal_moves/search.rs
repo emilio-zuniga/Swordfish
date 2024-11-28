@@ -6,17 +6,14 @@ use super::{GameManager, MoveTable, NoArc};
 
 /// A Negamax search routine that runs in parallel.
 pub fn root_negamax(maxdepth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Move, GameManager) {
-    // First we need all the legal moves, numbered, and an equal number of scores
-    // initialized in a list.
-
     let moves = gm.legal_moves(tbl);
 
     if moves.len() == 0 {
         panic!("IDK how to handle checkmate or stalemate; help!");
     }
 
-    let alpha = i32::MIN;
-    let beta = i32::MAX;
+    let alpha = i32::MIN + 1;
+    let beta = i32::MAX - 1;
 
     let labelled_scores: Vec<(i32, (Move, GameManager))> = moves
         .into_par_iter()
@@ -51,10 +48,10 @@ fn negamax(
     } else {
         let moves = gm.legal_moves(tbl);
         if moves.len() == 0 {
-            return i32::MIN; // It's a pretty bad outcome to have no moves,
-                             // but stalemates shouldn't count so hard against us.
+            return i32::MIN + 1; // It's a pretty bad outcome to have no moves,
+                                 // but stalemates shouldn't count so hard against us.
         }
-        let mut best = i32::MIN;
+        let mut best = i32::MIN + 1;
         for mv in moves {
             let value = -negamax(depth + 1, maxdepth, alpha, beta, &mv.4, tbl);
             best = i32::max(best, value);
