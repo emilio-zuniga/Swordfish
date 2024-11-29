@@ -1,7 +1,7 @@
 use crate::{
     bitboard,
     movetable::{noarc::NoArc, MoveTable},
-    types::{CastlingRecord, Color},
+    types::{CastlingRecord, Color, MoveType, PieceType, Square},
 };
 use bitboard::BitBoard;
 use pseudolegal_moves::pseudolegal_moves;
@@ -145,6 +145,7 @@ impl GameManager {
     }
 
     /// Returns a bitmask of all the pieces attacked by the given color on this GameManager's state.
+    /// TODO, BUG: Needs to be more careful of pawn moves. Pawns' forward moves cannot capture.
     pub fn attacked_by(&self, tbl: &NoArc<MoveTable>, color: Color) -> u64 {
         let moves = pseudolegal_moves(
             color,
@@ -156,8 +157,30 @@ impl GameManager {
             tbl,
         );
 
+        use crate::types::MoveType::*;
+        use crate::types::PieceType::*;
+
+        let movefilter: &dyn for<'a, 'b> Fn(&'a &'b (PieceType, Square, Square, MoveType)) -> bool =
+            &|mv: &&(PieceType, Square, Square, MoveType)| {
+                if mv.3 == DoublePawnPush
+                    || mv.0 == Pawn
+                        && (mv.3 == QuietMove
+                            || mv.3 == BPromotion
+                            || mv.3 == RPromotion
+                            || mv.3 == NPromotion
+                            || mv.3 == QPromotion)
+                {
+                    return false; // Rule it out if it is a pawn push.
+                } else if mv.0 == King && (mv.3 == KingCastle || mv.3 == QueenCastle) {
+                    return false; // Rule it out if it is a castling move.
+                } else {
+                    return true;
+                }
+            };
+
         moves
             .iter()
+            .filter(movefilter) // Isn't a pawn or isn't a pawn's quiet move.
             .map(|(_, _, to, _)| to.to_u64())
             .fold(0_u64, |acc, v| acc | v)
     }

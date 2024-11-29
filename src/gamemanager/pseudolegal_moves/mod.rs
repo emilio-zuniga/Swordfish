@@ -14,7 +14,7 @@ use crate::{
     bitboard::BitBoard,
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
-    types::{CastlingRecord, Color, Move},
+    types::{CastlingRecord, Color, Move, Square},
 };
 
 /// Returns a [`Vec`] of pseudolegal moves encoded as a [`Move`](Move) type,
@@ -31,6 +31,8 @@ pub fn pseudolegal_moves(
 ) -> Vec<Move> {
     let mut pseudolegal_moves: Vec<Move> = Vec::new();
 
+    //assert!(bitboard.king_black.is_power_of_two());
+    //assert!(bitboard.king_white.is_power_of_two());
     match color {
         Color::Black => {
             // For each black piece on the board, obtain its possible moves.
@@ -210,6 +212,14 @@ pub fn pseudolegal_moves(
     //     },
     //     pseudolegal_moves.len()
     // );
+
+    // for mv in &pseudolegal_moves {
+    //     if mv.1 == Square::E1 && mv.2 == Square::G1 {
+    //         println!("--- MOVE E1G1:");
+    //         println!("{:?} {:?}", mv.0, mv.3);
+    //         println!("--- END  E1G1.");
+    //     }
+    // }
 
     pseudolegal_moves
 }
