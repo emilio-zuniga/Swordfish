@@ -5,7 +5,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum PieceType {
     King,
-    Queen = 900,
+    Queen = 1000,
     Rook = 500,
     Bishop = 320,
     Knight = 300,

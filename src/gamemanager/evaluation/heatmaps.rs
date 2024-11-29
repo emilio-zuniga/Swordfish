@@ -10,8 +10,8 @@ pub struct Heatmap {
 }
 
 impl Default for Heatmap {
-    /// Returns the heatmaps for white.
-    /// Use .rev() to get the heatmaps for black.
+    /// Returns the heatmaps for black.
+    /// Use .rev() to get the heatmaps for white.
     fn default() -> Self {
         let pawns_start = [
             0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10,
@@ -79,8 +79,8 @@ impl Default for Heatmap {
 }
 
 impl Heatmap {
-    /// Returns the heatmap for black, if the provided
-    /// heatmap is for white, and vice versa.
+    /// Returns the heatmap for white, if the provided
+    /// heatmap is for black, and vice versa.
     pub fn rev(&self) -> Self {
         Self {
             pawns_start: reverse_array(self.pawns_start),

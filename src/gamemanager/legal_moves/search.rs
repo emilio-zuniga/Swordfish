@@ -30,7 +30,11 @@ pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Mov
         .map(|(s, movetuple)| (s, (movetuple.0, movetuple.1)))
         .collect();
 
-    scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
+    if depth % 2 == 0 {
+        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
+    } else {
+        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
+    }
 
     let best = scored_moves
         .into_iter()
@@ -56,7 +60,7 @@ fn negamax(
         let moves = gm.legal_moves(tbl);
 
         if moves.len() == 0 {
-            return gm.evaluate(MoveType::QuietMove); // Return value of node.
+            return i32::MIN + 1; // Return value of node.
         }
 
         let mut score = i32::MIN + 1;
