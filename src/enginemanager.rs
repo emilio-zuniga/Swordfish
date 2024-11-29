@@ -6,5 +6,5 @@ pub struct Engine {
     pub tbl: NoArc<MoveTable>,
     pub move_history: Vec<UciMove>,
     pub board: GameManager,
-    pub set_new_game: bool,
+    //pub set_new_game: bool,
 }

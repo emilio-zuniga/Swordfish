@@ -17,7 +17,7 @@ pub fn communicate() {
         tbl: NoArc::new(MoveTable::default()),
         board: GameManager::default(),
         move_history: Vec::<UciMove>::new(),
-        set_new_game: false,
+        //set_new_game: false,
     };
 
     while !stop_engine {
@@ -38,7 +38,7 @@ pub fn communicate() {
                 println!("readyok")
             }
             UciMessage::UciNewGame => {
-                e.set_new_game = true;
+                //e.set_new_game = true;
             }
             UciMessage::Position {
                 startpos,
@@ -53,66 +53,13 @@ pub fn communicate() {
                 } else {
                     e.board = GameManager::from_fen_str(fen.unwrap().as_str());
                 }
-                e.move_history = moves;
+                e.move_history = moves.clone();
 
-                for m in e.move_history {
-                    let h_from = Square::from_str(&m.from.to_string()).unwrap();
-                    let h_to = Square::from_str(&m.to.to_string()).unwrap();
-                    let legal_moves = e.board.legal_moves(&e.tbl);
-                    let updated_data = legal_moves
-                        .iter()
-                        .find(|data| {
-                            data.1 == h_from
-                                && data.2 == h_to
-                                && match m.promotion {
-                                    Some(p) => match p {
-                                        UciPiece::Knight => {
-                                            if m.from.rank != m.to.rank {
-                                                //if the ranks are not the same
-                                                //then this was a promoting pawn capture
-                                                data.3 == MoveType::NPromoCapture
-                                            } else {
-                                                data.3 == MoveType::NPromotion
-                                            }
-                                        }
-                                        UciPiece::Bishop => {
-                                            if m.from.rank != m.to.rank {
-                                                //if the ranks are not the same
-                                                //then this was a promoting pawn capture
-                                                data.3 == MoveType::BPromoCapture
-                                            } else {
-                                                data.3 == MoveType::BPromotion
-                                            }
-                                        }
-                                        UciPiece::Rook => {
-                                            if m.from.rank != m.to.rank {
-                                                //if the ranks are not the same
-                                                //then this was a promoting pawn capture
-                                                data.3 == MoveType::RPromoCapture
-                                            } else {
-                                                data.3 == MoveType::RPromotion
-                                            }
-                                        }
-                                        UciPiece::Queen => {
-                                            if m.from.rank != m.to.rank {
-                                                //if the ranks are not the same
-                                                //then this was a promoting pawn capture
-                                                data.3 == MoveType::QPromoCapture
-                                            } else {
-                                                data.3 == MoveType::QPromotion
-                                            }
-                                        }
-                                        _ => panic!("We should never promote to a Pawn or King"),
-                                    },
-                                    None => true,
-                                }
-                        })
-                        .unwrap();
-
-                    e.board = updated_data.4.clone();
+                for m in moves {
+                    e.board = make_move(&e.board, &e.tbl, m);
                 }
 
-                e.set_new_game = false;
+                //e.set_new_game = false;
             }
             UciMessage::Go {
                 time_control: _,
@@ -122,21 +69,11 @@ pub fn communicate() {
                 let clone_flag = start_search_flag.clone();
 
                 thread::spawn(move || {
-                    //dud move searching here
-                    let mut counter = 0;
-                    while clone_flag.load(Ordering::Relaxed) {
-                        thread::sleep(std::time::Duration::from_millis(500));
-                        println!("info depth {counter}");
-                        counter += 1;
-                    }
+                    //search() - pass in clone_flag to check whether search termination was ordered
                 });
             }
             UciMessage::Stop => {
                 start_search_flag.store(false, Ordering::Relaxed);
-                //dud move selection here:
-                let bestmove = e.board.legal_moves(&e.tbl).get(0).unwrap().clone();
-                let bestmove_algebraic = format!("{}{}", bestmove.1.to_str(), bestmove.2.to_str());
-                println!("bestmove {bestmove_algebraic}");
             }
             UciMessage::Quit => {
                 start_search_flag.store(false, Ordering::Relaxed);
@@ -147,4 +84,61 @@ pub fn communicate() {
             }
         }
     }
+}
+
+fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager{
+    let h_from = Square::from_str(&m.from.to_string()).unwrap();
+    let h_to = Square::from_str(&m.to.to_string()).unwrap();
+    let legal_moves = board.legal_moves(tbl);
+    let updated_data = legal_moves
+        .iter()
+        .find(|data| {
+            data.1 == h_from
+                && data.2 == h_to
+                && match m.promotion {
+                    Some(p) => match p {
+                        UciPiece::Knight => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::NPromoCapture
+                            } else {
+                                data.3 == MoveType::NPromotion
+                            }
+                        }
+                        UciPiece::Bishop => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::BPromoCapture
+                            } else {
+                                data.3 == MoveType::BPromotion
+                            }
+                        }
+                        UciPiece::Rook => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::RPromoCapture
+                            } else {
+                                data.3 == MoveType::RPromotion
+                            }
+                        }
+                        UciPiece::Queen => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::QPromoCapture
+                            } else {
+                                data.3 == MoveType::QPromotion
+                            }
+                        }
+                        _ => panic!("We should never promote to a Pawn or King"),
+                    },
+                    None => true,
+                }
+        })
+        .unwrap();
+
+    updated_data.4.clone()
 }
