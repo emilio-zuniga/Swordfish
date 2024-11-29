@@ -1,13 +1,14 @@
 use std::fmt::Display;
 
 /// An `enum` to represent which type the piece is. This provides indexing for our hash table of moves.
+/// It also carries the evaluation weights of the pieces, which influence our eval. fn.
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
 pub enum PieceType {
-    Queen = 500,
-    Rook = 300,
-    Bishop = 250,
-    Knight = 200,
-    King = 1000,
+    King,
+    Queen = 900,
+    Rook = 500,
+    Bishop = 320,
+    Knight = 300,
     Pawn = 100,
     Super,
 }
