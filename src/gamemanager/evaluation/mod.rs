@@ -20,8 +20,10 @@ impl GameManager {
         if self.white_to_move {
             // Evaluate for black; better or worse after its move?
             let mass_score = self.bitboard.piece_mass(Color::Black) + movetype_weight(movetype);
-            let heatmap = heatmaps::Heatmap::default();
+            let heatmap = heatmaps::Heatmap::default().rev();
 
+            // endgame_weight shows how close we are to the endgame. The more pieces our side has, the further
+            // it is from the end of the game, and the fewer, the closer to the end of the game.
             let endgame_weight = mass_score * 100 / START_MASS;
 
             let position_score =
@@ -31,7 +33,7 @@ impl GameManager {
         } else {
             // Ditto for white.
             let mass_score = self.bitboard.piece_mass(Color::White) + movetype_weight(movetype);
-            let heatmap = heatmaps::Heatmap::default().rev();
+            let heatmap = heatmaps::Heatmap::default();
 
             let endgame_weight = mass_score * 100 / START_MASS;
 
@@ -56,7 +58,7 @@ fn movetype_weight(mt: MoveType) -> i32 {
         NPromotion => Knight as i32,
         NPromoCapture => Knight as i32 + 50,
         EPCapture => Pawn as i32,
-        Capture => 400,
+        Capture => 100,
         _ => 0,
     }
 }

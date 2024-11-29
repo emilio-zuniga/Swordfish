@@ -32,12 +32,14 @@ pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Mov
 
     scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
 
-    // Little bit of debugging code.
-    let _ = scored_moves
-        .iter()
-        .for_each(|m| println!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()));
+    let best = scored_moves
+        .into_iter()
+        .inspect(|m| println!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
+        .last()
+        .expect("Should be a move here!");
 
-    scored_moves.pop().expect("There'll be a move!").1
+    println!("Best score: {}", best.0);
+    best.1
 }
 
 fn negamax(
@@ -54,22 +56,19 @@ fn negamax(
         let moves = gm.legal_moves(tbl);
 
         if moves.len() == 0 {
-            return i32::MIN + 1; // It's a pretty bad outcome to have no moves,
-                                 // but stalemates shouldn't count so hard against us.
+            return gm.evaluate(MoveType::QuietMove); // Return value of node.
         }
 
+        let mut score = i32::MIN + 1;
         for mv in moves {
             // Call negamax and negate it's return value. Enemy's alpha is our -beta & v.v.
-            let score = -negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl);
-
-            if score >= beta {
-                return beta;
-            }
-            if score > alpha {
-                alpha = score;
+            score = score.max(-negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl));
+            alpha = alpha.max(score);
+            if alpha >= beta {
+                break;
             }
         }
-        alpha
+        score
     }
 }
 

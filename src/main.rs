@@ -10,8 +10,7 @@ mod ucimanager;
 fn main() {
     let tbl = noarc::NoArc::new(MoveTable::default());
 
-    let gm =
-        GameManager::from_fen_str("3r3r/pkppqp2/1nN1pbp1/3P4/1p2P3/8/PPPBNPpP/1K1R2R1 b - - 3 6");
+    let gm = GameManager::from_fen_str("rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8");
     let bestmove = root_negamax(3, gm, &tbl).0;
     println!("Best move: {}{}", bestmove.1.to_str(), bestmove.2.to_str())
 }
