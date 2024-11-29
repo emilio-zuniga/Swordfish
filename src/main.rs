@@ -7,7 +7,16 @@ mod ucimanager;
 mod enginemanager;
 
 fn main() {
+
+    let tbl = noarc::NoArc::new(MoveTable::default());
+
+    let gm =
+        GameManager::from_fen_str("rn1b1k1r/p4ppp/1pp5/8/2B5/3n4/PPP1N1PP/RNBQ1K1R w - - 0 11");
+    let bestmove = root_negamax(4, gm, &tbl).0;
+    println!("Best move: {}{}", bestmove.1.to_str(), bestmove.2.to_str())
+
     ucimanager::communicate();
+
 }
 
 #[cfg(test)]

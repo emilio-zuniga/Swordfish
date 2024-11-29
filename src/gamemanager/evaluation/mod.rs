@@ -19,26 +19,28 @@ impl GameManager {
     pub fn evaluate(&self, movetype: MoveType) -> i32 {
         if self.white_to_move {
             // Evaluate for black; better or worse after its move?
-            let mass_score = self.bitboard.piece_mass(Color::Black) + movetype_weight(movetype);
+            let mass_score = self.bitboard.piece_mass(Color::Black);
             let heatmap = heatmaps::Heatmap::default();
 
-            let endgame_weight = mass_score * 100 / START_MASS;
+            // endgame_weight shows how close we are to the endgame. The more pieces our side has, the further
+            // it is from the end of the game, and the fewer, the closer to the end of the game.
+            let endgame_weight = (mass_score / START_MASS) * 100;
 
             let position_score =
                 eval_heatmaps(Color::Black, self.bitboard, heatmap, endgame_weight);
 
-            position_score + mass_score
+            position_score + mass_score + movetype_weight(movetype)
         } else {
             // Ditto for white.
-            let mass_score = self.bitboard.piece_mass(Color::White) + movetype_weight(movetype);
+            let mass_score = self.bitboard.piece_mass(Color::White);
             let heatmap = heatmaps::Heatmap::default().rev();
 
-            let endgame_weight = mass_score * 100 / START_MASS;
+            let endgame_weight = (mass_score / START_MASS) * 100;
 
             let position_score =
                 eval_heatmaps(Color::White, self.bitboard, heatmap, endgame_weight);
 
-            position_score + mass_score
+            position_score + mass_score + movetype_weight(movetype)
         }
     }
 }
@@ -55,8 +57,7 @@ fn movetype_weight(mt: MoveType) -> i32 {
         BPromoCapture => Bishop as i32 + 50,
         NPromotion => Knight as i32,
         NPromoCapture => Knight as i32 + 50,
-        EPCapture => Pawn as i32,
-        Capture => 400,
+        Capture => 500,
         _ => 0,
     }
 }
