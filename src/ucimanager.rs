@@ -1,85 +1,144 @@
-use std::io::{self, BufRead};
-use vampirc_uci::{UciFen, UciMessage, UciMove, UciSquare};
+use crate::types::{MoveType, Square};
+use crate::{
+    enginemanager::Engine,
+    gamemanager::GameManager,
+    movetable::{noarc::NoArc, MoveTable},
+};
+use std::io;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread;
+use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
 pub fn communicate() {
-    println!("Waiting for messages...");
+    let mut stop_engine = false;
+    let start_search_flag = Arc::new(AtomicBool::new(false));
+    let mut e: Engine = Engine {
+        tbl: NoArc::new(MoveTable::default()),
+        board: GameManager::default(),
+        move_history: Vec::<UciMove>::new(),
+        //set_new_game: false,
+    };
 
-    for line in io::stdin().lock().lines() {
-        let msg = vampirc_uci::parse_one(&line.unwrap());
+    while !stop_engine {
+        let mut text = String::new();
+
+        io::stdin()
+            .read_line(&mut text)
+            .expect("Failed to read line");
+        let msg = vampirc_uci::parse_one(&text);
 
         match msg {
             UciMessage::Uci => {
                 println!("id name Swordfish");
                 println!("id author Emilio Zuniga, Ethan Barry, Eric Oliver, Grace Kizer, & Zachary Wilson");
-                // if we want configurable options, then we would list them here
                 println!("uciok");
             }
             UciMessage::IsReady => {
-                // a function should initalize the movetable for the engine
-                // as well as set up any internal parameters
                 println!("readyok")
             }
             UciMessage::UciNewGame => {
-                // a function call here should clear the move history
-                // and starting FEN of any ongoing game
-                // - the history should just be set to an empty vec
-                // - the saved inital FEN should be reset to a None value (we will need to create this)
-                // then, the engine should wait for the GUI
-                // to send the inital position
-                // - that position should be saved as the starting FEN
+                //e.set_new_game = true;
             }
             UciMessage::Position {
                 startpos,
                 fen,
                 moves,
             } => {
-                
-                // if the saved inital position is a None value,
-                // then, set the above position as the inital position
-                // - if startpos is given as true, then just use standard board's FEN
-                // - otherwise, grab the given FEN
-                
-                // if so, setup default position
-                // if not, check moves & resume from last move
+                //For now, we'll reinitalize the engine's data
+                //(minus movetable) each time we receive a
+                //'position' command.
+                if startpos {
+                    e.board = GameManager::default();
+                } else {
+                    e.board = GameManager::from_fen_str(fen.unwrap().as_str());
+                }
+                e.move_history = moves.clone();
+
+                for m in moves {
+                    e.board = make_move(&e.board, &e.tbl, m);
+                }
+
+                //e.set_new_game = false;
             }
             UciMessage::Go {
-                time_control,
-                search_control,
+                time_control: _,
+                search_control: _,
             } => {
-                match time_control {
-                    _ => (),
-                }
-                match search_control {
-                    _ => todo!(),
-                }
-                // engine actually does thinking/computing here
-                // sends info regularly until "stop" message is received
+                start_search_flag.store(true, Ordering::Relaxed);
+                let clone_flag = start_search_flag.clone();
+
+                thread::spawn(move || {
+                    //search() - pass in clone_flag to check whether search termination was ordered
+                });
             }
             UciMessage::Stop => {
-                // engine should print info about last depth searched to
-                // then, send "bestmove 'move'" (we may include ponder here)
-                todo!()
+                start_search_flag.store(false, Ordering::Relaxed);
             }
-            UciMessage::Quit => todo!(), //engine should shutdown
-
-            _ => println!("Received message: {msg}"),
+            UciMessage::Quit => {
+                start_search_flag.store(false, Ordering::Relaxed);
+                stop_engine = true;
+            }
+            _ => {
+                println!("Some other message was received.");
+            }
         }
     }
-
-    println!("We made it out the loop");
 }
 
-fn crate_investigation() {
-    let fen: UciFen = UciFen(String::from("k7/8/8/4n3/8/3N4/RN6/K7 w - - 0 1"));
-    let move_list: Vec<UciMove> = vec![UciMove::from_to(
-        UciSquare::from('e', 2),
-        UciSquare::from('e', 4),
-    )];
-    let msg: UciMessage = UciMessage::Position {
-        startpos: false,
-        fen: Some(fen),
-        moves: move_list,
-    };
+fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager{
+    let h_from = Square::from_str(&m.from.to_string()).unwrap();
+    let h_to = Square::from_str(&m.to.to_string()).unwrap();
+    let legal_moves = board.legal_moves(tbl);
+    let updated_data = legal_moves
+        .iter()
+        .find(|data| {
+            data.1 == h_from
+                && data.2 == h_to
+                && match m.promotion {
+                    Some(p) => match p {
+                        UciPiece::Knight => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::NPromoCapture
+                            } else {
+                                data.3 == MoveType::NPromotion
+                            }
+                        }
+                        UciPiece::Bishop => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::BPromoCapture
+                            } else {
+                                data.3 == MoveType::BPromotion
+                            }
+                        }
+                        UciPiece::Rook => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::RPromoCapture
+                            } else {
+                                data.3 == MoveType::RPromotion
+                            }
+                        }
+                        UciPiece::Queen => {
+                            if m.from.rank != m.to.rank {
+                                //if the ranks are not the same
+                                //then this was a promoting pawn capture
+                                data.3 == MoveType::QPromoCapture
+                            } else {
+                                data.3 == MoveType::QPromotion
+                            }
+                        }
+                        _ => panic!("We should never promote to a Pawn or King"),
+                    },
+                    None => true,
+                }
+        })
+        .unwrap();
 
-    println!("UCI Message: {msg}");
+    updated_data.4.clone()
 }

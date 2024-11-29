@@ -7,10 +7,12 @@ use bitboard::BitBoard;
 use pseudolegal_moves::pseudolegal_moves;
 use regex::Regex;
 
+pub mod evaluation;
 pub mod legal_moves;
 pub mod pseudolegal_moves;
 
 /// This is a representation of a chess game and the various states of each element.
+#[derive(Clone)]
 pub struct GameManager {
     /*FEN Notes:
      * active color - get whose turn it is to move {w, b}
@@ -73,6 +75,7 @@ impl GameManager {
         }
     }
 
+    #[allow(dead_code)]
     /// A utility method generating a complete FEN string representation of the game
     /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {
