@@ -44,6 +44,28 @@ impl Default for BitBoard {
 }
 
 impl BitBoard {
+    /// Gets the total piece weights for a given side.
+    pub fn piece_mass(&self, color: Color) -> i32 {
+        match color {
+            Color::Black => {
+                self.king_black.count_ones() as i32 * PieceType::King as i32
+                    + self.queens_black.count_ones() as i32 * PieceType::Queen as i32
+                    + self.rooks_black.count_ones() as i32 * PieceType::Rook as i32
+                    + self.bishops_black.count_ones() as i32 * PieceType::Bishop as i32
+                    + self.knights_black.count_ones() as i32 * PieceType::Knight as i32
+                    + self.pawns_black.count_ones() as i32 * PieceType::Pawn as i32
+            }
+            Color::White => {
+                self.king_white.count_ones() as i32 * PieceType::King as i32
+                    + self.queens_white.count_ones() as i32 * PieceType::Queen as i32
+                    + self.rooks_white.count_ones() as i32 * PieceType::Rook as i32
+                    + self.bishops_white.count_ones() as i32 * PieceType::Bishop as i32
+                    + self.knights_white.count_ones() as i32 * PieceType::Knight as i32
+                    + self.pawns_white.count_ones() as i32 * PieceType::Pawn as i32
+            }
+        }
+    }
+
     /// A utility method for generating a `BitBoard` from a FEN string\
     /// * `fen` - a `&str` representing the board token of a FEN string\
     /// * `returns` - a `BitBoard` as generated from the FEN token
@@ -180,6 +202,7 @@ impl BitBoard {
     /// of this `PieceType` of this `Color`\
     /// * `color` - the `Color` of the pieces\
     /// * `pieces` - the `PieceType` of the pieces
+    #[allow(dead_code)]
     pub fn get_bitboard(&self, color: Color, piece: PieceType) -> u64 {
         match color {
             Color::White => match piece {

@@ -553,6 +553,7 @@ impl MoveTable {
     /// * `piece` - the `PieceType`
     /// * `square` - the x and y coordinates of the piece's position
     /// * `returns` - a `u64` bitboard representing the pseudo legal move of that piece possible from that square
+    #[allow(dead_code)]
     pub fn get_moves_as_bitboard(&self, color: Color, piece: PieceType, position: u64) -> u64 {
         let moverays = &self.get_moves(color, piece, position);
         let mut board = 0_u64;
