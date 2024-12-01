@@ -1,3 +1,8 @@
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
+
 use rayon::prelude::*;
 
 use crate::types::{Move, MoveType, PieceType, Square};
@@ -5,7 +10,19 @@ use crate::types::{Move, MoveType, PieceType, Square};
 use super::{GameManager, MoveTable, NoArc};
 
 /// A Negamax search routine that runs in parallel.
-pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Move, GameManager) {
+pub fn root_negamax(
+    depth: u16,
+    gm: GameManager,
+    tbl: &NoArc<MoveTable>,
+    flag: Arc<AtomicBool>,
+    best_move: Arc<Mutex<(Square, Square, MoveType)>>,
+) {
+    /* ************************************************************************************* */
+    /* NOTE: This acquires the lock around best_move. If the lock is freed before the best   */
+    /*       move has been written, the UCI thread will print out an invalid move. DO NOT    */
+    /*       FREE THIS LOCK EARLY!                                                           */
+    /* ************************************************************************************* */
+    let mut state = best_move.lock().unwrap();
     let moves = gm.legal_moves(tbl);
 
     if moves.len() == 0 {
@@ -19,7 +36,7 @@ pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Mov
         .into_par_iter()
         .map(|mv| {
             (
-                -negamax(depth, -beta, -alpha, mv.3, &mv.4, tbl),
+                -negamax(depth, -beta, -alpha, mv.3, &mv.4, tbl, flag.clone()),
                 ((mv.0, mv.1, mv.2, mv.3), mv.4),
             )
         })
@@ -30,20 +47,17 @@ pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Mov
         .map(|(s, movetuple)| (s, (movetuple.0, movetuple.1)))
         .collect();
 
-    if depth % 2 == 0 {
-        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
-    } else {
-        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
-    }
+    scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
 
     let best = scored_moves
         .into_iter()
-        .inspect(|m| println!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
+        .inspect(|m| eprintln!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
         .last()
         .expect("Should be a move here!");
 
-    println!("Best score: {}", best.0);
-    best.1
+    state.0 = best.1 .0 .1; // from
+    state.1 = best.1 .0 .2; // to
+    state.2 = best.1 .0 .3; // movetype
 }
 
 fn negamax(
@@ -53,8 +67,13 @@ fn negamax(
     movetype: MoveType,
     gm: &GameManager,
     tbl: &NoArc<MoveTable>,
+    flag: Arc<AtomicBool>,
 ) -> i32 {
-    if depth == 0 {
+    if flag.load(Ordering::Relaxed) == false || depth == 0 {
+        // NOTE: Call quiesence search on the current position regardless of
+        // depth if the flag "continue searching" is false. We can't stop
+        // immediately without throwing out the work at this depth entirely,
+        // and I'm not that good at concurrent programs to make that work.
         capture_search(alpha, beta, movetype, gm, tbl)
     } else {
         let moves = gm.legal_moves(tbl);
@@ -66,7 +85,15 @@ fn negamax(
         let mut score = i32::MIN + 1;
         for mv in moves {
             // Call negamax and negate it's return value. Enemy's alpha is our -beta & v.v.
-            score = score.max(-negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl));
+            score = score.max(-negamax(
+                depth - 1,
+                -beta,
+                -alpha,
+                mv.3,
+                &mv.4,
+                tbl,
+                flag.clone(),
+            ));
             alpha = alpha.max(score);
             if alpha >= beta {
                 break;

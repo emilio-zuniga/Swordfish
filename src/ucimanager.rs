@@ -1,26 +1,23 @@
+use crate::gamemanager::legal_moves::search::root_negamax;
 use crate::types::{MoveType, Square};
 use crate::{
     enginemanager::Engine,
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
 };
-use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::thread;
+use std::sync::{Arc, Mutex};
+use std::thread::{self, sleep};
+use std::time::Duration;
+use std::{io, u16};
 use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
-pub fn communicate() {
-    let mut stop_engine = false;
-    let start_search_flag = Arc::new(AtomicBool::new(false));
-    let mut e: Engine = Engine {
-        tbl: NoArc::new(MoveTable::default()),
-        board: GameManager::default(),
-        move_history: Vec::<UciMove>::new(),
-        //set_new_game: false,
-    };
-
-    while !stop_engine {
+pub fn communicate(
+    mut e: Engine,
+    search_flag: Arc<AtomicBool>,
+    best_move: Arc<Mutex<(Square, Square, MoveType)>>,
+) {
+    loop {
         let mut text = String::new();
 
         io::stdin()
@@ -45,9 +42,9 @@ pub fn communicate() {
                 fen,
                 moves,
             } => {
-                //For now, we'll reinitalize the engine's data
-                //(minus movetable) each time we receive a
-                //'position' command.
+                // For now, we'll reinitalize the engine's data
+                // (minus movetable) each time we receive a
+                // 'position' command.
                 if startpos {
                     e.board = GameManager::default();
                 } else {
@@ -62,34 +59,64 @@ pub fn communicate() {
                 //e.set_new_game = false;
             }
             UciMessage::Go {
-                time_control: _,
-                search_control: _,
+                time_control,
+                search_control,
             } => {
-                start_search_flag.store(true, Ordering::Relaxed);
-                let clone_flag = start_search_flag.clone();
+                search_flag.store(true, Ordering::Relaxed);
+                {
+                    let mut lock = best_move.lock().unwrap();
+                    *lock = (Square::A1, Square::A1, MoveType::QuietMove); // Reinitialize best_move.
+                } // Lock dropped here.
+                let flag = search_flag.clone();
+                let best_move = best_move.clone();
+                let table = NoArc::new(MoveTable::default()); // TODO: Really hurts to create a whole new table...
+                let gm = e.board.clone();
 
-                thread::spawn(move || {
-                    //search() - pass in clone_flag to check whether search termination was ordered
-                });
+                if let Some(timectl) = time_control {
+                    match timectl {
+                        vampirc_uci::UciTimeControl::Infinite => {
+                            thread::spawn(move || {
+                                root_negamax(20, gm, &table, flag, best_move);
+                            });
+                        }
+                        vampirc_uci::UciTimeControl::MoveTime(_) => unimplemented!(),
+                        vampirc_uci::UciTimeControl::Ponder => unimplemented!(),
+                        vampirc_uci::UciTimeControl::TimeLeft { .. } => unimplemented!(),
+                    }
+                }
             }
             UciMessage::Stop => {
-                start_search_flag.store(false, Ordering::Relaxed);
+                search_flag.store(false, Ordering::Relaxed);
+                {
+                    let lock = best_move.lock().unwrap();
+                    use MoveType::*;
+                    let promo = match lock.2 {
+                        QPromotion | QPromoCapture => "q",
+                        RPromotion | RPromoCapture => "r",
+                        BPromotion | BPromoCapture => "b",
+                        NPromotion | NPromoCapture => "n",
+                        _ => "",
+                    };
+                    let outstr =
+                        format!("bestmove {}{}{}", lock.0.to_str(), lock.1.to_str(), promo);
+                    println!("{}", outstr);
+                }
             }
             UciMessage::Quit => {
-                start_search_flag.store(false, Ordering::Relaxed);
-                stop_engine = true;
+                search_flag.store(false, Ordering::Relaxed);
+                break;
             }
             _ => {
                 println!("Some other message was received.");
             }
         }
-    }
+    } // End of the input loop. UCI terminates.
 }
 
-fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager{
+fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager {
     let h_from = Square::from_str(&m.from.to_string()).unwrap();
     let h_to = Square::from_str(&m.to.to_string()).unwrap();
-    let legal_moves = board.legal_moves(tbl);
+    let legal_moves = board.legal_moves(&tbl);
     let updated_data = legal_moves
         .iter()
         .find(|data| {

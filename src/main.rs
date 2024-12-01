@@ -1,7 +1,13 @@
 #![allow(dead_code)]
 
-use gamemanager::{legal_moves::search::root_negamax, GameManager};
-use movetable::{noarc, MoveTable};
+use std::{
+    sync::{atomic::AtomicBool, Arc, Mutex},
+    thread,
+};
+
+use enginemanager::Engine;
+use types::{MoveType, Square};
+
 mod bitboard;
 mod enginemanager;
 mod gamemanager;
@@ -10,14 +16,17 @@ mod types;
 mod ucimanager;
 
 fn main() {
-    let tbl = noarc::NoArc::new(MoveTable::default());
+    let e = Engine::default();
+    let search_flag = Arc::new(AtomicBool::new(false)); // Continue searching? Default to no.
+    let best_move = Arc::new(Mutex::new((Square::A1, Square::A1, MoveType::QuietMove)));
 
-    let gm =
-        GameManager::from_fen_str("rn1b1k1r/p4ppp/1pp5/8/2B5/3n4/PPP1N1PP/RNBQ1K1R w - - 0 11");
-    let bestmove = root_negamax(4, gm, &tbl).0;
-    println!("Best move: {}{}", bestmove.1.to_str(), bestmove.2.to_str());
+    let uci_handle = thread::spawn(move || {
+        ucimanager::communicate(e, search_flag, best_move);
+    });
 
-    ucimanager::communicate();
+    uci_handle
+        .join()
+        .expect("Joining thread uci_handle failed; the engine probably crashed.");
 }
 
 #[cfg(test)]
