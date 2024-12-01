@@ -1,6 +1,6 @@
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc,
+    Arc, Mutex,
 };
 
 use rayon::prelude::*;
@@ -12,10 +12,17 @@ use super::{GameManager, MoveTable, NoArc};
 /// A Negamax search routine that runs in parallel.
 pub fn root_negamax(
     depth: u16,
-    gm: &GameManager,
+    gm: GameManager,
     tbl: &NoArc<MoveTable>,
     flag: Arc<AtomicBool>,
-) -> (Move, GameManager) {
+    best_move: Arc<Mutex<(Square, Square, MoveType)>>,
+) {
+    /* ************************************************************************************* */
+    /* NOTE: This acquires the lock around best_move. If the lock is freed before the best   */
+    /*       move has been written, the UCI thread will print out an invalid move. DO NOT    */
+    /*       FREE THIS LOCK EARLY!                                                           */
+    /* ************************************************************************************* */
+    let mut state = best_move.lock().unwrap();
     let moves = gm.legal_moves(tbl);
 
     if moves.len() == 0 {
@@ -40,20 +47,17 @@ pub fn root_negamax(
         .map(|(s, movetuple)| (s, (movetuple.0, movetuple.1)))
         .collect();
 
-    if depth % 2 == 0 {
-        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
-    } else {
-        scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
-    }
+    scored_moves.sort_by(|a, b| a.0.cmp(&b.0));
 
     let best = scored_moves
         .into_iter()
-        .inspect(|m| println!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
+        .inspect(|m| eprintln!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
         .last()
         .expect("Should be a move here!");
 
-    println!("Best score: {}", best.0);
-    best.1
+    state.0 = best.1 .0 .1; // from
+    state.1 = best.1 .0 .2; // to
+    state.2 = best.1 .0 .3; // movetype
 }
 
 fn negamax(

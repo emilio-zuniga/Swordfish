@@ -1,5 +1,13 @@
 #![allow(dead_code)]
 
+use std::{
+    sync::{atomic::AtomicBool, Arc, Mutex},
+    thread,
+};
+
+use enginemanager::Engine;
+use types::{MoveType, Square};
+
 mod bitboard;
 mod enginemanager;
 mod gamemanager;
@@ -8,7 +16,17 @@ mod types;
 mod ucimanager;
 
 fn main() {
-    ucimanager::communicate();
+    let e = Engine::default();
+    let search_flag = Arc::new(AtomicBool::new(false)); // Continue searching? Default to no.
+    let best_move = Arc::new(Mutex::new((Square::A1, Square::A1, MoveType::QuietMove)));
+
+    let uci_handle = thread::spawn(move || {
+        ucimanager::communicate(e, search_flag, best_move);
+    });
+
+    uci_handle
+        .join()
+        .expect("Joining thread uci_handle failed; the engine probably crashed.");
 }
 
 #[cfg(test)]
