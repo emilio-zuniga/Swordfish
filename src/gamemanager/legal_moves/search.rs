@@ -1,3 +1,8 @@
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
 use rayon::prelude::*;
 
 use crate::types::{Move, MoveType, PieceType, Square};
@@ -5,7 +10,12 @@ use crate::types::{Move, MoveType, PieceType, Square};
 use super::{GameManager, MoveTable, NoArc};
 
 /// A Negamax search routine that runs in parallel.
-pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Move, GameManager) {
+pub fn root_negamax(
+    depth: u16,
+    gm: &GameManager,
+    tbl: &NoArc<MoveTable>,
+    flag: Arc<AtomicBool>,
+) -> (Move, GameManager) {
     let moves = gm.legal_moves(tbl);
 
     if moves.len() == 0 {
@@ -19,7 +29,7 @@ pub fn root_negamax(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> (Mov
         .into_par_iter()
         .map(|mv| {
             (
-                -negamax(depth, -beta, -alpha, mv.3, &mv.4, tbl),
+                -negamax(depth, -beta, -alpha, mv.3, &mv.4, tbl, flag.clone()),
                 ((mv.0, mv.1, mv.2, mv.3), mv.4),
             )
         })
@@ -53,8 +63,13 @@ fn negamax(
     movetype: MoveType,
     gm: &GameManager,
     tbl: &NoArc<MoveTable>,
+    flag: Arc<AtomicBool>,
 ) -> i32 {
-    if depth == 0 {
+    if flag.load(Ordering::Relaxed) == false || depth == 0 {
+        // NOTE: Call quiesence search on the current position regardless of
+        // depth if the flag "continue searching" is false. We can't stop
+        // immediately without throwing out the work at this depth entirely,
+        // and I'm not that good at concurrent programs to make that work.
         capture_search(alpha, beta, movetype, gm, tbl)
     } else {
         let moves = gm.legal_moves(tbl);
@@ -66,7 +81,15 @@ fn negamax(
         let mut score = i32::MIN + 1;
         for mv in moves {
             // Call negamax and negate it's return value. Enemy's alpha is our -beta & v.v.
-            score = score.max(-negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl));
+            score = score.max(-negamax(
+                depth - 1,
+                -beta,
+                -alpha,
+                mv.3,
+                &mv.4,
+                tbl,
+                flag.clone(),
+            ));
             alpha = alpha.max(score);
             if alpha >= beta {
                 break;

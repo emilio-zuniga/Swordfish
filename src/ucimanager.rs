@@ -1,3 +1,4 @@
+use crate::gamemanager::legal_moves::search::root_negamax;
 use crate::types::{MoveType, Square};
 use crate::{
     enginemanager::Engine,
@@ -62,15 +63,26 @@ pub fn communicate() {
                 //e.set_new_game = false;
             }
             UciMessage::Go {
-                time_control: _,
-                search_control: _,
+                time_control,
+                search_control,
             } => {
                 start_search_flag.store(true, Ordering::Relaxed);
-                let clone_flag = start_search_flag.clone();
+                let flag = start_search_flag.clone();
 
-                thread::spawn(move || {
-                    //search() - pass in clone_flag to check whether search termination was ordered
-                });
+                if let Some(timectl) = time_control {
+                    match timectl {
+                        vampirc_uci::UciTimeControl::Infinite => {
+                            for depth in 0..20
+                            /* or any big number */
+                            {
+                                root_negamax(depth, &e.board, &e.tbl, flag.clone());
+                            }
+                        }
+                        vampirc_uci::UciTimeControl::MoveTime(time) => {}
+                        vampirc_uci::UciTimeControl::Ponder => unimplemented!(),
+                        vampirc_uci::UciTimeControl::TimeLeft { .. } => unimplemented!(),
+                    }
+                }
             }
             UciMessage::Stop => {
                 start_search_flag.store(false, Ordering::Relaxed);
@@ -86,7 +98,7 @@ pub fn communicate() {
     }
 }
 
-fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager{
+fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameManager {
     let h_from = Square::from_str(&m.from.to_string()).unwrap();
     let h_to = Square::from_str(&m.to.to_string()).unwrap();
     let legal_moves = board.legal_moves(tbl);
