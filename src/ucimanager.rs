@@ -108,7 +108,13 @@ pub fn communicate(
                             });
                         }
                         vampirc_uci::UciTimeControl::Ponder => unimplemented!(),
-                        vampirc_uci::UciTimeControl::TimeLeft { .. } => {
+                        vampirc_uci::UciTimeControl::TimeLeft {
+                            white_time,
+                            black_time,
+                            white_increment: _,
+                            black_increment: _,
+                            moves_to_go: _,
+                        } => {
                             let flag_clone = flag.clone();
                             let best_move_clone = best_move.clone();
                             thread::spawn(move || {
@@ -132,9 +138,15 @@ pub fn communicate(
                                     println!("{}", outstr);
                                 }
                             });
-
+                            let time_remaining = if e.board.white_to_move {
+                                let time = white_time.unwrap().num_milliseconds().abs();
+                                Duration::from_millis(time as u64 / 20)
+                            } else {
+                                let time = black_time.unwrap().num_milliseconds().abs();
+                                Duration::from_millis(time as u64 / 20)
+                            };
                             thread::spawn(move || {
-                                thread::sleep(Duration::from_millis(5000_u64));
+                                thread::sleep(time_remaining);
                                 flag_clone.store(false, Ordering::Relaxed);
                             });
                         }
@@ -181,8 +193,8 @@ fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameMan
                 && match m.promotion {
                     Some(p) => match p {
                         UciPiece::Knight => {
-                            if m.from.rank != m.to.rank {
-                                //if the ranks are not the same
+                            if m.from.file != m.to.file {
+                                //if the files are not the same
                                 //then this was a promoting pawn capture
                                 data.3 == MoveType::NPromoCapture
                             } else {
@@ -190,8 +202,8 @@ fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameMan
                             }
                         }
                         UciPiece::Bishop => {
-                            if m.from.rank != m.to.rank {
-                                //if the ranks are not the same
+                            if m.from.file != m.to.file {
+                                //if the files are not the same
                                 //then this was a promoting pawn capture
                                 data.3 == MoveType::BPromoCapture
                             } else {
@@ -199,8 +211,8 @@ fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameMan
                             }
                         }
                         UciPiece::Rook => {
-                            if m.from.rank != m.to.rank {
-                                //if the ranks are not the same
+                            if m.from.file != m.to.file {
+                                //if the files are not the same
                                 //then this was a promoting pawn capture
                                 data.3 == MoveType::RPromoCapture
                             } else {
@@ -208,8 +220,8 @@ fn make_move(board: &GameManager, tbl: &NoArc<MoveTable>, m: UciMove) -> GameMan
                             }
                         }
                         UciPiece::Queen => {
-                            if m.from.rank != m.to.rank {
-                                //if the ranks are not the same
+                            if m.from.file != m.to.file {
+                                //if the files are not the same
                                 //then this was a promoting pawn capture
                                 data.3 == MoveType::QPromoCapture
                             } else {
