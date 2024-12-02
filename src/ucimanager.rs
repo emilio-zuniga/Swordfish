@@ -5,7 +5,6 @@ use crate::{
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
 };
-use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
