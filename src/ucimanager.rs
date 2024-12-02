@@ -5,11 +5,10 @@ use crate::{
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
 };
+use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread::{self, sleep};
-use std::time::Duration;
-use std::{io, u16};
+use std::thread;
 use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
 pub fn communicate(
@@ -76,7 +75,7 @@ pub fn communicate(
                     match timectl {
                         vampirc_uci::UciTimeControl::Infinite => {
                             thread::spawn(move || {
-                                root_negamax(20, gm, &table, flag, best_move);
+                                root_negamax(15, gm, &table, flag, best_move);
                             });
                         }
                         vampirc_uci::UciTimeControl::MoveTime(_) => unimplemented!(),
