@@ -7,9 +7,8 @@ use crate::{
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread::{self, sleep};
 use std::time::Duration;
-use std::{io, u16};
+use std::{io, thread};
 use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
 pub fn communicate(
@@ -60,7 +59,7 @@ pub fn communicate(
             }
             UciMessage::Go {
                 time_control,
-                search_control,
+                search_control: _,
             } => {
                 search_flag.store(true, Ordering::Relaxed);
                 {
@@ -76,12 +75,69 @@ pub fn communicate(
                     match timectl {
                         vampirc_uci::UciTimeControl::Infinite => {
                             thread::spawn(move || {
-                                root_negamax(20, gm, &table, flag, best_move);
+                                root_negamax(15, gm, &table, flag, best_move);
                             });
                         }
-                        vampirc_uci::UciTimeControl::MoveTime(_) => unimplemented!(),
+                        vampirc_uci::UciTimeControl::MoveTime(t) => {
+                            let flag_clone = flag.clone();
+                            let best_move_clone = best_move.clone();
+                            thread::spawn(move || {
+                                root_negamax(10, gm, &table, flag, best_move);
+                                {
+                                    let lock = best_move_clone.lock().unwrap();
+                                    use MoveType::*;
+                                    let promo = match lock.2 {
+                                        QPromotion | QPromoCapture => "q",
+                                        RPromotion | RPromoCapture => "r",
+                                        BPromotion | BPromoCapture => "b",
+                                        NPromotion | NPromoCapture => "n",
+                                        _ => "",
+                                    };
+                                    let outstr = format!(
+                                        "bestmove {}{}{}",
+                                        lock.0.to_str(),
+                                        lock.1.to_str(),
+                                        promo
+                                    );
+                                    println!("{}", outstr);
+                                }
+                            });
+                            thread::spawn(move || {
+                                thread::sleep(Duration::from_millis(t.num_milliseconds() as u64));
+                                flag_clone.store(false, Ordering::Relaxed);
+                            });
+                        }
                         vampirc_uci::UciTimeControl::Ponder => unimplemented!(),
-                        vampirc_uci::UciTimeControl::TimeLeft { .. } => unimplemented!(),
+                        vampirc_uci::UciTimeControl::TimeLeft { .. } => {
+                            let flag_clone = flag.clone();
+                            let best_move_clone = best_move.clone();
+                            thread::spawn(move || {
+                                root_negamax(10, gm, &table, flag, best_move);
+                                {
+                                    let lock = best_move_clone.lock().unwrap();
+                                    use MoveType::*;
+                                    let promo = match lock.2 {
+                                        QPromotion | QPromoCapture => "q",
+                                        RPromotion | RPromoCapture => "r",
+                                        BPromotion | BPromoCapture => "b",
+                                        NPromotion | NPromoCapture => "n",
+                                        _ => "",
+                                    };
+                                    let outstr = format!(
+                                        "bestmove {}{}{}",
+                                        lock.0.to_str(),
+                                        lock.1.to_str(),
+                                        promo
+                                    );
+                                    println!("{}", outstr);
+                                }
+                            });
+
+                            thread::spawn(move || {
+                                thread::sleep(Duration::from_millis(5000_u64));
+                                flag_clone.store(false, Ordering::Relaxed);
+                            });
+                        }
                     }
                 }
             }
