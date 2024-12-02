@@ -24,7 +24,7 @@ impl GameManager {
 
             // endgame_weight shows how close we are to the endgame. The more pieces our side has, the further
             // it is from the end of the game, and the fewer, the closer to the end of the game.
-            let endgame_weight = (mass_score / START_MASS) * 100;
+            let endgame_weight = ((mass_score as f32 * 100.0) / START_MASS as f32) as i32;
 
             let position_score =
                 eval_heatmaps(Color::Black, self.bitboard, heatmap, endgame_weight);
@@ -35,7 +35,7 @@ impl GameManager {
             let mass_score = self.bitboard.piece_mass(Color::White);
             let heatmap = heatmaps::Heatmap::default().rev();
 
-            let endgame_weight = (mass_score / START_MASS) * 100;
+            let endgame_weight = ((mass_score as f32 * 100.0) / START_MASS as f32) as i32;
 
             let position_score =
                 eval_heatmaps(Color::White, self.bitboard, heatmap, endgame_weight);
