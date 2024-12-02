@@ -29,6 +29,8 @@ impl GameManager {
             let position_score =
                 eval_heatmaps(Color::Black, self.bitboard, heatmap, endgame_weight);
 
+            dbg!(mass_score, endgame_weight, position_score);
+
             position_score + mass_score + movetype_weight(movetype)
         } else {
             // Ditto for white.
@@ -57,7 +59,7 @@ fn movetype_weight(mt: MoveType) -> i32 {
         BPromoCapture => Bishop as i32 + 50,
         NPromotion => Knight as i32,
         NPromoCapture => Knight as i32 + 50,
-        Capture => 500,
+        Capture => 2500,
         _ => 0,
     }
 }
@@ -80,16 +82,16 @@ fn eval_heatmaps(color: Color, board: BitBoard, map: Heatmap, endgame_weight: i3
 
     let weighted_value = match color {
         Color::Black => {
-            eval_heatmap(map.pawns_start, board.pawns_black) * (100 - endgame_weight)
-                + eval_heatmap(map.pawns_end, board.pawns_black) * endgame_weight
-                + eval_heatmap(map.kings_start, board.king_black) * (100 - endgame_weight)
-                + eval_heatmap(map.kings_end, board.king_black) * endgame_weight
+            eval_heatmap(map.pawns_start, board.pawns_black) * endgame_weight
+                + eval_heatmap(map.pawns_end, board.pawns_black) * (100 - endgame_weight)
+                + eval_heatmap(map.kings_start, board.king_black) * endgame_weight
+                + eval_heatmap(map.kings_end, board.king_black) * (100 - endgame_weight)
         }
         Color::White => {
-            eval_heatmap(map.pawns_start, board.pawns_white) * (100 - endgame_weight)
-                + eval_heatmap(map.pawns_end, board.pawns_white) * endgame_weight
-                + eval_heatmap(map.kings_start, board.king_white) * (100 - endgame_weight)
-                + eval_heatmap(map.kings_end, board.king_white) * endgame_weight
+            eval_heatmap(map.pawns_start, board.pawns_white) * endgame_weight
+                + eval_heatmap(map.pawns_end, board.pawns_white) * (100 - endgame_weight)
+                + eval_heatmap(map.kings_start, board.king_white) * endgame_weight
+                + eval_heatmap(map.kings_end, board.king_white) * (100 - endgame_weight)
         }
     };
 
