@@ -57,7 +57,7 @@ fn movetype_weight(mt: MoveType) -> i32 {
         BPromoCapture => Bishop as i32 + 50,
         NPromotion => Knight as i32,
         NPromoCapture => Knight as i32 + 50,
-        Capture => 25000,
+        Capture => 50,
         _ => 0,
     }
 }

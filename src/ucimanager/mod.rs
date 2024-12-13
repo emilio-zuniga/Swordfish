@@ -8,7 +8,7 @@ use crate::{
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use std::{io, thread};
+use std::{io, thread, u16};
 use vampirc_uci::{UciMessage, UciMove, UciPiece};
 
 pub fn communicate(
@@ -75,14 +75,20 @@ pub fn communicate(
                     match timectl {
                         vampirc_uci::UciTimeControl::Infinite => {
                             thread::spawn(move || {
-                                root_negamax(15, gm, &table, flag, best_move);
+                                root_negamax(u16::MAX, gm, &table, flag, best_move);
                             });
                         }
                         vampirc_uci::UciTimeControl::MoveTime(t) => {
                             let flag_clone = flag.clone();
+                            let loop_flag_clone = flag.clone();
                             let best_move_clone = best_move.clone();
                             thread::spawn(move || {
-                                root_negamax(10, gm, &table, flag, best_move);
+                                let mut depth = 1;
+                                while loop_flag_clone.load(Ordering::Relaxed) {
+                                    root_negamax(depth, gm.clone(), &table, flag.clone(), best_move.clone());
+                                    depth += 1;
+                                }
+
                                 {
                                     let lock = best_move_clone.lock().unwrap();
                                     use MoveType::*;
@@ -116,9 +122,15 @@ pub fn communicate(
                             moves_to_go: _,
                         } => {
                             let flag_clone = flag.clone();
+                            let loop_flag_clone = flag.clone();
                             let best_move_clone = best_move.clone();
                             thread::spawn(move || {
-                                root_negamax(10, gm, &table, flag, best_move);
+                                let mut depth = 1;
+                                while loop_flag_clone.load(Ordering::Relaxed) {
+                                    root_negamax(depth, gm.clone(), &table, flag.clone(), best_move.clone());
+                                    depth += 1;
+                                }
+
                                 {
                                     let lock = best_move_clone.lock().unwrap();
                                     use MoveType::*;

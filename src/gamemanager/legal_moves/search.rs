@@ -51,13 +51,15 @@ pub fn root_negamax(
 
     let best = scored_moves
         .into_iter()
-        .inspect(|m| eprintln!("{}: {}{}", m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
+        .inspect(|m| eprintln!("info depth {} score {}: {}{}", depth, m.0, m.1 .0 .1.to_str(), m.1 .0 .2.to_str()))
         .last()
         .expect("Should be a move here!");
 
-    state.0 = best.1 .0 .1; // from
-    state.1 = best.1 .0 .2; // to
-    state.2 = best.1 .0 .3; // movetype
+    if !flag.load(Ordering::Relaxed) {
+        state.0 = best.1 .0 .1; // from
+        state.1 = best.1 .0 .2; // to
+        state.2 = best.1 .0 .3; // movetype
+    }
 }
 
 fn negamax(
