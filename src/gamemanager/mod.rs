@@ -1,6 +1,7 @@
 use crate::{
     bitboard,
     movetable::{noarc::NoArc, MoveTable},
+    hashing::{get_castling_key, get_en_passant_key, get_piece_key, get_turn_key},
     types::{CastlingRecord, Color, MoveType, PieceType, Square},
 };
 use bitboard::BitBoard;
@@ -75,7 +76,6 @@ impl GameManager {
         }
     }
 
-    #[allow(dead_code)]
     /// A utility method generating a complete FEN string representation of the game
     /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {
@@ -185,6 +185,98 @@ impl GameManager {
             .filter(movefilter) // Isn't a pawn or isn't a pawn's quiet move.
             .map(|(_, _, to, _)| to.to_u64())
             .fold(0_u64, |acc, v| acc | v)
+    }
+
+    pub fn zobrist_hash(&self) -> u64 {
+        let mut key = 0;
+
+        for square in GameManager::powers_of_two(self.bitboard.pawns_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Pawn, Color::Black, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.knights_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Knight, Color::Black, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.bishops_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Bishop, Color::Black, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.rooks_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Rook, Color::Black, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.queens_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Queen, Color::Black, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.king_black) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::King, Color::Black, square);
+        }
+
+        for square in GameManager::powers_of_two(self.bitboard.pawns_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Pawn, Color::White, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.knights_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Knight, Color::White, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.bishops_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Bishop, Color::White, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.rooks_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Rook, Color::White, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.queens_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::Queen, Color::White, square);
+        }
+        for square in GameManager::powers_of_two(self.bitboard.king_white) {
+            let square = Square::from_u64(square).unwrap();
+            key = key ^ get_piece_key(PieceType::King, Color::White, square);
+        }
+
+        key = key ^ get_castling_key(self.castling_rights);
+        
+        if Square::from_str(&self.en_passant_target).is_some() {
+            let target_square = Square::from_str(&self.en_passant_target).unwrap();
+
+            if self.white_to_move {
+                let s = target_square.to_u64() >> 8;
+                let b5_through_g5 = 0x0000007E_00000000_u64;
+                let a5 = Square::A5.to_u64();
+                let h5 = Square::H5.to_u64();
+
+                if s & b5_through_g5 == s && (s >> 1 & self.bitboard.pawns_white == s >> 1 || s << 1 & self.bitboard.pawns_white == s << 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                } else if s & a5 == a5 && (s >> 1 & self.bitboard.pawns_white == s >> 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                } else if s & h5 == h5 && (s << 1 & self.bitboard.pawns_white == s << 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                }
+            } else {
+                let s = target_square.to_u64() << 8;
+                let b4_through_g4 = 0x00000000_7E000000_u64;
+                let a4 = Square::A4.to_u64();
+                let h4 = Square::H4.to_u64();
+
+                if s & b4_through_g4 == s && (s >> 1 & self.bitboard.pawns_black == s >> 1 || s << 1 & self.bitboard.pawns_black == s << 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                } else if s & a4 == a4 && (s >> 1 & self.bitboard.pawns_black == s >> 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                } else if s & h4 == h4 && (s << 1 & self.bitboard.pawns_black == s << 1) {
+                    key = key ^ get_en_passant_key(target_square);
+                }
+            }
+        }
+        
+        key = key ^ get_turn_key(self.white_to_move);
+
+        key
     }
 }
 

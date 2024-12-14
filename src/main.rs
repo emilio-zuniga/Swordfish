@@ -12,6 +12,7 @@ mod bitboard;
 mod enginemanager;
 mod gamemanager;
 mod movetable;
+mod hashing;
 mod types;
 mod ucimanager;
 
