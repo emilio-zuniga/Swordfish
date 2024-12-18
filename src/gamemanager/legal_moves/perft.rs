@@ -13,7 +13,6 @@ pub fn perft(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) -> u64 {
 }
 
 pub fn printing_perft(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) {
-    //use crate::types::Square::*;
     for mv in gm.legal_moves(tbl) {
         println!(
             "{}{}: {}",
@@ -26,10 +25,7 @@ pub fn printing_perft(depth: u16, gm: GameManager, tbl: &NoArc<MoveTable>) {
 
 #[cfg(test)]
 mod test {
-    use rayon::iter::ExponentialBlocks;
-
     use crate::{gamemanager::GameManager, movetable::{noarc::NoArc, MoveTable}};
-
     use super::perft;
 
     #[test]

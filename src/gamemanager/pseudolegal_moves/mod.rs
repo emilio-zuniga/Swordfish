@@ -14,7 +14,7 @@ use crate::{
     bitboard::BitBoard,
     gamemanager::GameManager,
     movetable::{noarc::NoArc, MoveTable},
-    types::{CastlingRecord, Color, Move},
+    types::{CastlingRecord, Color, Move, Square},
 };
 
 /// Returns a [`Vec`] of pseudolegal moves encoded as a [`Move`](Move) type,
@@ -24,7 +24,7 @@ pub fn pseudolegal_moves(
     color: Color,
     bitboard: BitBoard,
     castling_rights: CastlingRecord,
-    en_passant_target: &str,
+    en_passant_target: Option<Square>,
     _halfmoves: u32,
     _fullmoves: u32,
     movetable: &NoArc<MoveTable>,

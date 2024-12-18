@@ -32,7 +32,7 @@ pub struct GameManager {
     pub bitboard: BitBoard,
     pub white_to_move: bool,
     pub castling_rights: CastlingRecord,
-    pub en_passant_target: String,
+    pub en_passant_target: Option<Square>,
     pub halfmoves: u32,
     pub fullmoves: u32,
 }
@@ -44,7 +44,7 @@ impl Default for GameManager {
             bitboard: BitBoard::default(),
             white_to_move: true,
             castling_rights: CastlingRecord::default(),
-            en_passant_target: String::new(),
+            en_passant_target: None,
             halfmoves: 0,
             fullmoves: 1,
         }
@@ -64,7 +64,7 @@ impl GameManager {
                 white_to_move: tokens[1] == "w",
                 castling_rights: CastlingRecord::try_from(tokens[2].as_str())
                     .expect("We expect FEN strings to be well-formed."),
-                en_passant_target: tokens[3].clone(),
+                en_passant_target: Square::from_str(tokens[3].as_str()),
                 halfmoves: tokens[4].parse().unwrap_or_default(),
                 fullmoves: tokens[5].parse().unwrap_or_default(),
             } // TODO: Remove subscript element access to handle malformed FEN strings.
@@ -88,11 +88,12 @@ impl GameManager {
             cstlng_rights.as_str()
         });
         s.push(' ');
-        s.push_str(if self.en_passant_target.is_empty() {
-            "-"
-        } else {
-            &self.en_passant_target
-        });
+        s.push_str(
+            match &self.en_passant_target {
+                Some(s) => s.to_str(),
+                None => "-",
+            }
+        );
         s.push(' ');
         s.push_str(&self.halfmoves.to_string());
         s.push(' ');
@@ -151,7 +152,7 @@ impl GameManager {
             color,
             self.bitboard,
             self.castling_rights,
-            &self.en_passant_target,
+            self.en_passant_target,
             self.halfmoves,
             self.fullmoves,
             tbl,
@@ -238,7 +239,7 @@ mod test {
             Color::Black,
             game_manager.bitboard,
             game_manager.castling_rights,
-            &game_manager.en_passant_target,
+            game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,
             &NoArc::new(MoveTable::default()),
@@ -257,7 +258,7 @@ mod test {
             Color::White,
             game_manager.bitboard,
             game_manager.castling_rights,
-            &game_manager.en_passant_target,
+            game_manager.en_passant_target,
             game_manager.halfmoves,
             game_manager.fullmoves,
             &NoArc::new(MoveTable::default()),
