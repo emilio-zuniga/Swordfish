@@ -7,7 +7,6 @@ use bitboard::BitBoard;
 use pseudolegal_moves::pseudolegal_moves;
 use regex::Regex;
 
-pub mod evaluation;
 pub mod legal_moves;
 pub mod pseudolegal_moves;
 
@@ -75,7 +74,6 @@ impl GameManager {
         }
     }
 
-    #[allow(dead_code)]
     /// A utility method generating a complete FEN string representation of the game
     /// * `returns` - a `String` representing the game state in FEN
     pub fn to_fen_string(&self) -> String {

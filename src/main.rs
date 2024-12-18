@@ -1,32 +1,17 @@
-#![allow(dead_code)]
-
-use std::{
-    sync::{atomic::AtomicBool, Arc, Mutex},
-    thread,
-};
-
-use enginemanager::Engine;
-use types::{MoveType, Square};
+use gamemanager::{legal_moves::perft::perft, GameManager};
+use movetable::{noarc::NoArc, MoveTable};
 
 mod bitboard;
-mod enginemanager;
 mod gamemanager;
 mod movetable;
 mod types;
-mod ucimanager;
 
 fn main() {
-    let e = Engine::default();
-    let search_flag = Arc::new(AtomicBool::new(false)); // Continue searching? Default to no.
-    let best_move = Arc::new(Mutex::new((Square::A1, Square::A1, MoveType::QuietMove)));
+    let gm = GameManager::default();
+    let table = NoArc::new(MoveTable::default());
+    let depth = 5;
 
-    let uci_handle = thread::spawn(move || {
-        ucimanager::communicate(e, search_flag, best_move);
-    });
-
-    uci_handle
-        .join()
-        .expect("Joining thread uci_handle failed; the engine probably crashed.");
+    println!("Movecount at depth {}: {}", depth, perft(1, depth, gm, &table));
 }
 
 #[cfg(test)]
