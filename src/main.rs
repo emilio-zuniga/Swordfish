@@ -11,7 +11,7 @@ fn main() {
     let table = NoArc::new(MoveTable::default());
     let depth = 5;
 
-    println!("Movecount at depth {}: {}", depth, perft(1, depth, gm, &table));
+    println!("Movecount at depth {}: {}", depth, perft(depth, gm, &table));
 }
 
 #[cfg(test)]
