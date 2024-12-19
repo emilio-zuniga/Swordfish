@@ -1,6 +1,7 @@
 mod bitboard;
 mod gamemanager;
 mod movetable;
+mod hashing;
 mod types;
 
 use std::time::Instant;
