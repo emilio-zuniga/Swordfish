@@ -242,8 +242,8 @@ impl GameManager {
 
         key = key ^ get_castling_key(self.castling_rights);
         
-        if Square::from_str(&self.en_passant_target).is_some() {
-            let target_square = Square::from_str(&self.en_passant_target).unwrap();
+        if self.en_passant_target.is_some() {
+            let target_square = self.en_passant_target.unwrap();
 
             if self.white_to_move {
                 let s = target_square.to_u64() >> 8;
