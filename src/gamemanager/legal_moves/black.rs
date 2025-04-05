@@ -357,14 +357,14 @@ impl GameManager {
                     // Update en_passant_target to square behind the double push.
                     use Square::*;
                     let target_coord = match to {
-                        A5 => A6.to_str(),
-                        B5 => B6.to_str(),
-                        C5 => C6.to_str(),
-                        D5 => D6.to_str(),
-                        E5 => E6.to_str(),
-                        F5 => F6.to_str(),
-                        G5 => G6.to_str(),
-                        H5 => H6.to_str(),
+                        A5 => A6,
+                        B5 => B6,
+                        C5 => C6,
+                        D5 => D6,
+                        E5 => E6,
+                        F5 => F6,
+                        G5 => G6,
+                        H5 => H6,
                         _ => unreachable!(
                         "We will never have a non-rank-5 square as a valid `to` coordinate here."
                     ),
@@ -376,7 +376,7 @@ impl GameManager {
                             ..self.bitboard
                         },
                         castling_rights: self.castling_rights.clone(),
-                        en_passant_target: String::from(target_coord),
+                        en_passant_target: Some(target_coord),
                         ..*self
                     }
                 }

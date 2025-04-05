@@ -17,7 +17,7 @@ pub fn pseudolegal_pawn_moves(
     pawn_locations: Vec<u64>,
     friendly_pieces: u64,
     enemy_pieces: u64,
-    en_passant_target: &str,
+    en_passant_target: Option<Square>,
     movetable: &NoArc<MoveTable>,
 ) -> Vec<Move> {
     let mut pawn_pseudo_legal_moves = Vec::new();
@@ -150,7 +150,7 @@ pub fn pseudolegal_pawn_moves(
                                             MoveType::Capture,
                                         ));
                                     }
-                                } else if match Square::from_str(en_passant_target) {
+                                } else if match en_passant_target {
                                     Some(coord) => {
                                         m & coord.to_u64() == m && coord.to_u64() & fore_rank == 0
                                     }
@@ -280,7 +280,7 @@ pub fn pseudolegal_pawn_moves(
                                             MoveType::Capture,
                                         ));
                                     }
-                                } else if match Square::from_str(en_passant_target) {
+                                } else if match en_passant_target {
                                     Some(coord) => {
                                         m & coord.to_u64() == m && coord.to_u64() & fore_rank == 0
                                     }
