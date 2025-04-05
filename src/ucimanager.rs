@@ -59,7 +59,7 @@ pub fn communicate(
             }
             UciMessage::Go {
                 time_control,
-                search_control: _,
+                search_control,
             } => {
                 search_flag.store(true, Ordering::Relaxed);
                 {
@@ -151,6 +151,8 @@ pub fn communicate(
                             });
                         }
                     }
+                } else if let Some(searchctrl) = search_control {
+                    //
                 }
             }
             UciMessage::Stop => {
