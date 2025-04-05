@@ -1,6 +1,9 @@
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+use std::{
+    ops::Neg,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
 };
 
 use rayon::prelude::*;
@@ -32,6 +35,9 @@ pub fn root_negamax(
     let alpha = i32::MIN + 1;
     let beta = i32::MAX - 1;
 
+    // From here, we call depth_one_negamax, which is just the first step of the search, parallelized.
+    // It won't do anything
+
     let labelled_scores: Vec<(i32, (Move, GameManager))> = moves
         .into_par_iter()
         .map(|mv| {
@@ -58,6 +64,46 @@ pub fn root_negamax(
     state.0 = best.1 .0 .1; // from
     state.1 = best.1 .0 .2; // to
     state.2 = best.1 .0 .3; // movetype
+}
+
+fn depth_one_negamax(
+    depth: u16,
+    alpha: i32,
+    beta: i32,
+    movetype: MoveType,
+    gm: GameManager,
+    tbl: &NoArc<MoveTable>,
+    flag: Arc<AtomicBool>,
+) -> i32 {
+    if flag.load(Ordering::Relaxed) == false || depth == 0 {
+        // NOTE: Call quiesence search on the current position regardless of
+        // depth if the flag "continue searching" is false. We can't stop
+        // immediately without throwing out the work at this depth entirely,
+        // and I'm not that good at concurrent programs to make that work.
+        capture_search(alpha, beta, movetype, &gm, tbl)
+    } else {
+        let moves = gm.legal_moves(tbl);
+
+        if moves.len() == 0 {
+            return i32::MIN + 1; // Return value of node.
+        }
+
+        let labelled_scores: Vec<(i32, (Move, GameManager))> = moves
+            .into_par_iter()
+            .map(|mv| {
+                (
+                    -negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl, flag.clone()),
+                    ((mv.0, mv.1, mv.2, mv.3), mv.4),
+                )
+            })
+            .collect();
+
+        let mut scored_moves: Vec<i32> = labelled_scores.into_iter().map(|(s, _)| s).collect();
+
+        scored_moves.sort_by(|a, b| a.cmp(&b));
+
+        scored_moves.pop().expect("Has to be a move here!").neg()
+    }
 }
 
 fn negamax(
