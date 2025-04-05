@@ -7,6 +7,7 @@ use crate::{
 
 mod black;
 pub mod perft;
+pub mod search;
 mod white;
 
 impl GameManager {
@@ -35,7 +36,7 @@ impl GameManager {
             color,
             self.bitboard,
             self.castling_rights,
-            self.en_passant_target,
+            &self.en_passant_target,
             self.halfmoves,
             self.fullmoves,
             &tbl,
@@ -87,14 +88,14 @@ impl GameManager {
             match mv.3 {
                 QuietMove | KingCastle | QueenCastle => {
                     modified_gm.halfmoves += 1;
-                    modified_gm.en_passant_target = None; // Made a quiet move instead of EPCapture.
+                    modified_gm.en_passant_target = String::new(); // Made a quiet move instead of EPCapture.
                 }
                 DoublePawnPush => {
                     modified_gm.halfmoves = 0; // Leave en passant target alone; it was set by the color-specific function.
                 }
                 _ => {
                     modified_gm.halfmoves = 0;
-                    modified_gm.en_passant_target = None;
+                    modified_gm.en_passant_target = String::new();
                 }
             }
 
