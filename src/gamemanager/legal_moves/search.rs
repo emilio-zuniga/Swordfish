@@ -85,15 +85,10 @@ fn negamax(
         let mut score = i32::MIN + 1;
         for mv in moves {
             // Call negamax and negate it's return value. Enemy's alpha is our -beta & v.v.
-            score = score.max(-negamax(
-                depth - 1,
-                -beta,
-                -alpha,
-                mv.3,
-                &mv.4,
-                tbl,
-                flag.clone(),
-            ));
+            score = -i32::min(
+                -score,
+                -negamax(depth - 1, -beta, -alpha, mv.3, &mv.4, tbl, flag.clone()),
+            );
             alpha = alpha.max(score);
             if alpha >= beta {
                 break;
